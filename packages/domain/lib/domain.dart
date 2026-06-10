@@ -19,3 +19,4 @@ export 'src/modules/hrv_letdown.dart';
 export 'src/modules/menstrual_phase.dart';
 export 'src/modules/refractory.dart';
 export 'src/modules/alcohol.dart';
+export 'src/modules/caffeine.dart';
