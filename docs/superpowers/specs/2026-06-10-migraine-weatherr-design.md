@@ -93,7 +93,7 @@ The domain core never touches APIs or storage directly — adapters pass data in
   - **Onboarding** (first-launch only): trigger-flag multi-select (stress, sleep, weather, hormones, light, smell, caffeine, alcohol, dehydration), menstrual-tracking opt-in, permission requests, risk-display preference, disclaimer.
   - **Today**: hero risk display (gauge / numeric / weather icon — user choice) showing **today and tomorrow side-by-side**, active contributing-factor chips (only modules currently elevating risk), inline quick check-in (sleep hours if no Health data, stress 1–5 tap, journal trigger flags), prominent **Log Attack** button.
   - **Log Attack**: start/end time, severity 1–10, free-text notes. Stamps with the active `RiskAssessment.id` for retrospective correlation.
-  - **Insights** (unlocked after 3 logged attacks): calendar heatmap of attacks, per-trigger correlation cards ("Pressure drops preceded 7 of your last 9 attacks"), model-personalization progress.
+  - **Insights** (unlocked after 3 logged attacks): calendar heatmap of attacks, per-trigger correlation cards ("Pressure drops preceded 7 of your last 9 attacks"), personalization progress. After ≥10 attacks, **suggested weight-adjustment cards** appear when a personal hit/miss is detected (see Suggested weight adjustments below).
   - **Settings**: permissions, enabled trigger modules, **per-trigger user weight overrides** (-2…+2 multiplier), notification preferences, risk-display mode, manage flagged triggers.
 
 ### Storage schema (Drift / SQLite, local-only)
@@ -166,6 +166,25 @@ This gives day-1 personalization without any ML — a stress-flagged user gets a
 ### User weight overrides
 
 Power users can adjust a trigger's contribution in Settings via a -2…+2 slider stored in `user_trigger_flags.weight_override`. The engine treats it as an additive nudge to the module's `weight_max` (clamped). Always inspectable, always reversible.
+
+### Suggested weight adjustments (correlation-driven personalization)
+
+The transparent, user-in-the-loop alternative to silently retraining a model. Once a user has **≥10 logged attacks**, the Insights screen runs a per-trigger correlation analysis on each refresh:
+
+- For each module, compute the **conditional attack rate** when the module's signal fired (above its threshold) vs the user's **baseline attack rate** when it didn't.
+- Compute a confidence interval on the lift (Wilson score interval, given the small N).
+- If the lift's 90% CI excludes zero AND the point estimate is ≥2× baseline rate, the trigger is flagged as a **personal hit**.
+- If the lift's 90% CI is entirely below zero (the user has attacks *without* this trigger and rarely *with* it), the trigger is flagged as a **personal miss**.
+
+When a personal hit or miss is detected, the app surfaces a **suggested weight adjustment card** on the Insights screen:
+
+> "Your migraines have followed pressure drops 7 of 9 times. **Increase pressure's weight?** [+1] [Not now]"
+
+Tapping accept writes to `user_trigger_flags.weight_override` exactly as the manual Settings slider does. Tapping "not now" suppresses the suggestion for 14 days. The user can always undo any accepted suggestion from Settings — every override is reversible and inspectable.
+
+**Why this over SGD/NN retraining:** same statistical goal (per-user weight learning), but every change is (a) backed by a concrete, citeable correlation the user can see, (b) explicitly accepted by the user, and (c) trivially auditable later. No silent model drift, no opaque "the model updated" messages, no small-N overfitting risk because we only act on correlations whose CI clears a threshold.
+
+The correlation engine is its own pure-Dart unit in the domain core, tested with synthetic attack/feature timelines. It does not affect the rules engine's day-to-day evaluation — it only proposes overrides for the user to accept.
 
 When data for a module is missing (e.g., Health permission denied, no journal entries), the module returns `confidence: 0` and contributes nothing. The UI surfaces which modules are inactive.
 
@@ -293,7 +312,7 @@ GitHub Actions on push: full `flutter test` plus a faster pure-Dart job for `dom
 
 ## Open Questions / Future Work
 
-- Per-user calibration (logistic regression / correlation analysis) once a user has ≥30 migraine logs — designed for, not built in v1.
+- Per-user calibration is handled in v1 via the suggested weight adjustments mechanism. A formal logistic-regression or ML approach is deliberately deferred — the user-in-the-loop correlation model gives the same personalization benefit transparently and avoids small-N overfitting.
 - Doctor-shareable PDF export.
 - Cross-device sync (likely iCloud + Google Drive backup of the encrypted Drift file rather than a custom backend).
 - Population ML model — requires a backend, accounts, and a privacy review; deliberately deferred past v1.
