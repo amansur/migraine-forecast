@@ -26,7 +26,7 @@ class TriggerSignal extends Equatable {
         weight: 0,
         confidence: 0,
         explanation: reason,
-        missing: missing ?? DataRequirement(id: moduleId, label: moduleId),
+        missing: missing,
       );
 
   double get contribution => weight * confidence;
