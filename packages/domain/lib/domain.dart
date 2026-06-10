@@ -3,3 +3,6 @@ export 'src/types/trigger_signal.dart';
 export 'src/types/weather.dart';
 export 'src/types/health.dart';
 export 'src/types/journal.dart';
+export 'src/types/user_flags.dart';
+export 'src/types/evaluation_context.dart';
+export 'src/types/risk_assessment.dart';
