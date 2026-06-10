@@ -425,7 +425,7 @@ class WeatherSeries extends Equatable {
     double maxDrop = 0;
     int j = 0;
     for (int i = 0; i < samples.length; i++) {
-      while (j < samples.length && samples[j].at.difference(samples[i].at) < window) {
+      while (j < samples.length && samples[j].at.difference(samples[i].at) <= window) {
         j++;
       }
       for (int k = i + 1; k < j; k++) {
