@@ -13,3 +13,4 @@ export 'src/engine/trigger_module.dart';
 export 'src/engine/risk_engine.dart';
 export 'src/modules/pressure_drop.dart';
 export 'src/modules/humidity_temp_swing.dart';
+export 'src/modules/air_quality.dart';
