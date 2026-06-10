@@ -9,3 +9,4 @@ export 'src/types/risk_assessment.dart';
 export 'src/config/rules_config.dart';
 export 'src/config/rules_config_loader.dart';
 export 'src/baselines/baseline_store.dart';
+export 'src/engine/trigger_module.dart';
