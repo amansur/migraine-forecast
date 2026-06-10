@@ -23,6 +23,15 @@ Migraine Weatherr is a Flutter app for migraine sufferers that predicts daily mi
 
 Push notifications and risk alerts ARE in v1.
 
+## Branding and Aesthetics
+
+- **Name:** Migraine Weatherr
+- **Tone:** Calm / wellness — soft, soothing, non-clinical. Medical-adjacent without feeling like a medical device.
+- **Palette:** Sage greens and warm ivory base; risk-band accents (calm green → soft amber → muted red) reserved for the risk display itself.
+- **Typography:** Rounded, readable, generous line height. System fonts (SF / Roboto) styled for warmth.
+- **Risk display:** User-configurable in Settings — choose between **gauge / arc**, **numeric score**, or **weather-inspired icon** (sunny → cloudy → stormy → severe). Same underlying score, three visualizations.
+- **Motion:** Subtle. No alarmist transitions. A high-risk day reads as informative, not panicked.
+
 ## Triggers and Evidence
 
 Trigger short-list derived from a research review of peer-reviewed literature and credible clinical sources (AMF, NHS, Mayo).
@@ -37,6 +46,7 @@ Trigger short-list derived from a research review of peer-reviewed literature an
 | Sleep deficit | Strong (Bertisch 2020, PMC6624145) | <6h total, efficiency <85%, or schedule shift >2h vs 7d median | Apple Health / Health Connect sleep records | 24h |
 | HRV let-down | Moderate–strong (Koenig 2016 meta) | RMSSD drop >20% from 14d baseline | Apple Health / Health Connect HRV | same-day to 18h |
 | Menstrual phase | Strong (MacGregor 2004) | Cycle day -2 to +3 around menses onset | Apple Health / Health Connect menstrual flow | 2–5 days |
+| Days since last attack | Moderate (post-attack refractory pattern observed in diary studies) | Risk dips for 24–72h after a logged attack, rebounds after | Derived from `attacks` table | same-day |
 
 ### Self-logged (four modules)
 
@@ -79,8 +89,24 @@ The domain core never touches APIs or storage directly — adapters pass data in
 
 - `RiskController` (Riverpod) — orchestrates adapters → engine → UI; runs morning + evening refresh; schedules notifications.
 - `JournalController` — migraine logging, trigger journal entry.
-- Screens: **Today** (risk band + contributors), **Log** (migraine entry), **History** (calendar + correlations), **Settings** (permissions, enabled triggers, notification preferences).
-- Storage: Drift / SQLite for journal, migraine log, cached forecasts, rolling baselines, and `RiskAssessment` history.
+- Screens:
+  - **Onboarding** (first-launch only): trigger-flag multi-select (stress, sleep, weather, hormones, light, smell, caffeine, alcohol, dehydration), menstrual-tracking opt-in, permission requests, risk-display preference, disclaimer.
+  - **Today**: hero risk display (gauge / numeric / weather icon — user choice) showing **today and tomorrow side-by-side**, active contributing-factor chips (only modules currently elevating risk), inline quick check-in (sleep hours if no Health data, stress 1–5 tap, journal trigger flags), prominent **Log Attack** button.
+  - **Log Attack**: start/end time, severity 1–10, free-text notes. Stamps with the active `RiskAssessment.id` for retrospective correlation.
+  - **Insights** (unlocked after 3 logged attacks): calendar heatmap of attacks, per-trigger correlation cards ("Pressure drops preceded 7 of your last 9 attacks"), model-personalization progress.
+  - **Settings**: permissions, enabled trigger modules, **per-trigger user weight overrides** (-2…+2 multiplier), notification preferences, risk-display mode, manage flagged triggers.
+
+### Storage schema (Drift / SQLite, local-only)
+
+Sketch — refined during implementation:
+
+- `attacks` — id, started_at, ended_at, severity (1–10), notes, risk_assessment_id (FK).
+- `risk_assessments` — id, target_date, horizon (today / tomorrow), score (0–100), band, computed_at, config_version, contributors_json.
+- `journal_entries` — id, timestamp, kind (alcohol / caffeine / stress / hydration), payload_json.
+- `daily_logs` — date, sleep_hours, sleep_quality, stress, menstrual_phase, custom_trigger_flags (used when Health permissions aren't granted).
+- `weather_snapshots` — timestamp, lat, lon, pressure_msl, pressure_delta_24h, temperature_2m, relative_humidity_2m, pm2_5, raw_json.
+- `baselines` — metric (sleep_median_7d / hrv_rmssd_14d / pressure_baseline), value, updated_at.
+- `user_trigger_flags` — module_id, flagged (bool from onboarding), weight_override (signed multiplier, default 0).
 
 ## Trigger Modules and Rules Config
 
@@ -118,13 +144,28 @@ Tunable parameters live in `assets/rules_config_v1.json`, versioned and shipped 
     "alcohol":             { "enabled": true, "weight_max": 12, "lookback_hours": 24 },
     "caffeine":            { "enabled": true, "weight_max": 8,  "delta_mg_threshold": 100 },
     "stress":              { "enabled": true, "weight_max": 12 },
-    "hydration":           { "enabled": true, "weight_max": 8,  "min_liters": 1.5 }
+    "hydration":           { "enabled": true, "weight_max": 8,  "min_liters": 1.5 },
+    "refractory":          { "enabled": true, "weight_max": 6,  "suppression_hours": 48 }
   },
-  "score_bands": { "low": [0, 30], "medium": [30, 60], "high": [60, 100] }
+  "score_bands": { "low": [0, 25], "moderate": [25, 50], "high": [50, 75], "very_high": [75, 100] },
+  "unflagged_trigger_confidence_multiplier": 0.6
 }
 ```
 
 Each `RiskAssessment` is stamped with the `configVersion` that produced it so historical scores remain reconstructible across config updates. Menstrual phase is opt-in (default disabled).
+
+### Day-1 personalization via onboarding trigger flags
+
+During onboarding, the user multi-selects their **suspected** triggers from the list above. The result is stored in `user_trigger_flags`. At evaluation time:
+
+- A **flagged** trigger's signal passes through at full confidence.
+- An **unflagged** trigger's signal is multiplied by `unflagged_trigger_confidence_multiplier` (default 0.6) — it still contributes (users don't know all their triggers yet) but with less authority.
+
+This gives day-1 personalization without any ML — a stress-flagged user gets a meaningfully different score from a weather-flagged user even on identical conditions.
+
+### User weight overrides
+
+Power users can adjust a trigger's contribution in Settings via a -2…+2 slider stored in `user_trigger_flags.weight_override`. The engine treats it as an additive nudge to the module's `weight_max` (clamped). Always inspectable, always reversible.
 
 When data for a module is missing (e.g., Health permission denied, no journal entries), the module returns `confidence: 0` and contributes nothing. The UI surfaces which modules are inactive.
 
@@ -160,11 +201,12 @@ Background execution via `workmanager` (Android) and `BGTaskScheduler` (iOS). iO
 - Health reads are best-effort; missing data → module sits out.
 - All scoring is offline-capable once weather is cached.
 
-### Permissions ladder
+### Onboarding and permissions ladder
 
 Asked progressively, not up front:
 
-1. **Location** — first launch, required for weather. Manual city fallback if denied.
+0. **Onboarding** — first launch only. Trigger-flag multi-select, menstrual-tracking opt-in, risk-display preference, disclaimer. No permissions requested yet beyond what's needed to complete each step.
+1. **Location** — first launch (after onboarding), required for weather. Manual city fallback if denied.
 2. **Notifications** — when user enables the morning alert toggle.
 3. **Health** — when user visits Settings → "Improve predictions with health data". Each Health category (sleep, HRV, menstrual) requested independently.
 
