@@ -17,3 +17,4 @@ export 'src/modules/air_quality.dart';
 export 'src/modules/sleep_deficit.dart';
 export 'src/modules/hrv_letdown.dart';
 export 'src/modules/menstrual_phase.dart';
+export 'src/modules/refractory.dart';
