@@ -8,3 +8,4 @@ export 'src/types/evaluation_context.dart';
 export 'src/types/risk_assessment.dart';
 export 'src/config/rules_config.dart';
 export 'src/config/rules_config_loader.dart';
+export 'src/baselines/baseline_store.dart';
