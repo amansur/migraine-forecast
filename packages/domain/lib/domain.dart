@@ -11,3 +11,4 @@ export 'src/config/rules_config_loader.dart';
 export 'src/baselines/baseline_store.dart';
 export 'src/engine/trigger_module.dart';
 export 'src/engine/risk_engine.dart';
+export 'src/modules/pressure_drop.dart';
