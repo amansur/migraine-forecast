@@ -1,0 +1,14 @@
+name: domain
+description: Pure-Dart migraine-risk engine. No Flutter or IO dependencies.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  equatable: ^2.0.5
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^4.0.0
