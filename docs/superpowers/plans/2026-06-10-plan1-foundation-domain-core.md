@@ -209,11 +209,20 @@ void main() {
     });
 
     test('zero() factory produces a zero-contribution signal', () {
-      final s = TriggerSignal.zero(moduleId: 'sleep_deficit', reason: 'no data');
+      final s = TriggerSignal.zero(
+        moduleId: 'sleep_deficit',
+        reason: 'no data',
+        missing: DataRequirement.healthSleep,
+      );
       expect(s.weight, 0);
       expect(s.confidence, 0);
       expect(s.explanation, 'no data');
-      expect(s.missing, isNotNull);
+      expect(s.missing, DataRequirement.healthSleep);
+    });
+
+    test('zero() without missing produces null missing', () {
+      final s = TriggerSignal.zero(moduleId: 'x', reason: 'unspecified');
+      expect(s.missing, isNull);
     });
 
     test('value equality', () {
