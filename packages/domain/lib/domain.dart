@@ -1,1 +1,2 @@
-// Barrel export. Each subsequent task adds to this file.
+export 'src/types/data_requirement.dart';
+export 'src/types/trigger_signal.dart';
