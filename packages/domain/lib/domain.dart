@@ -23,3 +23,4 @@ export 'src/modules/caffeine.dart';
 export 'src/modules/stress.dart';
 export 'src/modules/hydration.dart';
 export 'src/correlation/wilson_interval.dart';
+export 'src/correlation/correlation_analyzer.dart';
