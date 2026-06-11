@@ -13,6 +13,7 @@ const _triggerOptions = <String, List<String>>{
   'Stress': ['stress'],
   'Sleep': ['sleep_deficit'],
   'Weather': ['pressure_drop', 'humidity', 'temp_swing'],
+  'Air quality': ['air_quality'],
   'Hormones': ['menstrual_phase'],
   'Alcohol': ['alcohol'],
   'Caffeine': ['caffeine'],
