@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:domain/domain.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../data/context_builder.dart';
@@ -107,13 +109,10 @@ void callbackDispatcher() {
 }
 
 Future<String> _loadConfigText() async {
-  // Background isolates can't access rootBundle. Production fix (Plan 5): copy
-  // assets/rules_config_v1.json to docs dir at app startup. For Plan 4, try
-  // the working-dir copy and fall back to the minimal default if absent.
   try {
-    final file = File('${Directory.current.path}/assets/rules_config_v1.json');
-    return file.readAsStringSync();
-  } catch (_) {
-    return ''; // parseOrFallback returns the minimal default
-  }
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dir.path, 'rules_config_v1.json'));
+    if (await file.exists()) return file.readAsStringSync();
+  } catch (_) {/* fall through to default */}
+  return ''; // parseOrFallback yields minimal default
 }
