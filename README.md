@@ -8,7 +8,7 @@ A Flutter app that predicts daily migraine risk from evidence-backed triggers (b
 - **Plan 2** — Adapters + Drift storage (Open-Meteo, Health Connect / Apple Health, journal, location) ✓
 - **Plan 3** — Flutter MVP (Onboarding, Today, Log, Settings) ✓
 - **Plan 4** — Background scheduling + notifications (+ web sqlite3 fix) ✓
-- **Plan 5** — Insights screen + correlation-driven personalization — not started
+- **Plan 5** — Insights screen + correlation-driven personalization ✓
 
 ## Running locally
 
@@ -70,6 +70,14 @@ Three layers, each independently testable:
 - `lib/ui/` + `lib/state/` — Riverpod providers, screens (Onboarding, Today, Log, Settings), `RiskDisplay` widget with three variants.
 
 See the design spec at `docs/superpowers/specs/2026-06-10-migraine-weatherr-design.md` and the per-plan implementation docs under `docs/superpowers/plans/`.
+
+## Personalization
+
+After you've logged 3 migraines, the Insights tab unlocks:
+
+- **Calendar heatmap** of the last 90 days, with attack days highlighted.
+- **Trigger correlation cards** showing per-trigger attack rate when that trigger was active vs not, with classification (personal hit / personal miss / unclear).
+- **Suggested weight adjustments** — when a trigger correlates strongly enough (90% Wilson CI excludes zero, ≥2× baseline rate, ≥3 attacks in the fired cohort), the app surfaces a one-tap card to bump that trigger's weight in your personal model. Every change is explicit, reversible, and based on a citeable cohort — no silent ML drift.
 
 ## Trigger research
 
