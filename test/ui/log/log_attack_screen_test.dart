@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import 'package:migraine_weatherr/data/sources/journal_source.dart';
 import 'package:migraine_weatherr/state/providers.dart';
 import 'package:migraine_weatherr/ui/log/log_attack_screen.dart';
@@ -24,10 +25,13 @@ class _RecordingJournal implements JournalSource {
 void main() {
   testWidgets('Submitting saves an attack via JournalSource', (tester) async {
     final journal = _RecordingJournal();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          databaseProvider.overrideWithValue(db),
           journalSourceProvider.overrideWithValue(journal),
         ],
         child: MaterialApp.router(

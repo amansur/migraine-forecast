@@ -51,6 +51,23 @@ class AssessmentRepository {
     return rows.isEmpty ? null : _toDomain(rows.first);
   }
 
+  Future<int?> activeAtRowId(DateTime when) async {
+    final rows = await (_db.select(_db.riskAssessments)
+          ..where((t) => t.computedAt.isSmallerOrEqualValue(when))
+          ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first.id;
+  }
+
+  Future<DateTime?> latestComputedAt() async {
+    final rows = await (_db.select(_db.riskAssessments)
+          ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first.computedAt;
+  }
+
   RiskAssessment _toDomain(dynamic row) {
     final contributors = (jsonDecode(row.contributorsJson) as List)
         .map((e) {

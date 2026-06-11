@@ -103,9 +103,10 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final journal = ref.read(journalSourceProvider);
+    final activeId = await ref.read(assessmentRepoProvider).activeAtRowId(_start.toUtc());
     await journal.addAttack(
       Attack(startedAt: _start.toUtc(), endedAt: _end?.toUtc(), severity: _severity.round()),
-      riskAssessmentId: null, // Plan 5 will wire the assessment row's PK
+      riskAssessmentId: activeId,
     );
     if (mounted) {
       try {

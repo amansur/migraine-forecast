@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/lifecycle_observer.dart';
+import '../state/providers.dart';
 import '../state/risk_assessment_provider.dart';
 import 'router.dart';
 import 'theme.dart';
@@ -22,9 +23,7 @@ class _MigraineWeatherrAppState extends ConsumerState<MigraineWeatherrApp> {
     _observer = AppLifecycleObserver(
       staleAfter: const Duration(hours: 6),
       lastRefreshAt: () async {
-        // Plan 5 will read the last RiskAssessment.computedAt; for now,
-        // return null on first run so refresh is skipped.
-        return null;
+        return ref.read(assessmentRepoProvider).latestComputedAt();
       },
       refresh: () async {
         await ref.read(riskAssessmentProvider.notifier).refresh();
