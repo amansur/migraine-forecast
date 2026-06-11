@@ -80,7 +80,8 @@ final rulesConfigProvider = FutureProvider<RulesConfig>((_) async {
 
 final riskEngineProvider = Provider<RiskEngine>((_) => RiskEngine(modules: [
       PressureDropModule(),
-      HumidityTempSwingModule(),
+      HumidityModule(),
+      TempSwingModule(),
       AirQualityModule(),
       SleepDeficitModule(),
       HrvLetdownModule(),

@@ -6,7 +6,8 @@ import 'providers.dart';
 
 const _moduleIds = [
   'pressure_drop',
-  'humidity_temp_swing',
+  'humidity',
+  'temp_swing',
   'air_quality',
   'sleep_deficit',
   'hrv_letdown',

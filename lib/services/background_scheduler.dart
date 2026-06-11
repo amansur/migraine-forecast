@@ -73,7 +73,8 @@ void callbackDispatcher() {
       );
       final engine = RiskEngine(modules: [
         PressureDropModule(),
-        HumidityTempSwingModule(),
+        HumidityModule(),
+        TempSwingModule(),
         AirQualityModule(),
         SleepDeficitModule(),
         HrvLetdownModule(),

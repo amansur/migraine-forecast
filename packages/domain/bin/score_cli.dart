@@ -5,7 +5,8 @@ import 'package:domain/domain.dart';
 
 List<TriggerModule> _buildModules() => [
       PressureDropModule(),
-      HumidityTempSwingModule(),
+      HumidityModule(),
+      TempSwingModule(),
       AirQualityModule(),
       SleepDeficitModule(),
       HrvLetdownModule(),

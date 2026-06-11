@@ -108,7 +108,8 @@ void main() {
     await flagsRepo.save(const UserTriggerFlags(
       flaggedModuleIds: {
         'pressure_drop',
-        'humidity_temp_swing',
+        'humidity',
+        'temp_swing',
         'sleep_deficit',
         'alcohol',
         'stress',
@@ -134,7 +135,8 @@ void main() {
       clock: () => DateTime.utc(2026, 6, 10, 6),
       modules: [
       PressureDropModule(),
-      HumidityTempSwingModule(),
+      HumidityModule(),
+      TempSwingModule(),
       AirQualityModule(),
       SleepDeficitModule(),
       HrvLetdownModule(),

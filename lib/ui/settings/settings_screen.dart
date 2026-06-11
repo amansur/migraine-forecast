@@ -12,7 +12,8 @@ import '../shared/unit_formatter.dart';
 
 const _moduleLabels = <String, String>{
   'pressure_drop': 'Pressure changes',
-  'humidity_temp_swing': 'Humidity + temp swing',
+  'humidity': 'Humidity',
+  'temp_swing': 'Temp swing',
   'air_quality': 'Air quality',
   'sleep_deficit': 'Sleep',
   'hrv_letdown': 'HRV / stress let-down',

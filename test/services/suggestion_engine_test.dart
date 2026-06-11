@@ -55,7 +55,7 @@ void main() {
 
   test('misses suggest -1', () {
     final out = engine.suggestionsFor(
-      results: [_miss('humidity_temp_swing')],
+      results: [_miss('humidity')],
       currentOverrides: const {},
       dismissedAt: const {},
       now: DateTime.utc(2026, 6, 11),
