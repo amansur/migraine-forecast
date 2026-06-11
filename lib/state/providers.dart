@@ -14,6 +14,8 @@ import '../data/sources/health_source.dart';
 import '../data/sources/journal_source.dart';
 import '../data/sources/location_source.dart';
 import '../data/sources/geolocator_location_source.dart';
+import '../data/sources/persisted_manual_location_source.dart';
+import '../data/sources/open_meteo/open_meteo_geocoder.dart';
 import '../data/sources/open_meteo/open_meteo_weather_source.dart';
 import '../data/sources/weather_source.dart';
 import '../data/context_builder.dart';
@@ -36,6 +38,9 @@ final httpClientProvider = Provider<http.Client>((ref) {
 
 final permissionServiceProvider = Provider<PermissionService>((_) => PermissionService());
 
+final geocoderProvider = Provider<OpenMeteoGeocoder>(
+    (ref) => OpenMeteoGeocoder(ref.watch(httpClientProvider)));
+
 final weatherSourceProvider = Provider<WeatherSource>((ref) =>
     OpenMeteoWeatherSource(client: ref.watch(httpClientProvider), db: ref.watch(databaseProvider)));
 
@@ -43,7 +48,11 @@ final healthSourceProvider = Provider<HealthSource>((_) => HealthPackageSource()
 
 final journalSourceProvider = Provider<JournalSource>((ref) => DriftJournalSource(ref.watch(databaseProvider)));
 
-final locationSourceProvider = Provider<LocationSource>((_) => GeolocatorLocationSource());
+final manualLocationSourceProvider = Provider<PersistedManualLocationSource>(
+    (ref) => PersistedManualLocationSource(ref.watch(settingsRepoProvider)));
+
+final locationSourceProvider = Provider<LocationSource>(
+    (ref) => GeolocatorLocationSource(fallback: ref.watch(manualLocationSourceProvider)));
 
 final settingsRepoProvider = Provider<SettingsRepo>((ref) => SettingsRepo(ref.watch(databaseProvider)));
 

@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/sources/location_source.dart';
+import '../ui/shared/unit_formatter.dart';
 import 'providers.dart';
+import 'risk_assessment_provider.dart';
 
 enum RiskDisplayMode { gauge, numeric, weatherIcon }
 
@@ -27,5 +30,59 @@ final setNotificationsEnabledProvider = Provider<Future<void> Function(bool)>((r
   return (enabled) async {
     await ref.read(settingsRepoProvider).setBool('notifications_enabled', enabled);
     ref.invalidate(notificationsEnabledProvider);
+  };
+});
+
+final temperatureUnitProvider = FutureProvider<TemperatureUnit>((ref) async {
+  final s = await ref.watch(settingsRepoProvider).getString('temperature_unit');
+  return s == 'fahrenheit' ? TemperatureUnit.fahrenheit : TemperatureUnit.celsius;
+});
+
+final setTemperatureUnitProvider = Provider<Future<void> Function(TemperatureUnit)>((ref) {
+  return (unit) async {
+    await ref.read(settingsRepoProvider).setString('temperature_unit', unit.name);
+    ref.invalidate(temperatureUnitProvider);
+    ref.invalidate(unitFormatterProvider);
+  };
+});
+
+final pressureUnitProvider = FutureProvider<PressureUnit>((ref) async {
+  final s = await ref.watch(settingsRepoProvider).getString('pressure_unit');
+  return s == 'mmhg' ? PressureUnit.mmhg : PressureUnit.hpa;
+});
+
+final setPressureUnitProvider = Provider<Future<void> Function(PressureUnit)>((ref) {
+  return (unit) async {
+    await ref.read(settingsRepoProvider).setString('pressure_unit', unit.name);
+    ref.invalidate(pressureUnitProvider);
+    ref.invalidate(unitFormatterProvider);
+  };
+});
+
+final unitFormatterProvider = FutureProvider<UnitFormatter>((ref) async {
+  final temp = await ref.watch(temperatureUnitProvider.future);
+  final pressure = await ref.watch(pressureUnitProvider.future);
+  return UnitFormatter(temperatureUnit: temp, pressureUnit: pressure);
+});
+
+final manualLocationProvider = FutureProvider<UserLocation?>((ref) async {
+  return ref.watch(manualLocationSourceProvider).current();
+});
+
+final setManualLocationProvider = Provider<Future<void> Function(double lat, double lon)>((ref) {
+  return (lat, lon) async {
+    await ref.read(manualLocationSourceProvider).set(lat: lat, lon: lon);
+    ref.invalidate(manualLocationProvider);
+    ref.invalidate(riskAssessmentProvider);
+    ref.invalidate(tomorrowRiskAssessmentProvider);
+  };
+});
+
+final clearManualLocationProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    await ref.read(manualLocationSourceProvider).clear();
+    ref.invalidate(manualLocationProvider);
+    ref.invalidate(riskAssessmentProvider);
+    ref.invalidate(tomorrowRiskAssessmentProvider);
   };
 });

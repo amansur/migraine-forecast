@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/sources/location_source.dart';
+import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
+import '../../state/providers.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
+import '../shared/unit_formatter.dart';
 
 const _moduleLabels = <String, String>{
   'pressure_drop': 'Pressure changes',
@@ -63,6 +67,37 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 8),
+          ref.watch(temperatureUnitProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => Text('Error: $e'),
+            data: (unit) => ListTile(
+              title: const Text('Temperature'),
+              trailing: SegmentedButton<TemperatureUnit>(
+                segments: const [
+                  ButtonSegment(value: TemperatureUnit.celsius, label: Text('°C')),
+                  ButtonSegment(value: TemperatureUnit.fahrenheit, label: Text('°F')),
+                ],
+                selected: {unit},
+                onSelectionChanged: (s) => ref.read(setTemperatureUnitProvider)(s.first),
+              ),
+            ),
+          ),
+          ref.watch(pressureUnitProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => Text('Error: $e'),
+            data: (unit) => ListTile(
+              title: const Text('Pressure'),
+              trailing: SegmentedButton<PressureUnit>(
+                segments: const [
+                  ButtonSegment(value: PressureUnit.hpa, label: Text('hPa')),
+                  ButtonSegment(value: PressureUnit.mmhg, label: Text('mmHg')),
+                ],
+                selected: {unit},
+                onSelectionChanged: (s) => ref.read(setPressureUnitProvider)(s.first),
+              ),
+            ),
+          ),
           const Divider(),
           Text('Notifications', style: Theme.of(context).textTheme.titleSmall),
           notifAsync.when(
@@ -73,6 +108,31 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: const Text('Background notifications come in Plan 4'),
               value: enabled,
               onChanged: (v) => ref.read(setNotificationsEnabledProvider)(v),
+            ),
+          ),
+          const Divider(),
+          Text('Location', style: Theme.of(context).textTheme.titleSmall),
+          ref.watch(manualLocationProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => Text('Error: $e'),
+            data: (loc) => ListTile(
+              title: const Text('Manual location'),
+              subtitle: loc != null
+                  ? Text('${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}')
+                  : const Text('Not set — using GPS'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (loc != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      tooltip: 'Clear manual location',
+                      onPressed: () => ref.read(clearManualLocationProvider)(),
+                    ),
+                  const Icon(Icons.edit_outlined),
+                ],
+              ),
+              onTap: () => _showLocationDialog(context, ref, loc),
             ),
           ),
           const Divider(),
@@ -145,6 +205,16 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _showLocationDialog(BuildContext context, WidgetRef ref, UserLocation? current) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => _LocationSearchDialog(
+        geocoder: ref.read(geocoderProvider),
+        onPick: (result) => ref.read(setManualLocationProvider)(result.lat, result.lon),
+      ),
+    );
+  }
+
   String _modeLabel(RiskDisplayMode m) {
     switch (m) {
       case RiskDisplayMode.gauge: return 'Gauge';
@@ -156,5 +226,107 @@ class SettingsScreen extends ConsumerWidget {
   String _overrideLabel(double v) {
     final s = v >= 0 ? '+${v.toInt()}' : '${v.toInt()}';
     return v == 0 ? '0' : s;
+  }
+}
+
+class _LocationSearchDialog extends StatefulWidget {
+  final OpenMeteoGeocoder geocoder;
+  final void Function(GeocodingResult) onPick;
+  const _LocationSearchDialog({required this.geocoder, required this.onPick});
+
+  @override
+  State<_LocationSearchDialog> createState() => _LocationSearchDialogState();
+}
+
+class _LocationSearchDialogState extends State<_LocationSearchDialog> {
+  final _ctrl = TextEditingController();
+  List<GeocodingResult> _results = [];
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search() async {
+    final q = _ctrl.text.trim();
+    if (q.isEmpty) return;
+    setState(() { _loading = true; _error = null; });
+    try {
+      final results = await widget.geocoder.search(q);
+      setState(() { _results = results; _loading = false; });
+    } catch (e) {
+      setState(() { _error = 'Search failed: $e'; _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Set location'),
+      content: SizedBox(
+        width: 360,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _ctrl,
+                    decoration: const InputDecoration(
+                      labelText: 'City, state, country or postal code',
+                      hintText: 'San Francisco, CA',
+                    ),
+                    onSubmitted: (_) => _search(),
+                    autofocus: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(icon: const Icon(Icons.search), onPressed: _search),
+              ],
+            ),
+            if (_loading) const Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: CircularProgressIndicator(),
+            ),
+            if (_error != null) Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
+            if (_results.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 240),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _results.length,
+                  itemBuilder: (_, i) {
+                    final r = _results[i];
+                    return ListTile(
+                      title: Text(r.displayName),
+                      subtitle: Text('${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
+                      onTap: () {
+                        widget.onPick(r);
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ] else if (!_loading && _ctrl.text.isNotEmpty && _results.isEmpty && _error == null)
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('No results — try a different search term'),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      ],
+    );
   }
 }

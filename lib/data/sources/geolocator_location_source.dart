@@ -6,8 +6,8 @@ import 'manual_location_source.dart';
 /// Returns the device's last known or current GPS fix, falling back to a
 /// manually-set location if GPS is unavailable or permission is denied.
 class GeolocatorLocationSource implements LocationSource {
-  final ManualLocationSource fallback;
-  GeolocatorLocationSource({ManualLocationSource? fallback})
+  final LocationSource fallback;
+  GeolocatorLocationSource({LocationSource? fallback})
       : fallback = fallback ?? ManualLocationSource();
 
   @override
