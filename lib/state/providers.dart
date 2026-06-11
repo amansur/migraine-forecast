@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import '../data/repos/assessment_repository.dart';
 import '../data/repos/baseline_snapshot_builder.dart';
+import '../data/repos/notification_dedup_repo.dart';
 import '../data/repos/settings_repo.dart';
 import '../data/repos/user_trigger_flags_repo_drift.dart';
 import '../data/sources/drift_journal_source.dart';
@@ -16,6 +17,8 @@ import '../data/sources/geolocator_location_source.dart';
 import '../data/sources/open_meteo/open_meteo_weather_source.dart';
 import '../data/sources/weather_source.dart';
 import '../data/context_builder.dart';
+import '../services/high_risk_notifier.dart';
+import '../services/notification_service.dart';
 import '../services/permission_service.dart';
 import 'package:domain/domain.dart';
 
@@ -79,3 +82,18 @@ final riskEngineProvider = Provider<RiskEngine>((_) => RiskEngine(modules: [
       StressModule(),
       HydrationModule(),
     ]));
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService();
+});
+
+final notificationDedupRepoProvider = Provider<NotificationDedupRepo>((ref) {
+  return NotificationDedupRepo(ref.watch(databaseProvider));
+});
+
+final highRiskNotifierProvider = Provider<HighRiskNotifier>((ref) {
+  return HighRiskNotifier(
+    notifications: ref.watch(notificationServiceProvider),
+    dedup: ref.watch(notificationDedupRepoProvider),
+  );
+});

@@ -26,6 +26,8 @@ class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     final ctx = await builder.build(now: now, target: today);
     final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.today);
     await ref.read(assessmentRepoProvider).save(ass);
+    final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');
+    await ref.read(highRiskNotifierProvider).maybeNotify(ass, enabled: enabled);
     return ass;
   }
 }
@@ -53,6 +55,8 @@ class TomorrowRiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     final ctx = await builder.build(now: now, target: tomorrow);
     final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.tomorrow);
     await ref.read(assessmentRepoProvider).save(ass);
+    final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');
+    await ref.read(highRiskNotifierProvider).maybeNotify(ass, enabled: enabled);
     return ass;
   }
 }
