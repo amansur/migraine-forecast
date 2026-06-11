@@ -66,6 +66,14 @@ class Settings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+class NotificationsSent extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get targetDate => dateTime()();
+  TextColumn get horizon => text()(); // 'today' | 'tomorrow'
+  TextColumn get band => text()(); // 'high' | 'veryHigh'
+  DateTimeColumn get sentAt => dateTime()();
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -74,13 +82,22 @@ class Settings extends Table {
   UserTriggerFlagsTbl,
   RiskAssessments,
   Settings,
+  NotificationsSent,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) await m.createTable(notificationsSent);
+        },
+      );
 }
 
 QueryExecutor _openConnection() {
