@@ -33,6 +33,8 @@ dependencies:
   domain:
     path: packages/domain
   drift: ^2.18.0
+  drift_flutter: ^0.2.0
+  sqlite3: ^2.4.0
   sqlite3_flutter_libs: ^0.5.0
   path: ^1.9.0
   path_provider: ^2.1.0

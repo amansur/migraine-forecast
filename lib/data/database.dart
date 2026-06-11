@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:drift_flutter/drift_flutter.dart';
+import 'native_database.dart'
+    if (dart.library.js_interop) 'native_database_web.dart';
 
 part 'database.g.dart';
 
@@ -78,16 +77,20 @@ class Settings extends Table {
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
-  AppDatabase.memory() : super(NativeDatabase.memory());
+  AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
   int get schemaVersion => 1;
 }
 
-LazyDatabase _openConnection() => LazyDatabase(() async {
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dbFolder.path, 'migraine_weatherr.sqlite'));
-      return NativeDatabase.createInBackground(file);
-    });
+QueryExecutor _openConnection() {
+  return driftDatabase(
+    name: 'migraine_weatherr',
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
+    ),
+  );
+}
 
 AppDatabase openAppDatabase() => AppDatabase(_openConnection());
