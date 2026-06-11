@@ -49,6 +49,16 @@ class WeatherSeries extends Equatable {
     return max - min;
   }
 
+  /// Returns last - first temperature within [window] of the latest sample.
+  /// Positive = warming, negative = cooling.
+  double? tempTrendInLast(Duration window) {
+    if (samples.isEmpty) return null;
+    final cutoff = samples.last.at.subtract(window);
+    final inWindow = samples.where((s) => !s.at.isBefore(cutoff)).toList();
+    if (inWindow.length < 2) return null;
+    return inWindow.last.temperatureC - inWindow.first.temperatureC;
+  }
+
   /// Maximum humidity value across the next [window] starting from [from].
   double? maxHumidityFrom(DateTime from, Duration window) {
     final inWindow = samples.where(

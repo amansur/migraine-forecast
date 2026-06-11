@@ -36,6 +36,8 @@ class HumidityTempSwingModule implements TriggerModule {
         missing: DataRequirement.weatherHumidity,
       );
     }
+    final trend = ctx.weather!.tempTrendInLast(const Duration(hours: 24));
+    final direction = trend == null ? '' : trend > 0 ? ', warming' : ', cooling';
     final humidOk = maxHumidity > humidityPct;
     final swingOk = swing >= tempDeltaC;
     if (!humidOk || !swingOk) {
@@ -43,7 +45,7 @@ class HumidityTempSwingModule implements TriggerModule {
         moduleId: id,
         weight: 0,
         confidence: 1.0,
-        explanation: 'Humidity ${maxHumidity.toStringAsFixed(0)}%, swing ${swing.toStringAsFixed(1)}°C',
+        explanation: 'Humidity ${maxHumidity.toStringAsFixed(0)}%, 24h swing ${swing.toStringAsFixed(1)}°ΔC$direction',
       );
     }
     return TriggerSignal(
@@ -51,7 +53,7 @@ class HumidityTempSwingModule implements TriggerModule {
       weight: params.weightMax,
       confidence: 1.0,
       explanation:
-          'Humid (${maxHumidity.toStringAsFixed(0)}%) with ${swing.toStringAsFixed(1)}°C swing',
+          'Humid (${maxHumidity.toStringAsFixed(0)}%), 24h swing ${swing.toStringAsFixed(1)}°ΔC$direction',
     );
   }
 }
