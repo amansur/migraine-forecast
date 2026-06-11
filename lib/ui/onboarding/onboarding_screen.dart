@@ -7,15 +7,16 @@ import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
 import '../../state/trigger_flags_provider.dart';
 
-/// User-facing labels for the multi-select. Each maps to a module ID.
-const _triggerOptions = <String, String>{
-  'Stress': 'stress',
-  'Sleep': 'sleep_deficit',
-  'Weather': 'pressure_drop',
-  'Hormones': 'menstrual_phase',
-  'Alcohol': 'alcohol',
-  'Caffeine': 'caffeine',
-  'Dehydration': 'hydration',
+/// User-facing labels for the multi-select. Each maps to one or more module IDs;
+/// a single chip can stand in for a family of related modules.
+const _triggerOptions = <String, List<String>>{
+  'Stress': ['stress'],
+  'Sleep': ['sleep_deficit'],
+  'Weather': ['pressure_drop', 'humidity', 'temp_swing'],
+  'Hormones': ['menstrual_phase'],
+  'Alcohol': ['alcohol'],
+  'Caffeine': ['caffeine'],
+  'Dehydration': ['hydration'],
 };
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -52,13 +53,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: _triggerOptions.entries.map((e) {
-                      final selected = _selected.contains(e.value);
+                    children: _triggerOptions.keys.map((label) {
+                      final selected = _selected.contains(label);
                       return FilterChip(
-                        label: Text(e.key),
+                        label: Text(label),
                         selected: selected,
                         onSelected: (v) => setState(() {
-                          v ? _selected.add(e.value) : _selected.remove(e.value);
+                          v ? _selected.add(label) : _selected.remove(label);
                         }),
                       );
                     }).toList(),
@@ -88,7 +89,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     await ref.read(permissionServiceProvider).requestLocation();
     final saveFlags = ref.read(saveTriggerFlagsProvider);
-    await saveFlags(UserTriggerFlags(flaggedModuleIds: Set.of(_selected)));
+    final moduleIds = <String>{
+      for (final label in _selected) ...?_triggerOptions[label],
+    };
+    await saveFlags(UserTriggerFlags(flaggedModuleIds: moduleIds));
     final markDone = ref.read(markOnboardingCompletedProvider);
     await markDone();
     if (mounted) context.go('/today');
