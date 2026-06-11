@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../state/onboarding_provider.dart';
+import '../ui/insights/insights_screen.dart';
 import '../ui/log/log_attack_screen.dart';
 import '../ui/onboarding/onboarding_screen.dart';
 import '../ui/settings/settings_screen.dart';
@@ -21,6 +22,7 @@ GoRouter buildRouter(WidgetRef ref) {
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/today', builder: (_, __) => const TodayScreen()),
       GoRoute(path: '/log', builder: (_, __) => const LogAttackScreen()),
+      GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     ],
   );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../state/insights_eligibility_provider.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import 'contributor_chip.dart';
@@ -19,6 +20,14 @@ class TodayScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Today'),
         actions: [
+          Consumer(builder: (context, ref, _) {
+            final eligible = ref.watch(insightsEligibleProvider).asData?.value ?? false;
+            if (!eligible) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: () => context.push('/insights'),
+              icon: const Icon(Icons.insights_outlined),
+            );
+          }),
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings_outlined),
