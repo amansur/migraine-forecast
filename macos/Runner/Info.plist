@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Migraine Weatherr uses your location to fetch local weather and air quality data for your risk score.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Migraine Weatherr uses your location to fetch local weather and air quality data for your risk score.</string>
 </dict>
 </plist>
