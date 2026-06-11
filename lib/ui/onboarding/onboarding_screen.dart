@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../state/onboarding_provider.dart';
+import '../../state/providers.dart';
 import '../../state/trigger_flags_provider.dart';
 
 /// User-facing labels for the multi-select. Each maps to a module ID.
@@ -85,6 +86,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    await ref.read(permissionServiceProvider).requestLocation();
     final saveFlags = ref.read(saveTriggerFlagsProvider);
     await saveFlags(UserTriggerFlags(flaggedModuleIds: Set.of(_selected)));
     final markDone = ref.read(markOnboardingCompletedProvider);

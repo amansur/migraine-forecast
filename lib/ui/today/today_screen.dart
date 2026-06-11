@@ -50,7 +50,7 @@ class TodayScreen extends ConsumerWidget {
               ),
               data: (a) {
                 if (a.isOnboarding) {
-                  return _OnboardingCard(onSetup: () => context.go('/settings'));
+                  return _OnboardingCard(onSetup: () => context.push('/settings'));
                 }
                 final contributing = a.contributors.where((c) => c.contribution > 0).take(4).toList();
                 return Column(
