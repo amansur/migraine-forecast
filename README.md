@@ -7,7 +7,7 @@ A Flutter app that predicts daily migraine risk from evidence-backed triggers (b
 - **Plan 1** — Pure-Dart domain core (engine + 11 trigger modules) ✓
 - **Plan 2** — Adapters + Drift storage (Open-Meteo, Health Connect / Apple Health, journal, location) ✓
 - **Plan 3** — Flutter MVP (Onboarding, Today, Log, Settings) ✓
-- **Plan 4** — Background scheduling + notifications (+ web sqlite3 fix) — not started
+- **Plan 4** — Background scheduling + notifications (+ web sqlite3 fix) ✓
 - **Plan 5** — Insights screen + correlation-driven personalization — not started
 
 ## Running locally
@@ -42,7 +42,7 @@ flutter run
 
 ### Web
 
-Currently broken — `sqlite3_flutter_libs` needs `sqlite3_web` + WASM bundling that isn't set up. Will be fixed in Plan 4.
+`flutter build web` works and serves the app. SQLite runs via WASM (the `sqlite3.wasm` + drift worker are bundled in `web/`). Limitations: the `health` plugin has no web implementation; geolocator on web requires HTTPS + browser permission; background notifications go through the browser's Push API which we don't wire in v1.
 
 ## Testing
 
