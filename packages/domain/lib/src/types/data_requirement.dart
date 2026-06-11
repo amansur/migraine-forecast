@@ -7,7 +7,8 @@ class DataRequirement extends Equatable {
   const DataRequirement({required this.id, required this.label});
 
   static const weatherPressure   = DataRequirement(id: 'weather.pressure',   label: 'Weather (pressure)');
-  static const weatherHumidity   = DataRequirement(id: 'weather.humidity',   label: 'Weather (humidity)');
+  static const weatherHumidity    = DataRequirement(id: 'weather.humidity',    label: 'Weather (humidity)');
+  static const weatherTemperature = DataRequirement(id: 'weather.temperature', label: 'Weather (temperature)');
   static const weatherAirQuality = DataRequirement(id: 'weather.air_quality', label: 'Air quality');
   static const healthSleep       = DataRequirement(id: 'health.sleep',       label: 'Sleep data');
   static const healthHrv         = DataRequirement(id: 'health.hrv',         label: 'HRV data');

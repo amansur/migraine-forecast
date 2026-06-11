@@ -10,7 +10,8 @@ void main() {
 
     final engine = RiskEngine(modules: [
       PressureDropModule(),
-      HumidityTempSwingModule(),
+      HumidityModule(),
+      TempSwingModule(),
       AirQualityModule(),
       SleepDeficitModule(),
       HrvLetdownModule(),

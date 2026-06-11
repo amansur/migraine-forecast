@@ -35,7 +35,7 @@ void main() {
 
     test('clear negative correlation produces a miss', () {
       final input = ModuleCohort(
-        moduleId: 'humidity_temp_swing',
+        moduleId: 'humidity',
         daysFiredWithAttack: 0,
         daysFiredTotal: 20,
         daysNotFiredWithAttack: 8,
