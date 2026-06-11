@@ -19,10 +19,11 @@ void main() {
           baselines: BaselineSnapshot.empty,
         );
 
-    test('no attacks -> no contribution, full confidence', () {
+    test('no attacks (no history) -> zero confidence, onboarding signal', () {
       final s = module.evaluate(withAttacks(const []), params);
       expect(s.weight, 0);
-      expect(s.confidence, 1.0);
+      expect(s.confidence, 0);
+      expect(s.missing, DataRequirement.attackHistory);
     });
 
     test('attack within suppression window -> weight 0', () {

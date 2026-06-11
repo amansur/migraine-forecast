@@ -15,11 +15,10 @@ class RefractoryModule implements TriggerModule {
   @override
   TriggerSignal evaluate(EvaluationContext ctx, ModuleParams params) {
     if (ctx.recentAttacks.isEmpty) {
-      return TriggerSignal(
+      return TriggerSignal.zero(
         moduleId: id,
-        weight: 0,
-        confidence: 1.0,
-        explanation: 'No recent attacks',
+        reason: 'No attack history',
+        missing: DataRequirement.attackHistory,
       );
     }
     final suppressionHours = params.getInt('suppression_hours', 48);
