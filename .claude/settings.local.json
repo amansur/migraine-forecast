@@ -8,7 +8,8 @@
       "Bash(git -C /Users/amansur/projects/migraine-weatherr log --oneline -3)",
       "Bash(git add *)",
       "Bash(git *)",
-      "Bash(dart test *)"
+      "Bash(dart test *)",
+      "Bash(flutter test *)"
     ]
   }
 }
