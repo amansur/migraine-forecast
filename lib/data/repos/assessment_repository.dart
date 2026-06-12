@@ -28,6 +28,7 @@ class AssessmentRepository {
                       'explanation': c.explanation,
                     })
                 .toList()),
+            backfilled: Value(ass.backfilled),
           ),
         );
   }
@@ -99,6 +100,7 @@ class AssessmentRepository {
       configVersion: row.configVersion as int,
       targetDate: (row.targetDate as DateTime).toUtc(),
       horizon: RiskHorizon.values.firstWhere((h) => h.name == row.horizon),
+      backfilled: row.backfilled as bool,
     );
   }
 }

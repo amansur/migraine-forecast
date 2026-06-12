@@ -65,6 +65,24 @@ void main() {
     final active = await repo.activeAt(DateTime.utc(2026, 6, 10, 20));
     expect(active?.score, 60);
   });
+
+  test('persists and reads back RiskAssessment.backfilled', () async {
+    final target = DateTime.utc(2026, 6, 1);
+    await repo.save(RiskAssessment(
+      score: 42,
+      band: RiskBand.moderate,
+      contributors: const [],
+      computedAt: DateTime.utc(2026, 6, 1, 12),
+      configVersion: 1,
+      targetDate: target,
+      horizon: RiskHorizon.today,
+      backfilled: true,
+    ));
+
+    final loaded = await repo.latestForDate(target: target, horizon: RiskHorizon.today);
+    expect(loaded, isNotNull);
+    expect(loaded!.backfilled, isTrue);
+  });
 }
 
 extension on RiskAssessment {
