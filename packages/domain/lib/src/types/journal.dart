@@ -20,7 +20,13 @@ class Attack extends Equatable {
   final DateTime startedAt;
   final DateTime? endedAt;
   final int severity; // 1..10
-  const Attack({required this.startedAt, this.endedAt, required this.severity});
+  final bool inProgress;
+  const Attack({
+    required this.startedAt,
+    this.endedAt,
+    required this.severity,
+    this.inProgress = false,
+  });
   @override
-  List<Object?> get props => [startedAt, endedAt, severity];
+  List<Object?> get props => [startedAt, endedAt, severity, inProgress];
 }
