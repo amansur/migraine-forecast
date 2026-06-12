@@ -9,12 +9,24 @@ class ContributorChip extends ConsumerWidget {
   final TriggerSignal signal;
   const ContributorChip({super.key, required this.signal});
 
+  IconData _directionIcon(String explanation) {
+    final lower = explanation.toLowerCase();
+    if (lower.contains('cooling') || lower.contains('dropping') || lower.contains('deficit') || lower.contains('low')) {
+      return Icons.trending_down;
+    }
+    if (lower.contains('warming') || lower.contains('rising')) {
+      return Icons.trending_up;
+    }
+    return Icons.trending_flat;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formatter = ref.watch(unitFormatterProvider).asData?.value ?? const UnitFormatter();
+    final formatted = formatter.formatExplanation(signal.explanation);
     return Chip(
-      avatar: const Icon(Icons.trending_up, size: 16),
-      label: SelectableText(formatter.formatExplanation(signal.explanation)),
+      avatar: Icon(_directionIcon(formatted), size: 16),
+      label: SelectableText(formatted),
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
