@@ -74,6 +74,21 @@ class $AttacksTable extends Attacks with TableInfo<$AttacksTable, Attack> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _inProgressMeta = const VerificationMeta(
+    'inProgress',
+  );
+  @override
+  late final GeneratedColumn<bool> inProgress = GeneratedColumn<bool>(
+    'in_progress',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("in_progress" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -82,6 +97,7 @@ class $AttacksTable extends Attacks with TableInfo<$AttacksTable, Attack> {
     severity,
     notes,
     riskAssessmentId,
+    inProgress,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -135,6 +151,12 @@ class $AttacksTable extends Attacks with TableInfo<$AttacksTable, Attack> {
         ),
       );
     }
+    if (data.containsKey('in_progress')) {
+      context.handle(
+        _inProgressMeta,
+        inProgress.isAcceptableOrUnknown(data['in_progress']!, _inProgressMeta),
+      );
+    }
     return context;
   }
 
@@ -168,6 +190,10 @@ class $AttacksTable extends Attacks with TableInfo<$AttacksTable, Attack> {
         DriftSqlType.int,
         data['${effectivePrefix}risk_assessment_id'],
       ),
+      inProgress: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}in_progress'],
+      )!,
     );
   }
 
@@ -184,6 +210,7 @@ class Attack extends DataClass implements Insertable<Attack> {
   final int severity;
   final String? notes;
   final int? riskAssessmentId;
+  final bool inProgress;
   const Attack({
     required this.id,
     required this.startedAt,
@@ -191,6 +218,7 @@ class Attack extends DataClass implements Insertable<Attack> {
     required this.severity,
     this.notes,
     this.riskAssessmentId,
+    required this.inProgress,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -207,6 +235,7 @@ class Attack extends DataClass implements Insertable<Attack> {
     if (!nullToAbsent || riskAssessmentId != null) {
       map['risk_assessment_id'] = Variable<int>(riskAssessmentId);
     }
+    map['in_progress'] = Variable<bool>(inProgress);
     return map;
   }
 
@@ -224,6 +253,7 @@ class Attack extends DataClass implements Insertable<Attack> {
       riskAssessmentId: riskAssessmentId == null && nullToAbsent
           ? const Value.absent()
           : Value(riskAssessmentId),
+      inProgress: Value(inProgress),
     );
   }
 
@@ -239,6 +269,7 @@ class Attack extends DataClass implements Insertable<Attack> {
       severity: serializer.fromJson<int>(json['severity']),
       notes: serializer.fromJson<String?>(json['notes']),
       riskAssessmentId: serializer.fromJson<int?>(json['riskAssessmentId']),
+      inProgress: serializer.fromJson<bool>(json['inProgress']),
     );
   }
   @override
@@ -251,6 +282,7 @@ class Attack extends DataClass implements Insertable<Attack> {
       'severity': serializer.toJson<int>(severity),
       'notes': serializer.toJson<String?>(notes),
       'riskAssessmentId': serializer.toJson<int?>(riskAssessmentId),
+      'inProgress': serializer.toJson<bool>(inProgress),
     };
   }
 
@@ -261,6 +293,7 @@ class Attack extends DataClass implements Insertable<Attack> {
     int? severity,
     Value<String?> notes = const Value.absent(),
     Value<int?> riskAssessmentId = const Value.absent(),
+    bool? inProgress,
   }) => Attack(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -270,6 +303,7 @@ class Attack extends DataClass implements Insertable<Attack> {
     riskAssessmentId: riskAssessmentId.present
         ? riskAssessmentId.value
         : this.riskAssessmentId,
+    inProgress: inProgress ?? this.inProgress,
   );
   Attack copyWithCompanion(AttacksCompanion data) {
     return Attack(
@@ -281,6 +315,9 @@ class Attack extends DataClass implements Insertable<Attack> {
       riskAssessmentId: data.riskAssessmentId.present
           ? data.riskAssessmentId.value
           : this.riskAssessmentId,
+      inProgress: data.inProgress.present
+          ? data.inProgress.value
+          : this.inProgress,
     );
   }
 
@@ -292,14 +329,22 @@ class Attack extends DataClass implements Insertable<Attack> {
           ..write('endedAt: $endedAt, ')
           ..write('severity: $severity, ')
           ..write('notes: $notes, ')
-          ..write('riskAssessmentId: $riskAssessmentId')
+          ..write('riskAssessmentId: $riskAssessmentId, ')
+          ..write('inProgress: $inProgress')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, startedAt, endedAt, severity, notes, riskAssessmentId);
+  int get hashCode => Object.hash(
+    id,
+    startedAt,
+    endedAt,
+    severity,
+    notes,
+    riskAssessmentId,
+    inProgress,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -309,7 +354,8 @@ class Attack extends DataClass implements Insertable<Attack> {
           other.endedAt == this.endedAt &&
           other.severity == this.severity &&
           other.notes == this.notes &&
-          other.riskAssessmentId == this.riskAssessmentId);
+          other.riskAssessmentId == this.riskAssessmentId &&
+          other.inProgress == this.inProgress);
 }
 
 class AttacksCompanion extends UpdateCompanion<Attack> {
@@ -319,6 +365,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
   final Value<int> severity;
   final Value<String?> notes;
   final Value<int?> riskAssessmentId;
+  final Value<bool> inProgress;
   const AttacksCompanion({
     this.id = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -326,6 +373,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
     this.severity = const Value.absent(),
     this.notes = const Value.absent(),
     this.riskAssessmentId = const Value.absent(),
+    this.inProgress = const Value.absent(),
   });
   AttacksCompanion.insert({
     this.id = const Value.absent(),
@@ -334,6 +382,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
     required int severity,
     this.notes = const Value.absent(),
     this.riskAssessmentId = const Value.absent(),
+    this.inProgress = const Value.absent(),
   }) : startedAt = Value(startedAt),
        severity = Value(severity);
   static Insertable<Attack> custom({
@@ -343,6 +392,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
     Expression<int>? severity,
     Expression<String>? notes,
     Expression<int>? riskAssessmentId,
+    Expression<bool>? inProgress,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -351,6 +401,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
       if (severity != null) 'severity': severity,
       if (notes != null) 'notes': notes,
       if (riskAssessmentId != null) 'risk_assessment_id': riskAssessmentId,
+      if (inProgress != null) 'in_progress': inProgress,
     });
   }
 
@@ -361,6 +412,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
     Value<int>? severity,
     Value<String?>? notes,
     Value<int?>? riskAssessmentId,
+    Value<bool>? inProgress,
   }) {
     return AttacksCompanion(
       id: id ?? this.id,
@@ -369,6 +421,7 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
       severity: severity ?? this.severity,
       notes: notes ?? this.notes,
       riskAssessmentId: riskAssessmentId ?? this.riskAssessmentId,
+      inProgress: inProgress ?? this.inProgress,
     );
   }
 
@@ -393,6 +446,9 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
     if (riskAssessmentId.present) {
       map['risk_assessment_id'] = Variable<int>(riskAssessmentId.value);
     }
+    if (inProgress.present) {
+      map['in_progress'] = Variable<bool>(inProgress.value);
+    }
     return map;
   }
 
@@ -404,7 +460,8 @@ class AttacksCompanion extends UpdateCompanion<Attack> {
           ..write('endedAt: $endedAt, ')
           ..write('severity: $severity, ')
           ..write('notes: $notes, ')
-          ..write('riskAssessmentId: $riskAssessmentId')
+          ..write('riskAssessmentId: $riskAssessmentId, ')
+          ..write('inProgress: $inProgress')
           ..write(')'))
         .toString();
   }
@@ -1749,6 +1806,21 @@ class $RiskAssessmentsTable extends RiskAssessments
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _backfilledMeta = const VerificationMeta(
+    'backfilled',
+  );
+  @override
+  late final GeneratedColumn<bool> backfilled = GeneratedColumn<bool>(
+    'backfilled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("backfilled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1759,6 +1831,7 @@ class $RiskAssessmentsTable extends RiskAssessments
     computedAt,
     configVersion,
     contributorsJson,
+    backfilled,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1837,6 +1910,12 @@ class $RiskAssessmentsTable extends RiskAssessments
     } else if (isInserting) {
       context.missing(_contributorsJsonMeta);
     }
+    if (data.containsKey('backfilled')) {
+      context.handle(
+        _backfilledMeta,
+        backfilled.isAcceptableOrUnknown(data['backfilled']!, _backfilledMeta),
+      );
+    }
     return context;
   }
 
@@ -1878,6 +1957,10 @@ class $RiskAssessmentsTable extends RiskAssessments
         DriftSqlType.string,
         data['${effectivePrefix}contributors_json'],
       )!,
+      backfilled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}backfilled'],
+      )!,
     );
   }
 
@@ -1896,6 +1979,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
   final DateTime computedAt;
   final int configVersion;
   final String contributorsJson;
+  final bool backfilled;
   const RiskAssessment({
     required this.id,
     required this.targetDate,
@@ -1905,6 +1989,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     required this.computedAt,
     required this.configVersion,
     required this.contributorsJson,
+    required this.backfilled,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1917,6 +2002,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     map['computed_at'] = Variable<DateTime>(computedAt);
     map['config_version'] = Variable<int>(configVersion);
     map['contributors_json'] = Variable<String>(contributorsJson);
+    map['backfilled'] = Variable<bool>(backfilled);
     return map;
   }
 
@@ -1930,6 +2016,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       computedAt: Value(computedAt),
       configVersion: Value(configVersion),
       contributorsJson: Value(contributorsJson),
+      backfilled: Value(backfilled),
     );
   }
 
@@ -1947,6 +2034,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       computedAt: serializer.fromJson<DateTime>(json['computedAt']),
       configVersion: serializer.fromJson<int>(json['configVersion']),
       contributorsJson: serializer.fromJson<String>(json['contributorsJson']),
+      backfilled: serializer.fromJson<bool>(json['backfilled']),
     );
   }
   @override
@@ -1961,6 +2049,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       'computedAt': serializer.toJson<DateTime>(computedAt),
       'configVersion': serializer.toJson<int>(configVersion),
       'contributorsJson': serializer.toJson<String>(contributorsJson),
+      'backfilled': serializer.toJson<bool>(backfilled),
     };
   }
 
@@ -1973,6 +2062,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     DateTime? computedAt,
     int? configVersion,
     String? contributorsJson,
+    bool? backfilled,
   }) => RiskAssessment(
     id: id ?? this.id,
     targetDate: targetDate ?? this.targetDate,
@@ -1982,6 +2072,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     computedAt: computedAt ?? this.computedAt,
     configVersion: configVersion ?? this.configVersion,
     contributorsJson: contributorsJson ?? this.contributorsJson,
+    backfilled: backfilled ?? this.backfilled,
   );
   RiskAssessment copyWithCompanion(RiskAssessmentsCompanion data) {
     return RiskAssessment(
@@ -2001,6 +2092,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       contributorsJson: data.contributorsJson.present
           ? data.contributorsJson.value
           : this.contributorsJson,
+      backfilled: data.backfilled.present
+          ? data.backfilled.value
+          : this.backfilled,
     );
   }
 
@@ -2014,7 +2108,8 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
           ..write('band: $band, ')
           ..write('computedAt: $computedAt, ')
           ..write('configVersion: $configVersion, ')
-          ..write('contributorsJson: $contributorsJson')
+          ..write('contributorsJson: $contributorsJson, ')
+          ..write('backfilled: $backfilled')
           ..write(')'))
         .toString();
   }
@@ -2029,6 +2124,7 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     computedAt,
     configVersion,
     contributorsJson,
+    backfilled,
   );
   @override
   bool operator ==(Object other) =>
@@ -2041,7 +2137,8 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
           other.band == this.band &&
           other.computedAt == this.computedAt &&
           other.configVersion == this.configVersion &&
-          other.contributorsJson == this.contributorsJson);
+          other.contributorsJson == this.contributorsJson &&
+          other.backfilled == this.backfilled);
 }
 
 class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
@@ -2053,6 +2150,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
   final Value<DateTime> computedAt;
   final Value<int> configVersion;
   final Value<String> contributorsJson;
+  final Value<bool> backfilled;
   const RiskAssessmentsCompanion({
     this.id = const Value.absent(),
     this.targetDate = const Value.absent(),
@@ -2062,6 +2160,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     this.computedAt = const Value.absent(),
     this.configVersion = const Value.absent(),
     this.contributorsJson = const Value.absent(),
+    this.backfilled = const Value.absent(),
   });
   RiskAssessmentsCompanion.insert({
     this.id = const Value.absent(),
@@ -2072,6 +2171,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     required DateTime computedAt,
     required int configVersion,
     required String contributorsJson,
+    this.backfilled = const Value.absent(),
   }) : targetDate = Value(targetDate),
        horizon = Value(horizon),
        score = Value(score),
@@ -2088,6 +2188,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     Expression<DateTime>? computedAt,
     Expression<int>? configVersion,
     Expression<String>? contributorsJson,
+    Expression<bool>? backfilled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2098,6 +2199,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
       if (computedAt != null) 'computed_at': computedAt,
       if (configVersion != null) 'config_version': configVersion,
       if (contributorsJson != null) 'contributors_json': contributorsJson,
+      if (backfilled != null) 'backfilled': backfilled,
     });
   }
 
@@ -2110,6 +2212,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     Value<DateTime>? computedAt,
     Value<int>? configVersion,
     Value<String>? contributorsJson,
+    Value<bool>? backfilled,
   }) {
     return RiskAssessmentsCompanion(
       id: id ?? this.id,
@@ -2120,6 +2223,7 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
       computedAt: computedAt ?? this.computedAt,
       configVersion: configVersion ?? this.configVersion,
       contributorsJson: contributorsJson ?? this.contributorsJson,
+      backfilled: backfilled ?? this.backfilled,
     );
   }
 
@@ -2150,6 +2254,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     if (contributorsJson.present) {
       map['contributors_json'] = Variable<String>(contributorsJson.value);
     }
+    if (backfilled.present) {
+      map['backfilled'] = Variable<bool>(backfilled.value);
+    }
     return map;
   }
 
@@ -2163,7 +2270,8 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
           ..write('band: $band, ')
           ..write('computedAt: $computedAt, ')
           ..write('configVersion: $configVersion, ')
-          ..write('contributorsJson: $contributorsJson')
+          ..write('contributorsJson: $contributorsJson, ')
+          ..write('backfilled: $backfilled')
           ..write(')'))
         .toString();
   }
@@ -2764,6 +2872,7 @@ typedef $$AttacksTableCreateCompanionBuilder =
       required int severity,
       Value<String?> notes,
       Value<int?> riskAssessmentId,
+      Value<bool> inProgress,
     });
 typedef $$AttacksTableUpdateCompanionBuilder =
     AttacksCompanion Function({
@@ -2773,6 +2882,7 @@ typedef $$AttacksTableUpdateCompanionBuilder =
       Value<int> severity,
       Value<String?> notes,
       Value<int?> riskAssessmentId,
+      Value<bool> inProgress,
     });
 
 class $$AttacksTableFilterComposer
@@ -2811,6 +2921,11 @@ class $$AttacksTableFilterComposer
 
   ColumnFilters<int> get riskAssessmentId => $composableBuilder(
     column: $table.riskAssessmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get inProgress => $composableBuilder(
+    column: $table.inProgress,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2853,6 +2968,11 @@ class $$AttacksTableOrderingComposer
     column: $table.riskAssessmentId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get inProgress => $composableBuilder(
+    column: $table.inProgress,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AttacksTableAnnotationComposer
@@ -2881,6 +3001,11 @@ class $$AttacksTableAnnotationComposer
 
   GeneratedColumn<int> get riskAssessmentId => $composableBuilder(
     column: $table.riskAssessmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get inProgress => $composableBuilder(
+    column: $table.inProgress,
     builder: (column) => column,
   );
 }
@@ -2919,6 +3044,7 @@ class $$AttacksTableTableManager
                 Value<int> severity = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int?> riskAssessmentId = const Value.absent(),
+                Value<bool> inProgress = const Value.absent(),
               }) => AttacksCompanion(
                 id: id,
                 startedAt: startedAt,
@@ -2926,6 +3052,7 @@ class $$AttacksTableTableManager
                 severity: severity,
                 notes: notes,
                 riskAssessmentId: riskAssessmentId,
+                inProgress: inProgress,
               ),
           createCompanionCallback:
               ({
@@ -2935,6 +3062,7 @@ class $$AttacksTableTableManager
                 required int severity,
                 Value<String?> notes = const Value.absent(),
                 Value<int?> riskAssessmentId = const Value.absent(),
+                Value<bool> inProgress = const Value.absent(),
               }) => AttacksCompanion.insert(
                 id: id,
                 startedAt: startedAt,
@@ -2942,6 +3070,7 @@ class $$AttacksTableTableManager
                 severity: severity,
                 notes: notes,
                 riskAssessmentId: riskAssessmentId,
+                inProgress: inProgress,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3719,6 +3848,7 @@ typedef $$RiskAssessmentsTableCreateCompanionBuilder =
       required DateTime computedAt,
       required int configVersion,
       required String contributorsJson,
+      Value<bool> backfilled,
     });
 typedef $$RiskAssessmentsTableUpdateCompanionBuilder =
     RiskAssessmentsCompanion Function({
@@ -3730,6 +3860,7 @@ typedef $$RiskAssessmentsTableUpdateCompanionBuilder =
       Value<DateTime> computedAt,
       Value<int> configVersion,
       Value<String> contributorsJson,
+      Value<bool> backfilled,
     });
 
 class $$RiskAssessmentsTableFilterComposer
@@ -3778,6 +3909,11 @@ class $$RiskAssessmentsTableFilterComposer
 
   ColumnFilters<String> get contributorsJson => $composableBuilder(
     column: $table.contributorsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get backfilled => $composableBuilder(
+    column: $table.backfilled,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3830,6 +3966,11 @@ class $$RiskAssessmentsTableOrderingComposer
     column: $table.contributorsJson,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get backfilled => $composableBuilder(
+    column: $table.backfilled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RiskAssessmentsTableAnnotationComposer
@@ -3870,6 +4011,11 @@ class $$RiskAssessmentsTableAnnotationComposer
 
   GeneratedColumn<String> get contributorsJson => $composableBuilder(
     column: $table.contributorsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get backfilled => $composableBuilder(
+    column: $table.backfilled,
     builder: (column) => column,
   );
 }
@@ -3919,6 +4065,7 @@ class $$RiskAssessmentsTableTableManager
                 Value<DateTime> computedAt = const Value.absent(),
                 Value<int> configVersion = const Value.absent(),
                 Value<String> contributorsJson = const Value.absent(),
+                Value<bool> backfilled = const Value.absent(),
               }) => RiskAssessmentsCompanion(
                 id: id,
                 targetDate: targetDate,
@@ -3928,6 +4075,7 @@ class $$RiskAssessmentsTableTableManager
                 computedAt: computedAt,
                 configVersion: configVersion,
                 contributorsJson: contributorsJson,
+                backfilled: backfilled,
               ),
           createCompanionCallback:
               ({
@@ -3939,6 +4087,7 @@ class $$RiskAssessmentsTableTableManager
                 required DateTime computedAt,
                 required int configVersion,
                 required String contributorsJson,
+                Value<bool> backfilled = const Value.absent(),
               }) => RiskAssessmentsCompanion.insert(
                 id: id,
                 targetDate: targetDate,
@@ -3948,6 +4097,7 @@ class $$RiskAssessmentsTableTableManager
                 computedAt: computedAt,
                 configVersion: configVersion,
                 contributorsJson: contributorsJson,
+                backfilled: backfilled,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

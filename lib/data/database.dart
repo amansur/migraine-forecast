@@ -12,6 +12,7 @@ class Attacks extends Table {
   IntColumn get severity => integer()();
   TextColumn get notes => text().nullable()();
   IntColumn get riskAssessmentId => integer().nullable()();
+  BoolColumn get inProgress => boolean().withDefault(const Constant(false))();
 }
 
 class JournalEntries extends Table {
@@ -57,6 +58,7 @@ class RiskAssessments extends Table {
   DateTimeColumn get computedAt => dateTime()();
   IntColumn get configVersion => integer()();
   TextColumn get contributorsJson => text()();
+  BoolColumn get backfilled => boolean().withDefault(const Constant(false))();
 }
 
 class Settings extends Table {
@@ -89,13 +91,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async => m.createAll(),
         onUpgrade: (m, from, to) async {
           if (from < 2) await m.createTable(notificationsSent);
+          if (from < 3) {
+            await m.addColumn(attacks, attacks.inProgress);
+            await m.addColumn(riskAssessments, riskAssessments.backfilled);
+          }
         },
       );
 }
