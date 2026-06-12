@@ -38,20 +38,36 @@ period dates — the user only logs what they can observe.
 
 ## Data model
 
+Two records. A `PeriodEvent` defines the span (start, end, baseline severity).
+Optional `PeriodDaySeverity` overrides let the user record day-to-day variation
+without forcing daily logging.
+
 ### `PeriodEvent`
 
 A new persistent record, stored alongside `Attack` records in the journal
 source.
 
-| Field       | Type      | Notes                                                                                        |
-|-------------|-----------|----------------------------------------------------------------------------------------------|
-| `startedAt` | `DateTime`| UTC. Primary key (same convention as `Attack.startedAt`).                                    |
-| `endedAt`   | `DateTime?` | UTC. Null while the period is in progress, mirroring the existing in-progress-attack pattern. |
-| `severity`  | `int`     | 1–10. Same scale as migraine severity, for consistency.                                      |
+| Field             | Type        | Notes                                                                                        |
+|-------------------|-------------|----------------------------------------------------------------------------------------------|
+| `startedAt`       | `DateTime`  | UTC. Primary key (same convention as `Attack.startedAt`).                                    |
+| `endedAt`         | `DateTime?` | UTC. Null while the period is in progress, mirroring the existing in-progress-attack pattern. |
+| `baselineSeverity`| `int`       | 1–10. Same scale as migraine severity. Captured once when the period is logged.              |
 
-No flow type, no symptoms — keep the model minimal. Severity is a single number
-the user enters when logging the period start; editable later from the
-day-detail sheet.
+### `PeriodDaySeverity`
+
+Optional per-day override for users who want to record day-to-day variation
+(e.g. heavy day 1, light day 4). Sparse by design — only days the user has
+explicitly adjusted get a row.
+
+| Field      | Type      | Notes                                                                              |
+|------------|-----------|------------------------------------------------------------------------------------|
+| `day`      | `DateTime`| UTC midnight. Primary key.                                                         |
+| `severity` | `int`     | 1–10. Overrides the parent `PeriodEvent.baselineSeverity` for this specific day.   |
+
+Effective severity for any day inside a period = `PeriodDaySeverity.severity`
+if one exists for that day, else the parent `PeriodEvent.baselineSeverity`.
+
+No flow type, no symptoms — keep the model minimal.
 
 ### Phase derivation (computed, never stored)
 
@@ -91,7 +107,7 @@ A second primary action button on the home screen, next to the existing "Log
 migraine" button.
 
 - Default label: **"Log period"** — tapping records a new `PeriodEvent` with
-  `startedAt = now`, no `endedAt`, prompts for severity.
+  `startedAt = now`, no `endedAt`, prompts for baseline severity.
 - If a period is currently in progress (most recent `PeriodEvent` has null
   `endedAt`), the label changes to **"End period"** — tapping sets `endedAt =
   now` on that event.
@@ -105,9 +121,14 @@ next to the existing "+ Add migraine" button:
 
 - "Mark period start" if no period overlaps this day.
 - "Mark period end" if a period started before this day and has no end yet.
-- Severity entry is part of the start flow.
+- Baseline severity entry is part of the start flow.
 
-This is the path for backfilling past periods.
+For a day already inside a logged period, the cycle row in the day-detail
+sheet becomes editable (see below) — tapping it lets the user record a
+`PeriodDaySeverity` override for just that day.
+
+This is the path for backfilling past periods and recording per-day
+variation.
 
 ## Insights screen changes
 
@@ -141,6 +162,14 @@ the top, above the existing "Risk Assessment" section:
 🩸 Cycle: Day 14 · Ovulatory
 ```
 
+When the day falls inside a logged period (menses phase), include the
+effective severity and make the row tappable to record or adjust a
+`PeriodDaySeverity` override:
+
+```
+🩸 Cycle: Day 2 · Menses · Severity 7 (tap to adjust)
+```
+
 If the phase is predicted (vs. confirmed), suffix with `(predicted)` or render
 slightly muted. If phase is unknown, the row is omitted entirely.
 
@@ -149,7 +178,8 @@ slightly muted. If phase is unknown, the row is omitted entirely.
 1. User logs a period (home screen button or heatmap day-tap) → `PeriodEvent`
    persisted to the journal source.
 2. A new `periodEventsProvider` watches the journal source and exposes the
-   ordered list of period events.
+   ordered list of period events. A companion `periodDaySeverityProvider`
+   exposes the sparse per-day overrides.
 3. A `cyclePhaseProvider` derives `(cycleLength, List<PhaseSpan>)` from the
    period events. Pure function, cached.
 4. The InsightsScreen reads `cyclePhaseProvider` for both:
