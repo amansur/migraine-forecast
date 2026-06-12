@@ -24,12 +24,8 @@ class AirQualityModule implements TriggerModule {
       );
     }
     final threshold = params.getDouble('pm25_threshold', 35);
-    final window = const Duration(hours: 24);
     final direction = directionFor(ctx);
-    final (start, end) = switch (direction) {
-      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
-      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
-    };
+    final (start, end) = windowFor(ctx, const Duration(hours: 24));
     final maxPm25 = aq.maxPm25InWindow(start, end);
     if (maxPm25 == null) {
       return TriggerSignal.zero(

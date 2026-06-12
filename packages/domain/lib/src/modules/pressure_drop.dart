@@ -25,12 +25,8 @@ class PressureDropModule implements TriggerModule {
       );
     }
     final thresholdHpa = params.getDouble('threshold_hpa', 5);
-    final window = const Duration(hours: 24);
     final direction = directionFor(ctx);
-    final (start, end) = switch (direction) {
-      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
-      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
-    };
+    final (start, end) = windowFor(ctx, const Duration(hours: 24));
     final drop = ctx.weather!.maxPressureDropInWindow(start, end);
     if (drop == null) {
       return TriggerSignal.zero(
