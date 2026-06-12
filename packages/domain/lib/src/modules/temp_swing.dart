@@ -35,10 +35,10 @@ class TempSwingModule implements TriggerModule {
     }
     final trend = ctx.weather!.tempTrendInWindow(start, end);
     final dirWord = trend == null ? '' : trend > 0 ? ', warming' : ', cooling';
-    final swingStr = swing.round();
+    final swingStr = swing.toStringAsFixed(1);
     final explanation = switch (direction) {
-      WindowDirection.past => 'Temp swung $swingStr°ΔC in last 24h$dirWord',
-      WindowDirection.future => 'Temp swing $swingStr°ΔC expected over next 24h$dirWord',
+      WindowDirection.past => 'Temperature swung $swingStr°ΔC in last 24h$dirWord',
+      WindowDirection.future => 'Temperature swing $swingStr°ΔC expected over next 24h$dirWord',
     };
     if (swing < threshold) {
       return TriggerSignal(moduleId: id, weight: 0, confidence: 1.0, explanation: explanation);

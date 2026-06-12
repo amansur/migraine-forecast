@@ -11,6 +11,7 @@ class UnitFormatter {
   });
 
   /// Converts °C/°ΔC and hPa values in a domain explanation string to the user's preferred units.
+  /// Temperatures are rounded to whole degrees for display; the underlying values keep full precision.
   String formatExplanation(String explanation) {
     var s = explanation;
     if (temperatureUnit == TemperatureUnit.fahrenheit) {
@@ -19,7 +20,7 @@ class UnitFormatter {
         RegExp(r'(-?\d+\.?\d*)°ΔC'),
         (m) {
           final c = double.parse(m.group(1)!);
-          return '${(c * 9 / 5).toStringAsFixed(1)}°F';
+          return '${(c * 9 / 5).round()}°F';
         },
       );
       // Absolute temperatures
@@ -27,12 +28,15 @@ class UnitFormatter {
         RegExp(r'(-?\d+\.?\d*)°C'),
         (m) {
           final c = double.parse(m.group(1)!);
-          return '${(c * 9 / 5 + 32).toStringAsFixed(1)}°F';
+          return '${(c * 9 / 5 + 32).round()}°F';
         },
       );
     } else {
-      // Strip the Δ marker for Celsius display
-      s = s.replaceAll('°ΔC', '°C');
+      // Round Celsius (delta or absolute) to whole degrees for display.
+      s = s.replaceAllMapped(
+        RegExp(r'(-?\d+\.?\d*)°(?:Δ)?C'),
+        (m) => '${double.parse(m.group(1)!).round()}°C',
+      );
     }
     if (pressureUnit == PressureUnit.mmhg) {
       s = s.replaceAllMapped(
@@ -50,9 +54,9 @@ class UnitFormatter {
   String formatTemperature(double celsius) {
     if (temperatureUnit == TemperatureUnit.fahrenheit) {
       final f = celsius * 9 / 5 + 32;
-      return '${f.toStringAsFixed(1)}°F';
+      return '${f.round()}°F';
     }
-    return '${celsius.toStringAsFixed(1)}°C';
+    return '${celsius.round()}°C';
   }
 
   String formatPressure(double hpa) {

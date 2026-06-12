@@ -39,7 +39,7 @@ void main() {
       ];
       final s = module.evaluate(withSamples(samples), params);
       expect(s.weight, 6);
-      expect(s.explanation, contains('Temp swung'));
+      expect(s.explanation, contains('Temperature swung'));
       expect(s.explanation, contains('in last 24h'));
       expect(s.explanation, contains('warming'));
     });
@@ -60,6 +60,7 @@ void main() {
         WeatherSample(at: now.add(const Duration(hours: 30)), pressureMsl: 1015, temperatureC: 17, humidityPct: 50),
       ];
       final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
+      expect(s.explanation, contains('Temperature swing'));
       expect(s.explanation, contains('expected over next 24h'));
       expect(s.explanation, contains('cooling'));
     });
