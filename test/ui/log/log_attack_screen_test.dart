@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import 'package:migraine_weatherr/data/sources/journal_source.dart';
 import 'package:migraine_weatherr/state/providers.dart';
+import 'package:migraine_weatherr/state/risk_assessment_provider.dart';
 import 'package:migraine_weatherr/ui/log/log_attack_screen.dart';
 
 class _RecordingJournal implements JournalSource {
@@ -33,6 +34,25 @@ class _RecordingJournal implements JournalSource {
     lastAttack = updated;
   }
 }
+
+class _MockRiskAssessmentNotifier extends RiskAssessmentNotifier {
+  @override
+  Future<RiskAssessment> build() async => _dummy();
+
+  @override
+  Future<RiskAssessment> backfill(DateTime target) async => _dummy(target: target);
+
+  RiskAssessment _dummy({DateTime? target}) => RiskAssessment(
+        score: 0,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.now(),
+        configVersion: 1,
+        targetDate: target ?? DateTime.now(),
+        horizon: RiskHorizon.today,
+      );
+}
+
 void main() {
   testWidgets('Submitting saves an attack via JournalSource', (tester) async {
     final journal = _RecordingJournal();
@@ -44,6 +64,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
           journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_MockRiskAssessmentNotifier.new),
         ],
         child: MaterialApp.router(
           routerConfig: GoRouter(routes: [
