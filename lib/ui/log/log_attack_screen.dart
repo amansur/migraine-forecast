@@ -8,13 +8,14 @@ import '../../state/risk_assessment_provider.dart';
 
 class LogAttackScreen extends ConsumerStatefulWidget {
   final Attack? initialAttack;
-  const LogAttackScreen({super.key, this.initialAttack});
+  final DateTime? initialDate;
+  const LogAttackScreen({super.key, this.initialAttack, this.initialDate});
   @override
   ConsumerState<LogAttackScreen> createState() => _LogAttackScreenState();
 }
 
 class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
-  late DateTime _start = widget.initialAttack?.startedAt ?? DateTime.now();
+  late DateTime _start = widget.initialAttack?.startedAt ?? widget.initialDate ?? DateTime.now();
   late DateTime? _end = widget.initialAttack?.endedAt;
   late double _severity = widget.initialAttack?.severity.toDouble() ?? 5;
   late final _notesCtrl = TextEditingController();

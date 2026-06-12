@@ -23,8 +23,14 @@ GoRouter buildRouter(WidgetRef ref) {
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/today', builder: (_, __) => const TodayScreen()),
       GoRoute(path: '/log', builder: (context, state) {
-        final initial = state.extra as Attack?;
-        return LogAttackScreen(initialAttack: initial);
+        final extra = state.extra;
+        if (extra is Attack) {
+          return LogAttackScreen(initialAttack: extra);
+        }
+        if (extra is DateTime) {
+          return LogAttackScreen(initialDate: extra);
+        }
+        return const LogAttackScreen();
       }),
       GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),

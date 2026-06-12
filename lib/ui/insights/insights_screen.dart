@@ -232,56 +232,70 @@ class _DayDetailSheet extends ConsumerWidget {
             const SizedBox(height: 8),
             attacks.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e'),
+              error: (e, _) => Text('Error loading attacks: $e'),
               data: (list) {
-                if (list.isEmpty) return const Text('No migraines logged on this day.');
                 return Column(
-                  children: list.map((a) {
-                    final start = DateFormat('jm').format(a.startedAt.toLocal());
-                    final end = a.endedAt != null
-                        ? DateFormat('jm').format(a.endedAt!.toLocal())
-                        : 'In progress';
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Severity ${a.severity}'),
-                      subtitle: Text('$start - $end'),
-                      leading: const Icon(Icons.bolt, color: Colors.orange),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () {
-                              Navigator.pop(context); // Close sheet
-                              context.push('/log', extra: a);
-                            },
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (list.isEmpty)
+                      const Text('No migraines logged on this day.')
+                    else
+                      ...list.map((a) {
+                        final start = DateFormat('jm').format(a.startedAt.toLocal());
+                        final end = a.endedAt != null
+                            ? DateFormat('jm').format(a.endedAt!.toLocal())
+                            : 'In progress';
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text('Severity ${a.severity}'),
+                          subtitle: Text('$start - $end'),
+                          leading: const Icon(Icons.bolt, color: Colors.orange),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () {
+                                  Navigator.pop(context); // Close sheet
+                                  context.push('/log', extra: a);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Delete record?'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                        TextButton(
+                                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await ref.read(journalSourceProvider).deleteAttack(a.startedAt);
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete record?'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                    TextButton(
-                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Delete'),
-                                ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await ref.read(journalSourceProvider).deleteAttack(a.startedAt);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.push('/log', extra: day);
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add migraine'),
+                    ),
+                  ],
                 );
               },
             ),
