@@ -7,7 +7,7 @@ void main() {
     const params = ModuleParams(
       enabled: true,
       weightMax: 18,
-      params: {'threshold_hpa': 5, 'lookahead_hours': 48},
+      params: {'threshold_hpa': 5, 'lookahead_hours': 24},
     );
     final now = DateTime.utc(2026, 6, 10, 6);
     final todayTarget = DateTime.utc(2026, 6, 10);
@@ -58,6 +58,24 @@ void main() {
       final s = module.evaluate(withWeather(samples, targetDate: tomorrowTarget), params);
       expect(s.explanation, contains('over next 24h'));
       expect(s.explanation, startsWith('Pressure dropping'));
+      expect(s.weight, greaterThan(0));
+    });
+
+    test('lookahead_hours param drives both window and label', () {
+      const params48 = ModuleParams(
+        enabled: true,
+        weightMax: 18,
+        params: {'threshold_hpa': 5, 'lookahead_hours': 48},
+      );
+      final samples = [
+        // 36h ago, then 24h ago — a 10 hPa drop within 12h, but only visible
+        // when the outer window extends 36h back.
+        WeatherSample(at: now.subtract(const Duration(hours: 36)), pressureMsl: 1020, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now.subtract(const Duration(hours: 24)), pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now, pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+      ];
+      final s = module.evaluate(withWeather(samples), params48);
+      expect(s.explanation, contains('in last 48h'));
       expect(s.weight, greaterThan(0));
     });
 
