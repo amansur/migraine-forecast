@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_weatherr/data/context_builder.dart';
 import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_weatherr/data/repos/assessment_repository.dart';
 import 'package:migraine_weatherr/data/sources/drift_journal_source.dart';
 import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
 import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
@@ -51,5 +52,32 @@ void main() {
     final ass = container.read(riskAssessmentProvider).requireValue;
     expect(ass.isOnboarding, isTrue);
     expect(ass.score, 0);
+  });
+
+  test('backfill saves an assessment marked backfilled=true', () async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final location = ManualLocationSource();
+    await location.set(lat: 40.7, lon: -74.0);
+
+    // Stub weather + journal so context-builder doesn't hit the network.
+    final container = ProviderContainer(overrides: [
+      databaseProvider.overrideWithValue(db),
+      weatherSourceProvider.overrideWithValue(_StubWeather()),
+      healthSourceProvider.overrideWithValue(FakeHealthSource()),
+      journalSourceProvider.overrideWithValue(DriftJournalSource(db)),
+      locationSourceProvider.overrideWithValue(location),
+      flagsRepoProvider.overrideWithValue(_MemFlagsRepo()),
+    ]);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(riskAssessmentProvider.notifier);
+    final target = DateTime.utc(2026, 6, 5);
+    await notifier.backfill(target);
+
+    final repo = AssessmentRepository(db);
+    final loaded = await repo.latestForDate(target: target, horizon: RiskHorizon.today);
+    expect(loaded, isNotNull);
+    expect(loaded!.backfilled, isTrue);
   });
 }

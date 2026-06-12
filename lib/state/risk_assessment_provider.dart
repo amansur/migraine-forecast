@@ -29,7 +29,17 @@ class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     final endOfDay = DateTime.utc(d.year, d.month, d.day, 23, 59, 59);
 
     final ctx = await builder.build(now: endOfDay, target: target.toUtc());
-    final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.today);
+    final raw = engine.evaluate(ctx, cfg, horizon: RiskHorizon.today);
+    final ass = RiskAssessment(
+      score: raw.score,
+      band: raw.band,
+      contributors: raw.contributors,
+      computedAt: raw.computedAt,
+      configVersion: raw.configVersion,
+      targetDate: raw.targetDate,
+      horizon: raw.horizon,
+      backfilled: true,
+    );
     await ref.read(assessmentRepoProvider).save(ass);
     return ass;
   }
