@@ -2,6 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repos/correlation_repo.dart';
+import 'insights_eligibility_provider.dart';
 import 'providers.dart';
 
 const _moduleIds = [
@@ -24,6 +25,9 @@ final correlationRepoProvider = Provider<CorrelationRepo>((ref) {
 });
 
 final correlationResultsProvider = FutureProvider<List<CorrelationResult>>((ref) async {
+  // Watch recentAttacksProvider to re-run when attacks change
+  ref.watch(recentAttacksProvider);
+
   final repo = ref.watch(correlationRepoProvider);
   final now = DateTime.now().toUtc();
   final cohorts = await repo.buildCohorts(
