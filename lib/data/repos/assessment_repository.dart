@@ -72,6 +72,25 @@ class AssessmentRepository {
     return rows.isEmpty ? null : rows.first.id;
   }
 
+  /// Returns the row ID of the most recently computed assessment for the given
+  /// target date (UTC day) and horizon, regardless of `computedAt`. This is
+  /// the correct lookup for backfilled assessments whose `computedAt` is the
+  /// current wall-clock time rather than the target day.
+  Future<int?> rowIdForDate({required DateTime target, required RiskHorizon horizon}) async {
+    final d = target.toUtc();
+    final start = DateTime.utc(d.year, d.month, d.day);
+    final end = start.add(const Duration(days: 1));
+    final rows = await (_db.select(_db.riskAssessments)
+          ..where((t) =>
+              t.targetDate.isBiggerOrEqualValue(start) &
+              t.targetDate.isSmallerThanValue(end) &
+              t.horizon.equals(horizon.name))
+          ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
+          ..limit(1))
+        .get();
+    return rows.isEmpty ? null : rows.first.id;
+  }
+
   Future<DateTime?> latestComputedAt() async {
     final rows = await (_db.select(_db.riskAssessments)
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])

@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_weatherr/data/context_builder.dart' show UserTriggerFlagsRepo;
+import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
 import 'package:migraine_weatherr/data/sources/journal_source.dart';
+import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
+import 'package:migraine_weatherr/data/sources/weather_source.dart';
 import 'package:migraine_weatherr/state/providers.dart';
 import 'package:migraine_weatherr/state/risk_assessment_provider.dart';
 import 'package:migraine_weatherr/ui/log/log_attack_screen.dart';
@@ -53,6 +57,49 @@ class _MockRiskAssessmentNotifier extends RiskAssessmentNotifier {
       );
 }
 
+class _StubWeather implements WeatherSource {
+  @override
+  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) async =>
+      WeatherSnapshot(
+        weather: const WeatherSeries(samples: []),
+        airQuality: const AirQualitySeries(samples: []),
+        fetchedAt: now,
+      );
+}
+
+class _ThrowingWeather implements WeatherSource {
+  @override
+  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) {
+    throw StateError('simulated network failure');
+  }
+}
+
+class _ThrowingBackfillNotifier extends RiskAssessmentNotifier {
+  @override
+  Future<RiskAssessment> build() async => RiskAssessment(
+        score: 0,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.now(),
+        configVersion: 1,
+        targetDate: DateTime.now(),
+        horizon: RiskHorizon.today,
+      );
+
+  @override
+  Future<RiskAssessment> backfill(DateTime target) {
+    throw StateError('simulated weather failure');
+  }
+}
+
+class _MemFlagsRepo implements UserTriggerFlagsRepo {
+  UserTriggerFlags _f = const UserTriggerFlags();
+  @override
+  Future<UserTriggerFlags> load() async => _f;
+  @override
+  Future<void> save(UserTriggerFlags flags) async => _f = flags;
+}
+
 void main() {
   testWidgets('Submitting saves an attack via JournalSource', (tester) async {
     final journal = _RecordingJournal();
@@ -79,5 +126,115 @@ void main() {
     await tester.pumpAndSettle();
     expect(journal.lastAttack, isNotNull);
     expect(journal.lastAttack!.severity, inInclusiveRange(1, 10));
+  });
+
+  testWidgets('saves past-day attack with link to backfilled assessment', (tester) async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final location = ManualLocationSource();
+    await location.set(lat: 40.7, lon: -74.0);
+    // Use a DriftJournalSource backed by the real DB so the assessment ID lookup works.
+    // But we still capture what addAttack received via a recording wrapper.
+    final journal = _RecordingJournal();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          weatherSourceProvider.overrideWithValue(_StubWeather()),
+          healthSourceProvider.overrideWithValue(FakeHealthSource()),
+          locationSourceProvider.overrideWithValue(location),
+          flagsRepoProvider.overrideWithValue(_MemFlagsRepo()),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, __) => LogAttackScreen(
+                initialDate: DateTime.utc(2026, 6, 5),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(journal.lastAttack, isNotNull);
+    expect(journal.lastAssessmentId, isNotNull,
+        reason: 'past-day save should link to the backfilled assessment row');
+  });
+
+  testWidgets('toggling "Still in progress" persists inProgress=true and clears end', (tester) async {
+    final journal = _RecordingJournal();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_MockRiskAssessmentNotifier.new),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const LogAttackScreen()),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('still-in-progress-switch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(journal.lastAttack, isNotNull);
+    expect(journal.lastAttack!.inProgress, isTrue);
+    expect(journal.lastAttack!.endedAt, isNull);
+  });
+
+  testWidgets('Open-Meteo failure surfaces SnackBar but attack still saves', (tester) async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final journal = _RecordingJournal();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_ThrowingBackfillNotifier.new),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, __) => LogAttackScreen(
+                initialDate: DateTime.utc(2026, 6, 5),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pump(); // surface the SnackBar
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.textContaining("Couldn't fetch weather"), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(journal.lastAttack, isNotNull,
+        reason: 'attack must save even when backfill fails');
+    expect(journal.lastAssessmentId, isNull,
+        reason: 'failed backfill leaves the link null');
   });
 }

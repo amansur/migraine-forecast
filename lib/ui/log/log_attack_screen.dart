@@ -18,6 +18,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
   late DateTime _start = _initStart();
   late DateTime? _end = widget.initialAttack?.endedAt?.toLocal();
   late double _severity = widget.initialAttack?.severity.toDouble() ?? 5;
+  late bool _inProgress = widget.initialAttack?.inProgress ?? false;
   late final _notesCtrl = TextEditingController();
   bool _saving = false;
 
@@ -44,47 +45,67 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Log a migraine')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                title: const Text('Started'),
-                subtitle: Text(_start.toString()),
-                trailing: const Icon(Icons.edit_outlined),
-                onTap: _pickStart,
-              ),
-              ListTile(
-                title: const Text('Ended (optional)'),
-                subtitle: Text(_end?.toString() ?? 'In progress'),
-                trailing: const Icon(Icons.edit_outlined),
-                onTap: _pickEnd,
-              ),
-              const SizedBox(height: 12),
-              Text('Severity: ${_severity.round()}', style: Theme.of(context).textTheme.titleMedium),
-              Slider(value: _severity, min: 1, max: 10, divisions: 9, onChanged: (v) => setState(() => _severity = v)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _notesCtrl,
-                decoration: const InputDecoration(labelText: 'Notes', border: OutlineInputBorder()),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(_saving ? 'Saving…' : 'Save'),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: const Text('Started'),
+                    subtitle: Text(_start.toString()),
+                    trailing: const Icon(Icons.edit_outlined),
+                    onTap: _pickStart,
                   ),
-                ),
+                  SwitchListTile(
+                    key: const Key('still-in-progress-switch'),
+                    title: const Text('Still in progress'),
+                    subtitle: const Text('Leave on if the attack is ongoing.'),
+                    value: _inProgress,
+                    onChanged: (v) => setState(() {
+                      _inProgress = v;
+                      if (v) _end = null;
+                    }),
+                  ),
+                  if (!_inProgress)
+                    ListTile(
+                      title: const Text('Ended (optional)'),
+                      subtitle: Text(_end?.toString() ?? 'No end time recorded'),
+                      trailing: const Icon(Icons.edit_outlined),
+                      onTap: _pickEnd,
+                    ),
+                  const SizedBox(height: 12),
+                  Text('Severity: ${_severity.round()}', style: Theme.of(context).textTheme.titleMedium),
+                  Slider(value: _severity, min: 1, max: 10, divisions: 9, onChanged: (v) => setState(() => _severity = v)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _notesCtrl,
+                    decoration: const InputDecoration(labelText: 'Notes', border: OutlineInputBorder()),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _saving ? null : _save,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(_saving ? 'Saving…' : 'Save'),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (_saving)
+            const ColoredBox(
+              color: Color(0x80000000),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -120,32 +141,36 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
     setState(() => _saving = true);
     final journal = ref.read(journalSourceProvider);
     final repo = ref.read(assessmentRepoProvider);
-    
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+
     final startUtc = _start.toUtc();
     final dayMarker = DateTime.utc(startUtc.year, startUtc.month, startUtc.day);
-    
-    // Check if an assessment exists for this DAY marker.
+
     var activeId = await repo.activeAtRowId(startUtc);
     final assessmentForDay = await repo.latestForDate(target: dayMarker, horizon: RiskHorizon.today);
-    
+
     if (assessmentForDay == null) {
-      // Fire and forget backfill. Don't await it here to avoid blocking UI or timing out in tests.
-      // The correlation engine joins by date, so the explicit riskAssessmentId link is a performance hint, not a hard requirement.
-      ref.read(riskAssessmentProvider.notifier).backfill(dayMarker).catchError((e) {
-        debugPrint('Failed to backfill risk: $e');
-        return RiskAssessment(
-          score: 0,
-          band: RiskBand.low,
-          contributors: const [],
-          computedAt: DateTime.now(),
-          configVersion: 0,
-          targetDate: dayMarker,
-          horizon: RiskHorizon.today,
-        );
-      });
+      try {
+        await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
+        // Use date-based lookup since backfilled rows have computedAt = now, not endOfDay.
+        activeId = await repo.rowIdForDate(target: dayMarker, horizon: RiskHorizon.today);
+      } catch (e) {
+        debugPrint('Backfill failed: $e');
+        if (mounted) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text("Couldn't fetch weather — risk for this day will be unavailable.")),
+          );
+        }
+      }
     }
 
-    final current = Attack(startedAt: startUtc, endedAt: _end?.toUtc(), severity: _severity.round());
+    final current = Attack(
+      startedAt: startUtc,
+      endedAt: _inProgress ? null : _end?.toUtc(),
+      severity: _severity.round(),
+      inProgress: _inProgress,
+    );
 
     if (widget.initialAttack != null) {
       await journal.updateAttack(widget.initialAttack!, current);
@@ -153,12 +178,15 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
       await journal.addAttack(current, riskAssessmentId: activeId);
     }
 
-    if (mounted) {
-      try {
-        context.pop();
-      } catch (_) {
-        // No prior route in test environment — ignore
+      if (mounted) {
+        try {
+          context.pop();
+        } catch (_) {
+          // No prior route in test environment — ignore
+        }
       }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 }
