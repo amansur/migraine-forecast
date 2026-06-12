@@ -64,9 +64,11 @@ class TodayScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: RiskDisplay(assessment: a, mode: mode),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: RiskDisplay(assessment: a, mode: mode),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const TomorrowTile(),
