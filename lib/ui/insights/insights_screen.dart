@@ -85,23 +85,26 @@ class _Body extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Last 90 days', style: Theme.of(context).textTheme.titleSmall),
+        Text('Last 8 weeks', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         recentAttacks.when(
           loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
           error: (e, _) => Text('Error loading heatmap: $e'),
           data: (attacks) {
-            final days = attacks
-                .map((a) {
-                  final d = a.startedAt.toUtc();
-                  return DateTime.utc(d.year, d.month, d.day);
-                })
-                .toSet();
+            // Build day → max severity map (UTC midnight keys).
+            final severityByDay = <DateTime, int>{};
+            for (final a in attacks) {
+              final utc = a.startedAt.toUtc();
+              final day = DateTime.utc(utc.year, utc.month, utc.day);
+              final prev = severityByDay[day] ?? 0;
+              if (a.severity > prev) severityByDay[day] = a.severity;
+            }
             final d = DateTime.now();
             final now = DateTime.utc(d.year, d.month, d.day);
+            // Show 8 weeks (56 days) for a compact, week-aligned view.
             return CalendarHeatmap(
-              attackDays: days,
-              windowStart: now.subtract(const Duration(days: 89)),
+              severityByDay: severityByDay,
+              windowStart: now.subtract(const Duration(days: 55)),
               windowEnd: now,
               onTap: (day) => _showDayDetail(context, day),
             );
