@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
-import 'contributor_chip.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
+import 'why_chips.dart';
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -60,8 +60,9 @@ class TodayScreen extends ConsumerWidget {
                 if (a.isOnboarding) {
                   return _OnboardingCard(onSetup: () => context.push('/settings'));
                 }
-                final contributing = a.contributors.where((c) => c.contribution > 0).take(4).toList();
+                final hasChips = a.contributors.any((c) => c.contribution > 0);
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -70,14 +71,8 @@ class TodayScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     const TomorrowTile(),
                     const SizedBox(height: 16),
-                    if (contributing.isNotEmpty) ...[
-                      Text('Why', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: contributing.map((c) => ContributorChip(signal: c)).toList(),
-                      ),
+                    if (hasChips) ...[
+                      WhyChips(contributors: a.contributors),
                       const SizedBox(height: 24),
                     ],
                     SizedBox(

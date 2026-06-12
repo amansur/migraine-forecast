@@ -8,6 +8,7 @@ import '../ui/log/log_attack_screen.dart';
 import '../ui/onboarding/onboarding_screen.dart';
 import '../ui/settings/settings_screen.dart';
 import '../ui/today/today_screen.dart';
+import '../ui/today/tomorrow_detail_screen.dart';
 
 GoRouter buildRouter(WidgetRef ref) {
   return GoRouter(
@@ -22,6 +23,7 @@ GoRouter buildRouter(WidgetRef ref) {
     routes: [
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/today', builder: (_, __) => const TodayScreen()),
+      GoRoute(path: '/tomorrow', builder: (_, __) => const TomorrowDetailScreen()),
       GoRoute(path: '/log', builder: (context, state) {
         final extra = state.extra;
         if (extra is Attack) {
