@@ -65,4 +65,32 @@ void main() {
     expect(results, hasLength(1));
     expect(results.first.severity, 5);
   });
+
+  test('persists and reads back Attack.inProgress', () async {
+    final now = DateTime.utc(2026, 6, 1, 12);
+    await source.addAttack(Attack(startedAt: now, severity: 6, inProgress: true));
+    final attacks = await source.recentAttacks(
+      const Duration(days: 1),
+      now: now.add(const Duration(hours: 1)),
+    );
+    expect(attacks, hasLength(1));
+    expect(attacks.first.inProgress, isTrue);
+    expect(attacks.first.endedAt, isNull);
+  });
+
+  test('updateAttack round-trips inProgress', () async {
+    final now = DateTime.utc(2026, 6, 1, 12);
+    final original = Attack(startedAt: now, severity: 6);
+    await source.addAttack(original);
+
+    final updated = Attack(startedAt: now, severity: 6, inProgress: true);
+    await source.updateAttack(original, updated);
+
+    final attacks = await source.recentAttacks(
+      const Duration(days: 1),
+      now: now.add(const Duration(hours: 1)),
+    );
+    expect(attacks, hasLength(1));
+    expect(attacks.first.inProgress, isTrue);
+  });
 }
