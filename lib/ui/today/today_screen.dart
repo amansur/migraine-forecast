@@ -20,14 +20,10 @@ class TodayScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Today'),
         actions: [
-          Consumer(builder: (context, ref, _) {
-            final eligible = ref.watch(insightsEligibleProvider).asData?.value ?? false;
-            if (!eligible) return const SizedBox.shrink();
-            return IconButton(
-              onPressed: () => context.push('/insights'),
-              icon: const Icon(Icons.insights_outlined),
-            );
-          }),
+          IconButton(
+            onPressed: () => context.push('/insights'),
+            icon: const Icon(Icons.insights_outlined),
+          ),
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings_outlined),

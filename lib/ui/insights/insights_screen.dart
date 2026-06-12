@@ -69,7 +69,7 @@ class _Body extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final journal = ref.watch(journalSourceProvider);
+    final recentAttacks = ref.watch(recentAttacksProvider);
     final correlations = ref.watch(correlationResultsProvider);
     final suggestions = ref.watch(suggestionsProvider);
 
@@ -78,10 +78,10 @@ class _Body extends ConsumerWidget {
       children: [
         Text('Last 90 days', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
-        FutureBuilder(
-          future: journal.recentAttacks(const Duration(days: 90), now: DateTime.now().toUtc()),
-          builder: (context, snap) {
-            final attacks = snap.data ?? const [];
+        recentAttacks.when(
+          loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+          error: (e, _) => Text('Error loading heatmap: $e'),
+          data: (attacks) {
             final days = attacks
                 .map((a) => DateTime.utc(a.startedAt.year, a.startedAt.month, a.startedAt.day))
                 .toSet();
