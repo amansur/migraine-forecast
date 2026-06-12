@@ -17,7 +17,7 @@ void main() {
     final entry = JournalEntry(
       at: DateTime.utc(2026, 6, 10, 8),
       kind: JournalKind.alcohol,
-      payload: {'units': 2.0},
+      payload: const {'units': 2.0},
     );
     await source.addEntry(entry);
     final recent = await source.recentEntries(const Duration(days: 1), now: DateTime.utc(2026, 6, 10, 12));
@@ -30,7 +30,7 @@ void main() {
     await source.addEntry(JournalEntry(
       at: DateTime.utc(2026, 6, 8, 8),
       kind: JournalKind.caffeine,
-      payload: {'mg': 100},
+      payload: const {'mg': 100},
     ));
     final recent = await source.recentEntries(const Duration(hours: 24), now: DateTime.utc(2026, 6, 10, 12));
     expect(recent, isEmpty);
@@ -45,5 +45,24 @@ void main() {
     final attacks = await source.recentAttacks(const Duration(days: 7), now: DateTime.utc(2026, 6, 10, 18));
     expect(attacks, hasLength(1));
     expect(attacks.first.severity, 7);
+  });
+
+  test('recentAttacks filters both lower and upper bounds', () async {
+    final day = DateTime.utc(2026, 6, 10);
+    final prevDay = day.subtract(const Duration(days: 1));
+    final nextDay = day.add(const Duration(days: 1));
+
+    await source.addAttack(Attack(startedAt: prevDay, severity: 1));
+    await source.addAttack(Attack(startedAt: day, severity: 5));
+    await source.addAttack(Attack(startedAt: nextDay, severity: 8));
+
+    // Ask for exactly June 10th
+    final results = await source.recentAttacks(
+      const Duration(days: 1),
+      now: nextDay,
+    );
+
+    expect(results, hasLength(1));
+    expect(results.first.severity, 5);
   });
 }

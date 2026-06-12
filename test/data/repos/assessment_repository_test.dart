@@ -40,6 +40,25 @@ void main() {
     expect(latest?.contributors.first.moduleId, 'pressure_drop');
   });
 
+  test('latestForDate is robust to timezone mismatches', () async {
+    // We use a specific UTC moment.
+    final moment = DateTime.utc(2026, 6, 12, 14); // 2 PM UTC
+    // We save it. The repository will normalize it to June 12 00:00:00Z.
+    await repo.save(makeAss(date: moment));
+
+    // We query for June 12 (as a Local date that might have different components).
+    // In many timezones, June 12 00:00:00 UTC is June 11 in Local.
+    // But our repository should normalize the query target too.
+    final queryTarget = DateTime.utc(2026, 6, 12);
+    
+    final latest = await repo.latestForDate(
+      target: queryTarget,
+      horizon: RiskHorizon.today,
+    );
+    expect(latest, isNotNull);
+    expect(latest?.targetDate, DateTime.utc(2026, 6, 12));
+  });
+
   test('activeAt returns the most recent assessment at or before the given time', () async {
     await repo.save(makeAss(score: 30));
     await repo.save(makeAss(score: 60).copyWithComputedAt(DateTime.utc(2026, 6, 10, 18)));

@@ -6,4 +6,6 @@ abstract class JournalSource {
   Future<int> addAttack(Attack attack, {int? riskAssessmentId});
   Future<List<Attack>> recentAttacks(Duration window, {required DateTime now});
   Stream<List<Attack>> watchRecentAttacks(Duration window, {required DateTime now});
+  Future<void> deleteAttack(DateTime startedAt);
+  Future<void> updateAttack(Attack old, Attack updated);
 }

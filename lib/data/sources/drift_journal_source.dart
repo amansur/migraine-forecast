@@ -14,7 +14,7 @@ class DriftJournalSource implements JournalSource {
   Future<void> addEntry(domain.JournalEntry entry) async {
     await _db.into(_db.journalEntries).insert(
           JournalEntriesCompanion.insert(
-            at: entry.at,
+            at: entry.at.toUtc(),
             kind: entry.kind.name,
             payloadJson: jsonEncode(entry.payload),
           ),
@@ -23,14 +23,15 @@ class DriftJournalSource implements JournalSource {
 
   @override
   Future<List<domain.JournalEntry>> recentEntries(Duration window, {required DateTime now}) async {
-    final cutoff = now.subtract(window);
+    final utcNow = now.toUtc();
+    final cutoff = utcNow.subtract(window);
     final rows = await (_db.select(_db.journalEntries)
-          ..where((t) => t.at.isBiggerOrEqualValue(cutoff))
+          ..where((t) => t.at.isBiggerOrEqualValue(cutoff) & t.at.isSmallerThanValue(utcNow))
           ..orderBy([(t) => OrderingTerm.desc(t.at)]))
         .get();
     return rows
         .map((r) => domain.JournalEntry(
-              at: r.at,
+              at: r.at.toUtc(),
               kind: domain.JournalKind.values.firstWhere((k) => k.name == r.kind),
               payload: Map<String, Object?>.from(jsonDecode(r.payloadJson) as Map),
             ))
@@ -41,8 +42,8 @@ class DriftJournalSource implements JournalSource {
   Future<int> addAttack(domain.Attack attack, {int? riskAssessmentId}) async {
     return _db.into(_db.attacks).insert(
           AttacksCompanion.insert(
-            startedAt: attack.startedAt,
-            endedAt: Value(attack.endedAt),
+            startedAt: attack.startedAt.toUtc(),
+            endedAt: Value(attack.endedAt?.toUtc()),
             severity: attack.severity,
             notes: const Value.absent(),
             riskAssessmentId: Value(riskAssessmentId),
@@ -52,24 +53,52 @@ class DriftJournalSource implements JournalSource {
 
   @override
   Future<List<domain.Attack>> recentAttacks(Duration window, {required DateTime now}) async {
-    final cutoff = now.subtract(window);
+    final utcNow = now.toUtc();
+    final cutoff = utcNow.subtract(window);
     final rows = await (_db.select(_db.attacks)
-          ..where((t) => t.startedAt.isBiggerOrEqualValue(cutoff))
+          ..where((t) => t.startedAt.isBiggerOrEqualValue(cutoff) & t.startedAt.isSmallerThanValue(utcNow))
           ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
         .get();
     return rows
-        .map((r) => domain.Attack(startedAt: r.startedAt, endedAt: r.endedAt, severity: r.severity))
+        .map((r) => domain.Attack(
+              startedAt: r.startedAt.toUtc(),
+              endedAt: r.endedAt?.toUtc(),
+              severity: r.severity,
+            ))
         .toList();
   }
 
   @override
   Stream<List<domain.Attack>> watchRecentAttacks(Duration window, {required DateTime now}) {
-    final cutoff = now.subtract(window);
+    final utcNow = now.toUtc();
+    final cutoff = utcNow.subtract(window);
     final query = _db.select(_db.attacks)
-      ..where((t) => t.startedAt.isBiggerOrEqualValue(cutoff))
+      ..where((t) => t.startedAt.isBiggerOrEqualValue(cutoff) & t.startedAt.isSmallerThanValue(utcNow))
       ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]);
     return query.watch().map((rows) => rows
-        .map((r) => domain.Attack(startedAt: r.startedAt, endedAt: r.endedAt, severity: r.severity))
+        .map((r) => domain.Attack(
+              startedAt: r.startedAt.toUtc(),
+              endedAt: r.endedAt?.toUtc(),
+              severity: r.severity,
+            ))
         .toList());
+  }
+
+  @override
+  Future<void> deleteAttack(DateTime startedAt) async {
+    final utc = startedAt.toUtc();
+    await (_db.delete(_db.attacks)..where((t) => t.startedAt.equals(utc))).go();
+  }
+
+  @override
+  Future<void> updateAttack(domain.Attack old, domain.Attack updated) async {
+    final utcOld = old.startedAt.toUtc();
+    await (_db.update(_db.attacks)
+          ..where((t) => t.startedAt.equals(utcOld)))
+        .write(AttacksCompanion(
+          startedAt: Value(updated.startedAt.toUtc()),
+          endedAt: Value(updated.endedAt?.toUtc()),
+          severity: Value(updated.severity),
+        ));
   }
 }

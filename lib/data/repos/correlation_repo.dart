@@ -14,10 +14,15 @@ class CorrelationRepo {
     required DateTime windowEnd,
     required List<String> moduleIds,
   }) async {
+    final s = windowStart.toUtc();
+    final utcStart = DateTime.utc(s.year, s.month, s.day);
+    final e = windowEnd.toUtc();
+    final utcEnd = DateTime.utc(e.year, e.month, e.day).add(const Duration(days: 1));
+
     final assessmentRows = await (_db.select(_db.riskAssessments)
           ..where((t) =>
-              t.targetDate.isBiggerOrEqualValue(windowStart) &
-              t.targetDate.isSmallerThanValue(windowEnd)))
+              t.targetDate.isBiggerOrEqualValue(utcStart) &
+              t.targetDate.isSmallerThanValue(utcEnd)))
         .get();
 
     final firedDaysByModule = <String, Set<DateTime>>{
@@ -25,7 +30,8 @@ class CorrelationRepo {
     };
     final allDays = <DateTime>{};
     for (final row in assessmentRows) {
-      final day = DateTime.utc(row.targetDate.year, row.targetDate.month, row.targetDate.day);
+      final d = row.targetDate.toUtc();
+      final day = DateTime.utc(d.year, d.month, d.day);
       allDays.add(day);
       final contributors = jsonDecode(row.contributorsJson) as List;
       for (final c in contributors) {
@@ -41,12 +47,13 @@ class CorrelationRepo {
 
     final attackRows = await (_db.select(_db.attacks)
           ..where((t) =>
-              t.startedAt.isBiggerOrEqualValue(windowStart) &
-              t.startedAt.isSmallerThanValue(windowEnd)))
+              t.startedAt.isBiggerOrEqualValue(utcStart) &
+              t.startedAt.isSmallerThanValue(utcEnd)))
         .get();
     final attackDays = <DateTime>{};
     for (final a in attackRows) {
-      attackDays.add(DateTime.utc(a.startedAt.year, a.startedAt.month, a.startedAt.day));
+      final d = a.startedAt.toUtc();
+      attackDays.add(DateTime.utc(d.year, d.month, d.day));
     }
 
     return moduleIds.map((id) {

@@ -30,11 +30,12 @@ void main() {
     });
 
     test('liftDifference returns the right direction and width', () {
+      // 90% positive rate over 20 vs 30% over 20.
       final fired = WilsonInterval.compute(successes: 18, trials: 20);
       final notFired = WilsonInterval.compute(successes: 6, trials: 20);
       final lift = WilsonInterval.differenceLift(fired, notFired);
       expect(lift.point, closeTo(0.6, 0.01));
-      expect(lift.low, greaterThan(0.3));
+      expect(lift.low, greaterThan(0.3));    // CI clearly positive
       expect(lift.high, lessThan(1.0));
     });
   });

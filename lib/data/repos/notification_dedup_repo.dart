@@ -12,9 +12,11 @@ class NotificationDedupRepo {
     required RiskHorizon horizon,
     required RiskBand band,
   }) async {
+    final d = date.toUtc();
+    final utcDate = DateTime.utc(d.year, d.month, d.day);
     final rows = await (_db.select(_db.notificationsSent)
           ..where((t) =>
-              t.targetDate.equals(date) &
+              t.targetDate.equals(utcDate) &
               t.horizon.equals(horizon.name) &
               t.band.equals(band.name))
           ..limit(1))
@@ -28,12 +30,14 @@ class NotificationDedupRepo {
     required RiskBand band,
     required DateTime at,
   }) async {
+    final d = date.toUtc();
+    final utcDate = DateTime.utc(d.year, d.month, d.day);
     await _db.into(_db.notificationsSent).insert(
           NotificationsSentCompanion.insert(
-            targetDate: date,
+            targetDate: utcDate,
             horizon: horizon.name,
             band: band.name,
-            sentAt: at,
+            sentAt: at.toUtc(),
           ),
         );
   }

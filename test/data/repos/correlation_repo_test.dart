@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:domain/domain.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
@@ -54,11 +53,13 @@ void main() {
   }
 
   test('cohorts split fired vs not-fired days correctly', () async {
+    // 5 days where pressure_drop fired, 3 of which had attacks.
     for (var i = 0; i < 5; i++) {
       final day = DateTime.utc(2026, 6, 1 + i);
       await insertAssessment(targetDate: day, contributions: {'pressure_drop': 10.0});
       if (i < 3) await insertAttack(day.add(const Duration(hours: 6)));
     }
+    // 10 days where pressure_drop did NOT fire, 1 of which had an attack.
     for (var i = 0; i < 10; i++) {
       final day = DateTime.utc(2026, 6, 6 + i);
       await insertAssessment(targetDate: day, contributions: {'sleep_deficit': 5.0});

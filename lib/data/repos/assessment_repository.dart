@@ -10,13 +10,15 @@ class AssessmentRepository {
   AssessmentRepository(this._db);
 
   Future<int> save(RiskAssessment ass) async {
+    final d = ass.targetDate.toUtc();
+    final utcTarget = DateTime.utc(d.year, d.month, d.day);
     return _db.into(_db.riskAssessments).insert(
           RiskAssessmentsCompanion.insert(
-            targetDate: ass.targetDate,
+            targetDate: utcTarget,
             horizon: ass.horizon.name,
             score: ass.score,
             band: ass.band.name,
-            computedAt: ass.computedAt,
+            computedAt: ass.computedAt.toUtc(),
             configVersion: ass.configVersion,
             contributorsJson: jsonEncode(ass.contributors
                 .map((c) => {
@@ -34,8 +36,15 @@ class AssessmentRepository {
     required DateTime target,
     required RiskHorizon horizon,
   }) async {
+    final d = target.toUtc();
+    final start = DateTime.utc(d.year, d.month, d.day);
+    final end = start.add(const Duration(days: 1));
+
     final rows = await (_db.select(_db.riskAssessments)
-          ..where((t) => t.targetDate.equals(target) & t.horizon.equals(horizon.name))
+          ..where((t) =>
+              t.targetDate.isBiggerOrEqualValue(start) &
+              t.targetDate.isSmallerThanValue(end) &
+              t.horizon.equals(horizon.name))
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
           ..limit(1))
         .get();
@@ -43,8 +52,9 @@ class AssessmentRepository {
   }
 
   Future<RiskAssessment?> activeAt(DateTime when) async {
+    final utcWhen = when.toUtc();
     final rows = await (_db.select(_db.riskAssessments)
-          ..where((t) => t.computedAt.isSmallerOrEqualValue(when))
+          ..where((t) => t.computedAt.isSmallerOrEqualValue(utcWhen))
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
           ..limit(1))
         .get();
@@ -52,8 +62,9 @@ class AssessmentRepository {
   }
 
   Future<int?> activeAtRowId(DateTime when) async {
+    final utcWhen = when.toUtc();
     final rows = await (_db.select(_db.riskAssessments)
-          ..where((t) => t.computedAt.isSmallerOrEqualValue(when))
+          ..where((t) => t.computedAt.isSmallerOrEqualValue(utcWhen))
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
           ..limit(1))
         .get();
@@ -65,7 +76,7 @@ class AssessmentRepository {
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
           ..limit(1))
         .get();
-    return rows.isEmpty ? null : rows.first.computedAt;
+    return rows.isEmpty ? null : rows.first.computedAt.toUtc();
   }
 
   RiskAssessment _toDomain(dynamic row) {
@@ -84,9 +95,9 @@ class AssessmentRepository {
       score: row.score as int,
       band: RiskBand.values.firstWhere((b) => b.name == row.band),
       contributors: contributors,
-      computedAt: row.computedAt as DateTime,
+      computedAt: (row.computedAt as DateTime).toUtc(),
       configVersion: row.configVersion as int,
-      targetDate: row.targetDate as DateTime,
+      targetDate: (row.targetDate as DateTime).toUtc(),
       horizon: RiskHorizon.values.firstWhere((h) => h.name == row.horizon),
     );
   }
