@@ -1,3 +1,4 @@
+import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,7 +22,10 @@ GoRouter buildRouter(WidgetRef ref) {
     routes: [
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/today', builder: (_, __) => const TodayScreen()),
-      GoRoute(path: '/log', builder: (_, __) => const LogAttackScreen()),
+      GoRoute(path: '/log', builder: (context, state) {
+        final initial = state.extra as Attack?;
+        return LogAttackScreen(initialAttack: initial);
+      }),
       GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     ],

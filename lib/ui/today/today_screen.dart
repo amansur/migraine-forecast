@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/risk_assessment_provider.dart';
@@ -16,14 +17,25 @@ class TodayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ass = ref.watch(riskAssessmentProvider);
     final mode = ref.watch(riskDisplayModeProvider).asData?.value ?? RiskDisplayMode.gauge;
+    final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Today'),
+        title: Column(
+          children: [
+            const Text('Today'),
+            Text(dateStr, style: Theme.of(context).textTheme.labelSmall),
+          ],
+        ),
         actions: [
-          IconButton(
-            onPressed: () => context.push('/insights'),
-            icon: const Icon(Icons.insights_outlined),
-          ),
+          Consumer(builder: (context, ref, _) {
+            final eligible = ref.watch(insightsEligibleProvider).asData?.value ?? false;
+            if (!eligible) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: () => context.push('/insights'),
+              icon: const Icon(Icons.insights_outlined),
+            );
+          }),
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings_outlined),

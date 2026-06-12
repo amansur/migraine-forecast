@@ -107,3 +107,18 @@ final highRiskNotifierProvider = Provider<HighRiskNotifier>((ref) {
     dedup: ref.watch(notificationDedupRepoProvider),
   );
 });
+
+final dayAssessmentProvider = FutureProvider.family<RiskAssessment?, DateTime>((ref, date) async {
+  final repo = ref.watch(assessmentRepoProvider);
+  final today = await repo.latestForDate(target: date, horizon: RiskHorizon.today);
+  if (today != null) return today;
+  return repo.latestForDate(target: date, horizon: RiskHorizon.tomorrow);
+});
+
+final dayAttacksProvider = StreamProvider.family<List<Attack>, DateTime>((ref, date) {
+  final journal = ref.watch(journalSourceProvider);
+  final d = date.toUtc();
+  final startOfDay = DateTime.utc(d.year, d.month, d.day);
+  final endOfDay = startOfDay.add(const Duration(days: 1));
+  return journal.watchRecentAttacks(const Duration(days: 1), now: endOfDay);
+});

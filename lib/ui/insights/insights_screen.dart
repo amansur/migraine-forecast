@@ -2,6 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../state/correlation_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
@@ -67,6 +68,14 @@ class _NotEligible extends StatelessWidget {
 class _Body extends ConsumerWidget {
   const _Body();
 
+  void _showDayDetail(BuildContext context, DateTime day) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _DayDetailSheet(day: day),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recentAttacks = ref.watch(recentAttacksProvider);
@@ -83,13 +92,18 @@ class _Body extends ConsumerWidget {
           error: (e, _) => Text('Error loading heatmap: $e'),
           data: (attacks) {
             final days = attacks
-                .map((a) => DateTime.utc(a.startedAt.year, a.startedAt.month, a.startedAt.day))
+                .map((a) {
+                  final d = a.startedAt.toUtc();
+                  return DateTime.utc(d.year, d.month, d.day);
+                })
                 .toSet();
-            final now = DateTime.now().toUtc();
+            final d = DateTime.now();
+            final now = DateTime.utc(d.year, d.month, d.day);
             return CalendarHeatmap(
               attackDays: days,
               windowStart: now.subtract(const Duration(days: 89)),
               windowEnd: now,
+              onTap: (day) => _showDayDetail(context, day),
             );
           },
         ),
@@ -133,6 +147,147 @@ class _Body extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class _DayDetailSheet extends ConsumerWidget {
+  final DateTime day;
+  const _DayDetailSheet({required this.day});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final assessment = ref.watch(dayAssessmentProvider(day));
+    final attacks = ref.watch(dayAttacksProvider(day));
+
+    final d = DateTime.now();
+    // Compare normalized markers (both UTC midnight)
+    final todayMarker = DateTime.utc(d.year, d.month, d.day);
+    final isToday = day.isAtSameMomentAs(todayMarker);
+    
+    final dateTitle = isToday
+        ? 'Today, ${DateFormat('MMMM d').format(day)}'
+        : DateFormat('EEEE, MMMM d').format(day);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.9,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (context, scrollController) {
+        return ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          children: [
+            Text(
+              dateTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 24),
+            Text('Risk Assessment', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            assessment.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error loading assessment: $e'),
+              data: (a) {
+                if (a == null) return const Text('No risk data recorded for this day.');
+                final factors = a.contributors.where((c) => c.contribution > 0).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Score: ${a.score} (${a.band.name})',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    if (factors.isEmpty)
+                      const Text('No contributing triggers identified.')
+                    else
+                      Column(
+                        children: factors
+                            .map((f) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${f.moduleId}: ${f.explanation}',
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            Text('Logged Migraines', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            attacks.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error: $e'),
+              data: (list) {
+                if (list.isEmpty) return const Text('No migraines logged on this day.');
+                return Column(
+                  children: list.map((a) {
+                    final start = DateFormat('jm').format(a.startedAt.toLocal());
+                    final end = a.endedAt != null
+                        ? DateFormat('jm').format(a.endedAt!.toLocal())
+                        : 'In progress';
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Severity ${a.severity}'),
+                      subtitle: Text('$start - $end'),
+                      leading: const Icon(Icons.bolt, color: Colors.orange),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () {
+                              Navigator.pop(context); // Close sheet
+                              context.push('/log', extra: a);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete record?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                    TextButton(
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Delete'),
+                                ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await ref.read(journalSourceProvider).deleteAttack(a.startedAt);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
