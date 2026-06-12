@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migraine_weatherr/data/context_builder.dart';
+import 'package:migraine_weatherr/services/permission_service.dart';
 import 'package:migraine_weatherr/state/providers.dart';
 import 'package:migraine_weatherr/state/onboarding_provider.dart';
 import 'package:migraine_weatherr/ui/onboarding/onboarding_screen.dart';
@@ -12,6 +13,12 @@ class _MemFlagsRepo implements UserTriggerFlagsRepo {
   UserTriggerFlags _f = const UserTriggerFlags();
   @override Future<UserTriggerFlags> load() async => _f;
   @override Future<void> save(UserTriggerFlags flags) async => _f = flags;
+}
+
+class _StubPermissionService extends PermissionService {
+  _StubPermissionService() : super.forTesting();
+  @override
+  Future<bool> requestLocation() async => true;
 }
 
 void main() {
@@ -28,6 +35,7 @@ void main() {
       ProviderScope(
         overrides: [
           flagsRepoProvider.overrideWithValue(flagsRepo),
+          permissionServiceProvider.overrideWithValue(_StubPermissionService()),
           markOnboardingCompletedProvider.overrideWithValue(() async { onboardingDone = true; }),
         ],
         child: MaterialApp.router(routerConfig: router),

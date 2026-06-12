@@ -19,9 +19,12 @@ class _RecordingJournal implements JournalSource {
   }
   @override Future<void> addEntry(JournalEntry entry) async {}
   @override Future<List<JournalEntry>> recentEntries(Duration window, {required DateTime now}) async => const [];
-  @override Future<List<Attack>> recentAttacks(Duration window, {required DateTime now}) async => const [];
-}
+  @override
+  Future<List<Attack>> recentAttacks(Duration window, {required DateTime now}) async => [];
 
+  @override
+  Stream<List<Attack>> watchRecentAttacks(Duration window, {required DateTime now}) => Stream.value([]);
+  }
 void main() {
   testWidgets('Submitting saves an attack via JournalSource', (tester) async {
     final journal = _RecordingJournal();

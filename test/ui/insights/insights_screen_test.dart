@@ -10,8 +10,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          insightsEligibleProvider.overrideWith((ref) async => false),
-          attackCountProvider.overrideWith((ref) async => 1),
+          insightsEligibleProvider.overrideWith((ref) => Stream.value(false)),
+          attackCountProvider.overrideWith((ref) => Stream.value(1)),
         ],
         child: MaterialApp.router(
           routerConfig: GoRouter(routes: [
