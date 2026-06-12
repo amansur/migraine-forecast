@@ -4,7 +4,7 @@ import 'package:migraine_weatherr/data/repos/baseline_snapshot_builder.dart';
 
 void main() {
   test('builds a snapshot from health + journal history', () {
-    final builder = BaselineSnapshotBuilder(const BaselineStore());
+    const builder = BaselineSnapshotBuilder(BaselineStore());
     final sleep = List.generate(
       7,
       (i) => SleepRecord(
@@ -33,7 +33,7 @@ void main() {
   });
 
   test('returns empty for missing inputs', () {
-    final builder = BaselineSnapshotBuilder(const BaselineStore());
+    const builder = BaselineSnapshotBuilder(BaselineStore());
     final snap = builder.build(
       sleep: const [],
       hrv: const [],

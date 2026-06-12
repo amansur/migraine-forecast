@@ -29,7 +29,7 @@ void main() {
       final s = module.evaluate(
         withJournal([
           JournalEntry(
-            at: now.subtract(Duration(hours: 6)),
+            at: now.subtract(const Duration(hours: 6)),
             kind: JournalKind.alcohol,
             payload: {'units': 2.0},
           ),
@@ -44,7 +44,7 @@ void main() {
       final s = module.evaluate(
         withJournal([
           JournalEntry(
-            at: now.subtract(Duration(hours: 36)),
+            at: now.subtract(const Duration(hours: 36)),
             kind: JournalKind.alcohol,
             payload: {'units': 4.0},
           ),
@@ -59,7 +59,7 @@ void main() {
       final s = module.evaluate(
         withJournal([
           JournalEntry(
-            at: now.subtract(Duration(hours: 6)),
+            at: now.subtract(const Duration(hours: 6)),
             kind: JournalKind.alcohol,
             payload: {'units': 0.0},
           ),

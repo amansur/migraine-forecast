@@ -29,9 +29,9 @@ void main() {
     test('inside perimenstrual window -> full weight', () {
       // Cycle onset two days from target -> day -2
       final history = [
-        MenstrualEvent(onsetDate: target.add(Duration(days: 2))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 26))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 54))),
+        MenstrualEvent(onsetDate: target.add(const Duration(days: 2))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 26))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 54))),
       ];
       final s = module.evaluate(withCycles(history), params);
       expect(s.weight, 20);
@@ -39,8 +39,8 @@ void main() {
 
     test('outside window -> no weight', () {
       final history = [
-        MenstrualEvent(onsetDate: target.add(Duration(days: 14))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 14))),
+        MenstrualEvent(onsetDate: target.add(const Duration(days: 14))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 14))),
       ];
       final s = module.evaluate(withCycles(history), params);
       expect(s.weight, 0);
@@ -48,13 +48,13 @@ void main() {
 
     test('irregular cycles reduce confidence', () {
       final history = [
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 2))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 26))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 60))), // long gap
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 85))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 115))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 140))),
-        MenstrualEvent(onsetDate: target.subtract(Duration(days: 200))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 2))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 26))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 60))), // long gap
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 85))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 115))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 140))),
+        MenstrualEvent(onsetDate: target.subtract(const Duration(days: 200))),
       ];
       final s = module.evaluate(withCycles(history), params);
       expect(s.confidence, lessThan(1.0));

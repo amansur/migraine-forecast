@@ -2,7 +2,7 @@ import 'package:geolocator/geolocator.dart';
 
 class PermissionService {
   bool _locationGranted = false;
-  bool _notificationsGranted = false;
+  final bool _notificationsGranted = false;
 
   PermissionService();
   PermissionService.forTesting();

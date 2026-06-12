@@ -25,7 +25,7 @@ void main() {
     final repo = AssessmentRepository(db);
     final t1 = DateTime.utc(2026, 6, 10, 6);
     final t2 = DateTime.utc(2026, 6, 11, 6);
-    await repo.save(RiskAssessment(
+    final base = RiskAssessment(
       score: 30,
       band: RiskBand.moderate,
       contributors: const [],
@@ -33,7 +33,8 @@ void main() {
       configVersion: 1,
       targetDate: DateTime.utc(2026, 6, 10),
       horizon: RiskHorizon.today,
-    ));
+    );
+    await repo.save(base);
     await repo.save(RiskAssessment(
       score: 60,
       band: RiskBand.high,

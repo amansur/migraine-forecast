@@ -33,7 +33,7 @@ void main() {
     test('no signal when drop below threshold', () {
       final samples = [
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
-        WeatherSample(at: now.add(Duration(hours: 24)), pressureMsl: 1013, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1013, temperatureC: 20, humidityPct: 50),
       ];
       final s = module.evaluate(withWeather(samples), params);
       expect(s.weight, lessThan(9.0)); // half-ramp under threshold
@@ -43,7 +43,7 @@ void main() {
     test('proportional weight at threshold', () {
       final samples = [
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
-        WeatherSample(at: now.add(Duration(hours: 24)), pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
       ];
       // 5 hPa drop = at threshold -> weight at half of max (9.0 with weightMax=18)
       final s = module.evaluate(withWeather(samples), params);
@@ -53,7 +53,7 @@ void main() {
     test('saturates at weight_max for large drops', () {
       final samples = [
         WeatherSample(at: now, pressureMsl: 1020, temperatureC: 20, humidityPct: 50),
-        WeatherSample(at: now.add(Duration(hours: 18)), pressureMsl: 1005, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now.add(const Duration(hours: 18)), pressureMsl: 1005, temperatureC: 20, humidityPct: 50),
       ];
       final s = module.evaluate(withWeather(samples), params);
       expect(s.weight, 18);

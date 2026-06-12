@@ -31,7 +31,7 @@ void main() {
     await journal.addEntry(JournalEntry(
       at: DateTime.utc(2026, 6, 10, 2),
       kind: JournalKind.stress,
-      payload: {'rating': 5},
+      payload: const {'rating': 5},
     ));
 
     final weather = OpenMeteoParser.parseForecast('{"hourly": {"time": ["2026-06-10T06:00"], "pressure_msl": [1012], "temperature_2m": [20], "relative_humidity_2m": [55]}}');
@@ -51,7 +51,7 @@ void main() {
       journal: journal,
       location: location,
       flagsRepo: flagsRepo,
-      baselineBuilder: BaselineSnapshotBuilder(const BaselineStore()),
+      baselineBuilder: const BaselineSnapshotBuilder(BaselineStore()),
       db: db,
     );
 

@@ -19,13 +19,28 @@ class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     state = await AsyncValue.guard(_compute);
   }
 
+  Future<RiskAssessment> backfill(DateTime target) async {
+    final builder = ref.read(contextBuilderProvider);
+    final cfg = await ref.read(rulesConfigProvider.future);
+    final engine = ref.read(riskEngineProvider);
+
+    // For backfill, 'now' should be the end of the target day to ensure we get a full snapshot.
+    final d = target.toUtc();
+    final endOfDay = DateTime.utc(d.year, d.month, d.day, 23, 59, 59);
+
+    final ctx = await builder.build(now: endOfDay, target: target.toUtc());
+    final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.today);
+    await ref.read(assessmentRepoProvider).save(ass);
+    return ass;
+  }
+
   Future<RiskAssessment> _compute() async {
     final builder = ref.read(contextBuilderProvider);
     final cfg = await ref.read(rulesConfigProvider.future);
     final engine = ref.read(riskEngineProvider);
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now();
     final today = DateTime.utc(now.year, now.month, now.day);
-    final ctx = await builder.build(now: now, target: today);
+    final ctx = await builder.build(now: now.toUtc(), target: today);
     final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.today);
     await ref.read(assessmentRepoProvider).save(ass);
     final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');
@@ -53,9 +68,9 @@ class TomorrowRiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     final builder = ref.read(contextBuilderProvider);
     final cfg = await ref.read(rulesConfigProvider.future);
     final engine = ref.read(riskEngineProvider);
-    final now = DateTime.now().toUtc();
+    final now = DateTime.now();
     final tomorrow = DateTime.utc(now.year, now.month, now.day).add(const Duration(days: 1));
-    final ctx = await builder.build(now: now, target: tomorrow);
+    final ctx = await builder.build(now: now.toUtc(), target: tomorrow);
     final ass = engine.evaluate(ctx, cfg, horizon: RiskHorizon.tomorrow);
     await ref.read(assessmentRepoProvider).save(ass);
     final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');

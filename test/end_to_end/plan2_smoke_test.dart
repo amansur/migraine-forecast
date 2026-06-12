@@ -38,26 +38,26 @@ void main() {
     await journal.addEntry(JournalEntry(
       at: DateTime.utc(2026, 6, 10, 2),
       kind: JournalKind.stress,
-      payload: {'rating': 5},
+      payload: const {'rating': 5},
     ));
     // Alcohol entry within 24h window
     await journal.addEntry(JournalEntry(
       at: DateTime.utc(2026, 6, 9, 22),
       kind: JournalKind.alcohol,
-      payload: {'units': 3.0},
+      payload: const {'units': 3.0},
     ));
     // Low hydration entry today to trigger hydration module
     await journal.addEntry(JournalEntry(
       at: DateTime.utc(2026, 6, 10, 5),
       kind: JournalKind.hydration,
-      payload: {'liters': 0.3},
+      payload: const {'liters': 0.3},
     ));
     // Caffeine baseline: 7 days of typical intake (200 mg/day each), no caffeine today
     for (int d = 7; d >= 1; d--) {
       await journal.addEntry(JournalEntry(
         at: DateTime.utc(2026, 6, 10 - d, 8),
         kind: JournalKind.caffeine,
-        payload: {'mg': 200.0},
+        payload: const {'mg': 200.0},
       ));
     }
 
@@ -125,7 +125,7 @@ void main() {
       journal: journal,
       location: location,
       flagsRepo: flagsRepo,
-      baselineBuilder: BaselineSnapshotBuilder(const BaselineStore()),
+      baselineBuilder: const BaselineSnapshotBuilder(BaselineStore()),
       db: db,
     );
 

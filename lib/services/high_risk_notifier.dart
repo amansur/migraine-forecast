@@ -40,7 +40,7 @@ class HighRiskNotifier {
     final when = ass.horizon == RiskHorizon.today ? 'Today' : 'Tomorrow';
     final band = ass.band == RiskBand.veryHigh ? 'very high' : 'high';
     final top = ass.contributors.isEmpty ? '' : ' — ${ass.contributors.first.explanation}.';
-    return ('${when}\'s migraine risk is $band', 'Score ${ass.score}/100$top');
+    return ('$when\'s migraine risk is $band', 'Score ${ass.score}/100$top');
   }
 
   int _idFor(RiskAssessment ass) {

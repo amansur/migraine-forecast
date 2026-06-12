@@ -4,18 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../state/providers.dart';
+import '../../state/risk_assessment_provider.dart';
 
 class LogAttackScreen extends ConsumerStatefulWidget {
-  const LogAttackScreen({super.key});
+  final Attack? initialAttack;
+  const LogAttackScreen({super.key, this.initialAttack});
   @override
   ConsumerState<LogAttackScreen> createState() => _LogAttackScreenState();
 }
 
 class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
-  late DateTime _start = DateTime.now();
-  DateTime? _end;
-  double _severity = 5;
-  final _notesCtrl = TextEditingController();
+  late DateTime _start = widget.initialAttack?.startedAt ?? DateTime.now();
+  late DateTime? _end = widget.initialAttack?.endedAt;
+  late double _severity = widget.initialAttack?.severity.toDouble() ?? 5;
+  late final _notesCtrl = TextEditingController();
   bool _saving = false;
 
   @override
@@ -87,7 +89,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
     final d = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      firstDate: DateTime.now().subtract(const Duration(days: 90)),
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (d == null) return null;
@@ -103,11 +105,34 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final journal = ref.read(journalSourceProvider);
-    final activeId = await ref.read(assessmentRepoProvider).activeAtRowId(_start.toUtc());
-    await journal.addAttack(
-      Attack(startedAt: _start.toUtc(), endedAt: _end?.toUtc(), severity: _severity.round()),
-      riskAssessmentId: activeId,
-    );
+    final repo = ref.read(assessmentRepoProvider);
+    
+    final startUtc = _start.toUtc();
+    final dayMarker = DateTime.utc(startUtc.year, startUtc.month, startUtc.day);
+    
+    // Check if an assessment exists for this DAY marker.
+    var activeId = await repo.activeAtRowId(startUtc);
+    final assessmentForDay = await repo.latestForDate(target: dayMarker, horizon: RiskHorizon.today);
+    
+    if (assessmentForDay == null) {
+      try {
+        // Backfill risk data for this day.
+        await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
+        // Re-fetch the active ID to link it to the newly created assessment.
+        activeId = await repo.activeAtRowId(startUtc);
+      } catch (e) {
+        debugPrint('Failed to backfill risk: $e');
+      }
+    }
+
+    final current = Attack(startedAt: startUtc, endedAt: _end?.toUtc(), severity: _severity.round());
+
+    if (widget.initialAttack != null) {
+      await journal.updateAttack(widget.initialAttack!, current);
+    } else {
+      await journal.addAttack(current, riskAssessmentId: activeId);
+    }
+
     if (mounted) {
       try {
         context.pop();

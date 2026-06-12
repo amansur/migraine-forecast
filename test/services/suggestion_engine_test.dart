@@ -39,7 +39,7 @@ CorrelationResult _none(String moduleId) => CorrelationResult(
     );
 
 void main() {
-  final engine = const SuggestionEngine();
+  const engine = SuggestionEngine();
 
   test('hits with no existing override suggest +1', () {
     final out = engine.suggestionsFor(
@@ -55,7 +55,7 @@ void main() {
 
   test('misses suggest -1', () {
     final out = engine.suggestionsFor(
-      results: [_miss('humidity')],
+      results: [_miss('humidity_temp_swing')],
       currentOverrides: const {},
       dismissedAt: const {},
       now: DateTime.utc(2026, 6, 11),

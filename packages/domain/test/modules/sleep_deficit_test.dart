@@ -34,11 +34,11 @@ void main() {
         withSleep([
           SleepRecord(
             night: lastNight,
-            totalSleep: Duration(hours: 4, minutes: 30),
+            totalSleep: const Duration(hours: 4, minutes: 30),
             efficiency: 0.9,
-            sleepStart: lastNight.add(Duration(hours: 22)),
+            sleepStart: lastNight.add(const Duration(hours: 22)),
           ),
-        ], baseline: Duration(hours: 7)),
+        ], baseline: const Duration(hours: 7)),
         params,
       );
       expect(s.weight, greaterThan(2.0));
@@ -50,11 +50,11 @@ void main() {
         withSleep([
           SleepRecord(
             night: lastNight,
-            totalSleep: Duration(hours: 7),
+            totalSleep: const Duration(hours: 7),
             efficiency: 0.7,
-            sleepStart: lastNight.add(Duration(hours: 22)),
+            sleepStart: lastNight.add(const Duration(hours: 22)),
           ),
-        ], baseline: Duration(hours: 7)),
+        ], baseline: const Duration(hours: 7)),
         params,
       );
       expect(s.weight, greaterThan(0));
@@ -65,12 +65,12 @@ void main() {
         withSleep([
           SleepRecord(
             night: lastNight,
-            totalSleep: Duration(hours: 7),
+            totalSleep: const Duration(hours: 7),
             efficiency: 0.9,
-            sleepStart: lastNight.add(Duration(hours: 25)), // 1am vs typical 10pm = 3h shift
+            sleepStart: lastNight.add(const Duration(hours: 25)), // 1am vs typical 10pm = 3h shift
           ),
-        ], baseline: Duration(hours: 7)),
-        ModuleParams(
+        ], baseline: const Duration(hours: 7)),
+        const ModuleParams(
           enabled: true,
           weightMax: 20,
           params: {
@@ -89,9 +89,9 @@ void main() {
         withSleep([
           SleepRecord(
             night: lastNight,
-            totalSleep: Duration(hours: 5),
+            totalSleep: const Duration(hours: 5),
             efficiency: 0.9,
-            sleepStart: lastNight.add(Duration(hours: 22)),
+            sleepStart: lastNight.add(const Duration(hours: 22)),
           ),
         ]),
         params,

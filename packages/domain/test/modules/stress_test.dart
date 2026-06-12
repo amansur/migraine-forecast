@@ -23,7 +23,7 @@ void main() {
       final s = module.evaluate(
         withEntries([
           JournalEntry(
-            at: now.subtract(Duration(hours: 4)),
+            at: now.subtract(const Duration(hours: 4)),
             kind: JournalKind.stress,
             payload: {'rating': 5},
           ),
@@ -37,7 +37,7 @@ void main() {
       final s = module.evaluate(
         withEntries([
           JournalEntry(
-            at: now.subtract(Duration(hours: 4)),
+            at: now.subtract(const Duration(hours: 4)),
             kind: JournalKind.stress,
             payload: {'rating': 1},
           ),
@@ -51,9 +51,9 @@ void main() {
       final s = module.evaluate(
         withEntries([
           // ordered earliest first; module sorts internally
-          JournalEntry(at: now.subtract(Duration(hours: 30)), kind: JournalKind.stress, payload: {'rating': 5}),
-          JournalEntry(at: now.subtract(Duration(hours: 24)), kind: JournalKind.stress, payload: {'rating': 5}),
-          JournalEntry(at: now.subtract(Duration(hours: 4)), kind: JournalKind.stress, payload: {'rating': 2}),
+          JournalEntry(at: now.subtract(const Duration(hours: 30)), kind: JournalKind.stress, payload: {'rating': 5}),
+          JournalEntry(at: now.subtract(const Duration(hours: 24)), kind: JournalKind.stress, payload: {'rating': 5}),
+          JournalEntry(at: now.subtract(const Duration(hours: 4)), kind: JournalKind.stress, payload: {'rating': 2}),
         ]),
         params,
       );

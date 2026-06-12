@@ -24,7 +24,15 @@ class _RecordingJournal implements JournalSource {
 
   @override
   Stream<List<Attack>> watchRecentAttacks(Duration window, {required DateTime now}) => Stream.value([]);
+
+  @override
+  Future<void> deleteAttack(DateTime startedAt) async {}
+
+  @override
+  Future<void> updateAttack(Attack old, Attack updated) async {
+    lastAttack = updated;
   }
+}
 void main() {
   testWidgets('Submitting saves an attack via JournalSource', (tester) async {
     final journal = _RecordingJournal();

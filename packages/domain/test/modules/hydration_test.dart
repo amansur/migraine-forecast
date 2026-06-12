@@ -33,7 +33,7 @@ void main() {
       final s = module.evaluate(
         build(entries: [
           JournalEntry(
-            at: now.subtract(Duration(hours: 2)),
+            at: now.subtract(const Duration(hours: 2)),
             kind: JournalKind.hydration,
             payload: {'liters': 2.0},
           ),
@@ -47,7 +47,7 @@ void main() {
       final s = module.evaluate(
         build(entries: [
           JournalEntry(
-            at: now.subtract(Duration(hours: 2)),
+            at: now.subtract(const Duration(hours: 2)),
             kind: JournalKind.hydration,
             payload: {'liters': 0.5},
           ),
@@ -59,17 +59,17 @@ void main() {
 
     test('hot weather amplifies signal', () {
       final hotSamples = [
-        WeatherSample(at: now.subtract(Duration(hours: 6)), pressureMsl: 1015, temperatureC: 32, humidityPct: 30),
+        WeatherSample(at: now.subtract(const Duration(hours: 6)), pressureMsl: 1015, temperatureC: 32, humidityPct: 30),
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 33, humidityPct: 30),
       ];
       final mildSamples = [
-        WeatherSample(at: now.subtract(Duration(hours: 6)), pressureMsl: 1015, temperatureC: 18, humidityPct: 50),
+        WeatherSample(at: now.subtract(const Duration(hours: 6)), pressureMsl: 1015, temperatureC: 18, humidityPct: 50),
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 19, humidityPct: 50),
       ];
       final hot = module.evaluate(
         build(
           entries: [
-            JournalEntry(at: now.subtract(Duration(hours: 2)), kind: JournalKind.hydration, payload: {'liters': 1.0}),
+            JournalEntry(at: now.subtract(const Duration(hours: 2)), kind: JournalKind.hydration, payload: {'liters': 1.0}),
           ],
           weather: WeatherSeries(samples: hotSamples),
         ),
@@ -78,7 +78,7 @@ void main() {
       final mild = module.evaluate(
         build(
           entries: [
-            JournalEntry(at: now.subtract(Duration(hours: 2)), kind: JournalKind.hydration, payload: {'liters': 1.0}),
+            JournalEntry(at: now.subtract(const Duration(hours: 2)), kind: JournalKind.hydration, payload: {'liters': 1.0}),
           ],
           weather: WeatherSeries(samples: mildSamples),
         ),

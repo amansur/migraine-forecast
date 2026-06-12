@@ -33,7 +33,7 @@ void main() {
         build(
           entries: [
             JournalEntry(
-              at: now.subtract(Duration(hours: 3)),
+              at: now.subtract(const Duration(hours: 3)),
               kind: JournalKind.caffeine,
               payload: {'mg': 50},
             ),
@@ -50,7 +50,7 @@ void main() {
         build(
           entries: [
             JournalEntry(
-              at: now.subtract(Duration(hours: 3)),
+              at: now.subtract(const Duration(hours: 3)),
               kind: JournalKind.caffeine,
               payload: {'mg': 180},
             ),

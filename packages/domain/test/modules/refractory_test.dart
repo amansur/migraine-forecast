@@ -29,7 +29,7 @@ void main() {
     test('attack within suppression window -> weight 0', () {
       // Refractory means risk is LOWER right after an attack. We model that as 0 contribution.
       final s = module.evaluate(
-        withAttacks([Attack(startedAt: now.subtract(Duration(hours: 12)), severity: 6)]),
+        withAttacks([Attack(startedAt: now.subtract(const Duration(hours: 12)), severity: 6)]),
         params,
       );
       expect(s.weight, 0);
@@ -38,7 +38,7 @@ void main() {
 
     test('attack just outside window -> small positive (rebound)', () {
       final s = module.evaluate(
-        withAttacks([Attack(startedAt: now.subtract(Duration(hours: 60)), severity: 6)]),
+        withAttacks([Attack(startedAt: now.subtract(const Duration(hours: 60)), severity: 6)]),
         params,
       );
       expect(s.weight, greaterThan(0));
@@ -47,7 +47,7 @@ void main() {
 
     test('attack long ago -> no contribution', () {
       final s = module.evaluate(
-        withAttacks([Attack(startedAt: now.subtract(Duration(days: 30)), severity: 6)]),
+        withAttacks([Attack(startedAt: now.subtract(const Duration(days: 30)), severity: 6)]),
         params,
       );
       expect(s.weight, 0);

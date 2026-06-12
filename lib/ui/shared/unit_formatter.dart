@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 enum TemperatureUnit { celsius, fahrenheit }
 enum PressureUnit { hpa, mmhg }
 

@@ -25,7 +25,9 @@ class OpenMeteoWeatherSource implements WeatherSource {
       return _toSnapshot(cached, stale: false);
     }
     try {
-      final forecastRes = await client.get(OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon));
+      final diffDays = DateTime.now().difference(now).inDays.abs();
+      final pastDays = diffDays.clamp(1, 90);
+      final forecastRes = await client.get(OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays));
       final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon));
       if (forecastRes.statusCode >= 400 || aqRes.statusCode >= 400) {
         if (cached != null) return _toSnapshot(cached, stale: true);

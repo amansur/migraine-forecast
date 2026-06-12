@@ -32,28 +32,28 @@ void main() {
       targetDate: target,
       weather: WeatherSeries(samples: [
         WeatherSample(at: now, pressureMsl: 1020, temperatureC: 18, humidityPct: 50),
-        WeatherSample(at: now.add(Duration(hours: 24)), pressureMsl: 1008, temperatureC: 19, humidityPct: 55),
+        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1008, temperatureC: 19, humidityPct: 55),
       ]),
       health: HealthMetrics(
         recentSleep: [
           SleepRecord(
             night: lastNight,
-            totalSleep: Duration(hours: 4, minutes: 30),
+            totalSleep: const Duration(hours: 4, minutes: 30),
             efficiency: 0.78,
-            sleepStart: lastNight.add(Duration(hours: 25)),
+            sleepStart: lastNight.add(const Duration(hours: 25)),
           ),
         ],
         recentHrv: [HrvSample(at: now, rmssdMs: 30)],
       ),
       recentJournal: [
-        JournalEntry(at: now.subtract(Duration(hours: 8)), kind: JournalKind.alcohol, payload: {'units': 3.0}),
-        JournalEntry(at: now.subtract(Duration(hours: 4)), kind: JournalKind.stress, payload: {'rating': 5}),
+        JournalEntry(at: now.subtract(const Duration(hours: 8)), kind: JournalKind.alcohol, payload: {'units': 3.0}),
+        JournalEntry(at: now.subtract(const Duration(hours: 4)), kind: JournalKind.stress, payload: {'rating': 5}),
       ],
-      baselines: BaselineSnapshot(
+      baselines: const BaselineSnapshot(
         sleepMedian7d: Duration(hours: 7),
         hrvRmssdBaseline14d: 50,
       ),
-      userFlags: UserTriggerFlags(
+      userFlags: const UserTriggerFlags(
         flaggedModuleIds: {'pressure_drop', 'sleep_deficit', 'alcohol', 'stress', 'hrv_letdown'},
       ),
     );

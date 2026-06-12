@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:migraine_weatherr/data/sources/open_meteo/open_meteo_parser.dart';
 
 void main() {
