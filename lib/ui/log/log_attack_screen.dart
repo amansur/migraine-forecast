@@ -15,11 +15,24 @@ class LogAttackScreen extends ConsumerStatefulWidget {
 }
 
 class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
-  late DateTime _start = widget.initialAttack?.startedAt ?? widget.initialDate ?? DateTime.now();
-  late DateTime? _end = widget.initialAttack?.endedAt;
+  late DateTime _start = _initStart();
+  late DateTime? _end = widget.initialAttack?.endedAt?.toLocal();
   late double _severity = widget.initialAttack?.severity.toDouble() ?? 5;
   late final _notesCtrl = TextEditingController();
   bool _saving = false;
+
+  DateTime _initStart() {
+    if (widget.initialAttack != null) {
+      return widget.initialAttack!.startedAt.toLocal();
+    }
+    if (widget.initialDate != null) {
+      final d = widget.initialDate!;
+      // initialDate is a UTC midnight marker (e.g. June 11 00:00Z).
+      // We want to initialize the log to June 11 at 12:00 PM in the user's Local time.
+      return DateTime(d.year, d.month, d.day, 12, 0);
+    }
+    return DateTime.now();
+  }
 
   @override
   void dispose() {
@@ -39,13 +52,13 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
             children: [
               ListTile(
                 title: const Text('Started'),
-                subtitle: Text(_start.toLocal().toString()),
+                subtitle: Text(_start.toString()),
                 trailing: const Icon(Icons.edit_outlined),
                 onTap: _pickStart,
               ),
               ListTile(
                 title: const Text('Ended (optional)'),
-                subtitle: Text(_end?.toLocal().toString() ?? 'In progress'),
+                subtitle: Text(_end?.toString() ?? 'In progress'),
                 trailing: const Icon(Icons.edit_outlined),
                 onTap: _pickEnd,
               ),
