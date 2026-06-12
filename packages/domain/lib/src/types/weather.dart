@@ -78,6 +78,57 @@ class WeatherSeries extends Equatable {
     return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
   }
 
+  List<WeatherSample> _between(DateTime start, DateTime end) =>
+      samples.where((s) => !s.at.isBefore(start) && !s.at.isAfter(end)).toList();
+
+  /// Max pressure drop within any 24h-or-smaller sliding pair in [start, end].
+  double? maxPressureDropInWindow(DateTime start, DateTime end) {
+    final inWindow = _between(start, end);
+    if (inWindow.length < 2) return null;
+    double maxDrop = 0;
+    int j = 0;
+    for (int i = 0; i < inWindow.length; i++) {
+      while (j < inWindow.length && inWindow[j].at.difference(inWindow[i].at) <= const Duration(hours: 24)) {
+        j++;
+      }
+      for (int k = i + 1; k < j; k++) {
+        final drop = inWindow[i].pressureMsl - inWindow[k].pressureMsl;
+        if (drop > maxDrop) maxDrop = drop;
+      }
+    }
+    return maxDrop;
+  }
+
+  /// Max minus min temperature within [start, end].
+  double? tempSwingInWindow(DateTime start, DateTime end) {
+    final inWindow = _between(start, end);
+    if (inWindow.isEmpty) return null;
+    final max = inWindow.map((s) => s.temperatureC).reduce((a, b) => a > b ? a : b);
+    final min = inWindow.map((s) => s.temperatureC).reduce((a, b) => a < b ? a : b);
+    return max - min;
+  }
+
+  /// Last minus first temperature within [start, end]. Positive = warming.
+  double? tempTrendInWindow(DateTime start, DateTime end) {
+    final inWindow = _between(start, end);
+    if (inWindow.length < 2) return null;
+    return inWindow.last.temperatureC - inWindow.first.temperatureC;
+  }
+
+  /// Last minus first humidity within [start, end]. Positive = rising.
+  double? humidityTrendInWindow(DateTime start, DateTime end) {
+    final inWindow = _between(start, end);
+    if (inWindow.length < 2) return null;
+    return inWindow.last.humidityPct - inWindow.first.humidityPct;
+  }
+
+  /// Peak humidity within [start, end].
+  double? maxHumidityInWindow(DateTime start, DateTime end) {
+    final inWindow = _between(start, end);
+    if (inWindow.isEmpty) return null;
+    return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
+  }
+
   @override
   List<Object?> get props => [samples];
 }
@@ -102,6 +153,16 @@ class AirQualitySeries extends Equatable {
     return inWindow.map((s) => s.pm25).reduce((a, b) => a > b ? a : b);
   }
 
+  /// Peak PM2.5 within [start, end] inclusive.
+  double? maxPm25InWindow(DateTime start, DateTime end) {
+    final inWindow = samples.where(
+      (s) => !s.at.isBefore(start) && !s.at.isAfter(end),
+    );
+    if (inWindow.isEmpty) return null;
+    return inWindow.map((s) => s.pm25).reduce((a, b) => a > b ? a : b);
+  }
+
   @override
   List<Object?> get props => [samples];
 }
+
