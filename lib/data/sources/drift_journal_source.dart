@@ -61,4 +61,15 @@ class DriftJournalSource implements JournalSource {
         .map((r) => domain.Attack(startedAt: r.startedAt, endedAt: r.endedAt, severity: r.severity))
         .toList();
   }
+
+  @override
+  Stream<List<domain.Attack>> watchRecentAttacks(Duration window, {required DateTime now}) {
+    final cutoff = now.subtract(window);
+    final query = _db.select(_db.attacks)
+      ..where((t) => t.startedAt.isBiggerOrEqualValue(cutoff))
+      ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]);
+    return query.watch().map((rows) => rows
+        .map((r) => domain.Attack(startedAt: r.startedAt, endedAt: r.endedAt, severity: r.severity))
+        .toList());
+  }
 }
