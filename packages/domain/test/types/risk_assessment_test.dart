@@ -27,5 +27,42 @@ void main() {
       );
       expect(ass.isOnboarding, isTrue);
     });
+
+    test('backfilled defaults to false', () {
+      final ass = RiskAssessment(
+        score: 10,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.utc(2026, 6, 1, 12),
+        configVersion: 1,
+        targetDate: DateTime.utc(2026, 6, 1),
+        horizon: RiskHorizon.today,
+      );
+      expect(ass.backfilled, isFalse);
+    });
+
+    test('backfilled flag is settable and included in equality', () {
+      final base = RiskAssessment(
+        score: 0,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.utc(2026, 6, 1, 12),
+        configVersion: 1,
+        targetDate: DateTime.utc(2026, 6, 1),
+        horizon: RiskHorizon.today,
+      );
+      final backfilled = RiskAssessment(
+        score: 0,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.utc(2026, 6, 1, 12),
+        configVersion: 1,
+        targetDate: DateTime.utc(2026, 6, 1),
+        horizon: RiskHorizon.today,
+        backfilled: true,
+      );
+      expect(backfilled.backfilled, isTrue);
+      expect(backfilled, isNot(equals(base)));
+    });
   });
 }
