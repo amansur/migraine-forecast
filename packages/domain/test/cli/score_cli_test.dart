@@ -13,8 +13,8 @@ void main() {
       'targetDate': '2026-06-10T00:00:00Z',
       'horizon': 'today',
       'weather': [
-        {'at': '2026-06-10T06:00:00Z', 'pressureMsl': 1020, 'temperatureC': 18, 'humidityPct': 50},
-        {'at': '2026-06-11T06:00:00Z', 'pressureMsl': 1006, 'temperatureC': 19, 'humidityPct': 55},
+        {'at': '2026-06-09T06:00:00Z', 'pressureMsl': 1020, 'temperatureC': 18, 'humidityPct': 50},
+        {'at': '2026-06-10T06:00:00Z', 'pressureMsl': 1006, 'temperatureC': 19, 'humidityPct': 55},
       ],
       'health': {
         'sleep': [

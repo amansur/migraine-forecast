@@ -1,5 +1,6 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
+import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -22,10 +23,13 @@ class HumidityModule implements TriggerModule {
       );
     }
     final threshold = params.getDouble('humidity_pct', 60);
-    final maxHumidity = ctx.weather!.maxHumidityFrom(
-      ctx.now.subtract(const Duration(hours: 24)),
-      const Duration(hours: 48),
-    );
+    final window = const Duration(hours: 24);
+    final direction = directionFor(ctx);
+    final (start, end) = switch (direction) {
+      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
+      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
+    };
+    final maxHumidity = ctx.weather!.maxHumidityInWindow(start, end);
     if (maxHumidity == null) {
       return TriggerSignal.zero(
         moduleId: id,
@@ -33,14 +37,24 @@ class HumidityModule implements TriggerModule {
         missing: DataRequirement.weatherHumidity,
       );
     }
-    final trend = ctx.weather!.humidityTrendInLast(const Duration(hours: 24));
+    final trend = ctx.weather!.humidityTrendInWindow(start, end);
     final delta = trend == null
         ? ''
         : trend >= 0
-            ? ' (+${trend.round()}%)'
-            : ' (${trend.round()}%)';
-    final direction = trend == null ? '' : trend > 0 ? ', rising' : ', falling';
-    final explanation = 'Humidity ${maxHumidity.toStringAsFixed(0)}%$delta$direction';
+            ? ' +${trend.round()}%'
+            : ' ${trend.round()}%';
+    final risingFalling = trend == null ? '' : trend > 0 ? 'rising' : 'falling';
+    final maxStr = maxHumidity.toStringAsFixed(0);
+    final explanation = switch (direction) {
+      WindowDirection.past => trend == null
+          ? 'Humidity $maxStr% in last 24h'
+          : trend >= 0
+              ? 'Humidity $maxStr%, rose$delta in last 24h'
+              : 'Humidity $maxStr%, fell$delta in last 24h',
+      WindowDirection.future => trend == null
+          ? 'Humidity reaching $maxStr% over next 24h'
+          : 'Humidity reaching $maxStr%, $risingFalling$delta over next 24h',
+    };
     if (maxHumidity <= threshold) {
       return TriggerSignal(moduleId: id, weight: 0, confidence: 1.0, explanation: explanation);
     }

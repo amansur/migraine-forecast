@@ -62,7 +62,17 @@ void main() {
     }
 
     final fxText = await rootBundle.loadString('test/data/sources/fixtures/open_meteo/forecast_pressure_drop.json');
-    final weather = OpenMeteoParser.parseForecast(fxText);
+    final forecast = OpenMeteoParser.parseForecast(fxText);
+    // The fixture's first sample is at 2026-06-10 06:00 (==now). The today-scoring
+    // path now reads [now-24h, now], so prepend the same drop pattern shifted
+    // back 24h to represent recent history.
+    final pastSamples = [
+      WeatherSample(at: DateTime.utc(2026, 6, 9, 6), pressureMsl: 1020, temperatureC: 18, humidityPct: 50),
+      WeatherSample(at: DateTime.utc(2026, 6, 9, 12), pressureMsl: 1017, temperatureC: 21, humidityPct: 58),
+      WeatherSample(at: DateTime.utc(2026, 6, 9, 18), pressureMsl: 1013, temperatureC: 24.5, humidityPct: 65),
+      WeatherSample(at: DateTime.utc(2026, 6, 10, 0), pressureMsl: 1009, temperatureC: 23, humidityPct: 72),
+    ];
+    final weather = WeatherSeries(samples: [...pastSamples, ...forecast.samples]);
     final stubWeather = _StubWeather(
       WeatherSnapshot(weather: weather, airQuality: const AirQualitySeries(samples: []), fetchedAt: DateTime.utc(2026, 6, 10, 6)),
     );

@@ -1,5 +1,6 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
+import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -23,29 +24,44 @@ class AirQualityModule implements TriggerModule {
       );
     }
     final threshold = params.getDouble('pm25_threshold', 35);
-    final maxPm25 = aq.maxPm25From(ctx.now, const Duration(hours: 24));
+    final window = const Duration(hours: 24);
+    final direction = directionFor(ctx);
+    final (start, end) = switch (direction) {
+      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
+      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
+    };
+    final maxPm25 = aq.maxPm25InWindow(start, end);
     if (maxPm25 == null) {
       return TriggerSignal.zero(
         moduleId: id,
-        reason: 'No upcoming AQ samples',
+        reason: 'No AQ samples in window',
         missing: DataRequirement.weatherAirQuality,
       );
     }
+    final valStr = maxPm25.toStringAsFixed(0);
     if (maxPm25 < threshold) {
+      final okExplanation = switch (direction) {
+        WindowDirection.past => 'Air quality OK (PM2.5 $valStr in last 24h)',
+        WindowDirection.future => 'Air quality OK (PM2.5 $valStr over next 24h)',
+      };
       return TriggerSignal(
         moduleId: id,
         weight: 0,
         confidence: 1.0,
-        explanation: 'Air quality OK (PM2.5 ${maxPm25.toStringAsFixed(0)})',
+        explanation: okExplanation,
       );
     }
     final saturation = threshold * 2;
     final t = ((maxPm25 - threshold) / (saturation - threshold)).clamp(0.0, 1.0);
+    final explanation = switch (direction) {
+      WindowDirection.past => 'PM2.5 peaked at $valStr µg/m³ in last 24h',
+      WindowDirection.future => 'PM2.5 forecast to reach $valStr µg/m³ over next 24h',
+    };
     return TriggerSignal(
       moduleId: id,
       weight: params.weightMax * t,
       confidence: 1.0,
-      explanation: 'High PM2.5 (${maxPm25.toStringAsFixed(0)} µg/m³)',
+      explanation: explanation,
     );
   }
 }

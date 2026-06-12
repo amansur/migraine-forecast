@@ -31,8 +31,10 @@ void main() {
       now: now,
       targetDate: target,
       weather: WeatherSeries(samples: [
-        WeatherSample(at: now, pressureMsl: 1020, temperatureC: 18, humidityPct: 50),
-        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1008, temperatureC: 19, humidityPct: 55),
+        // Past 24h: pressure drop + warm humid drift; target = today so the
+        // engine reads [now - 24h, now].
+        WeatherSample(at: now.subtract(const Duration(hours: 24)), pressureMsl: 1020, temperatureC: 18, humidityPct: 50),
+        WeatherSample(at: now, pressureMsl: 1008, temperatureC: 19, humidityPct: 55),
       ]),
       health: HealthMetrics(
         recentSleep: [

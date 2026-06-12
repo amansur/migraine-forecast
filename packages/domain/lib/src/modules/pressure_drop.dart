@@ -1,5 +1,6 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
+import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -24,9 +25,21 @@ class PressureDropModule implements TriggerModule {
       );
     }
     final thresholdHpa = params.getDouble('threshold_hpa', 5);
-    final lookahead = Duration(hours: params.getInt('lookahead_hours', 48));
-    final drop = ctx.weather!.maxPressureDropOver(const Duration(hours: 24));
-    if (drop == null || drop <= 0) {
+    final window = const Duration(hours: 24);
+    final direction = directionFor(ctx);
+    final (start, end) = switch (direction) {
+      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
+      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
+    };
+    final drop = ctx.weather!.maxPressureDropInWindow(start, end);
+    if (drop == null) {
+      return TriggerSignal.zero(
+        moduleId: id,
+        reason: 'Insufficient weather samples',
+        missing: DataRequirement.weatherPressure,
+      );
+    }
+    if (drop <= 0) {
       return TriggerSignal(
         moduleId: id,
         weight: 0,
@@ -34,19 +47,22 @@ class PressureDropModule implements TriggerModule {
         explanation: 'Pressure stable',
       );
     }
-    // Linear ramp from threshold to 2x threshold; saturates at weight_max.
     final saturationHpa = thresholdHpa * 2.0;
     final t = ((drop - thresholdHpa) / (saturationHpa - thresholdHpa)).clamp(0.0, 1.0);
-    // Below threshold: half-weight ramp to handle borderline cases.
     final rampedT = drop < thresholdHpa
         ? (drop / thresholdHpa) * 0.5
         : 0.5 + t * 0.5;
     final weight = (params.weightMax * rampedT).clamp(0.0, params.weightMax);
+    final dropStr = drop.toStringAsFixed(1);
+    final explanation = switch (direction) {
+      WindowDirection.past => 'Pressure dropped $dropStr hPa in last 24h',
+      WindowDirection.future => 'Pressure dropping $dropStr hPa over next 24h',
+    };
     return TriggerSignal(
       moduleId: id,
       weight: weight,
       confidence: 1.0,
-      explanation: 'Pressure dropping ${drop.toStringAsFixed(1)} hPa over next ${lookahead.inHours}h',
+      explanation: explanation,
     );
   }
 }

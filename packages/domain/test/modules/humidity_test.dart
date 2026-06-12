@@ -10,39 +10,58 @@ void main() {
       params: {'humidity_pct': 60},
     );
     final now = DateTime.utc(2026, 6, 10, 6);
-    final targetDate = DateTime.utc(2026, 6, 10);
+    final todayTarget = DateTime.utc(2026, 6, 10);
+    final tomorrowTarget = DateTime.utc(2026, 6, 11);
 
-    EvaluationContext withSamples(List<WeatherSample> samples) => EvaluationContext(
+    EvaluationContext withSamples(
+      List<WeatherSample> samples, {
+      DateTime? targetDate,
+    }) =>
+        EvaluationContext(
           now: now,
-          targetDate: targetDate,
+          targetDate: targetDate ?? todayTarget,
           weather: WeatherSeries(samples: samples),
           baselines: BaselineSnapshot.empty,
         );
 
     test('no weather -> zero confidence', () {
       final s = module.evaluate(
-        EvaluationContext(now: now, targetDate: targetDate, baselines: BaselineSnapshot.empty),
+        EvaluationContext(now: now, targetDate: todayTarget, baselines: BaselineSnapshot.empty),
         params,
       );
       expect(s.confidence, 0);
     });
 
-    test('full weight above threshold', () {
+    test('today (past): full weight above threshold, past-tense string', () {
       final samples = [
         WeatherSample(at: now.subtract(const Duration(hours: 23)), pressureMsl: 1015, temperatureC: 20, humidityPct: 70),
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 75),
       ];
       final s = module.evaluate(withSamples(samples), params);
       expect(s.weight, 6);
+      expect(s.explanation, contains('rose'));
+      expect(s.explanation, contains('in last 24h'));
     });
 
-    test('zero weight at or below threshold', () {
+    test('today (past): zero weight at or below threshold', () {
       final samples = [
         WeatherSample(at: now.subtract(const Duration(hours: 23)), pressureMsl: 1015, temperatureC: 20, humidityPct: 55),
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 60),
       ];
       final s = module.evaluate(withSamples(samples), params);
       expect(s.weight, 0);
+    });
+
+    test('tomorrow (future): reads forecast, uses future tense', () {
+      final samples = [
+        WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
+        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1015, temperatureC: 20, humidityPct: 85),
+      ];
+      final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
+      expect(s.weight, 6);
+      expect(s.explanation, contains('reaching 85%'));
+      expect(s.explanation, contains('rising'));
+      expect(s.explanation, contains('over next 24h'));
     });
   });
 }
