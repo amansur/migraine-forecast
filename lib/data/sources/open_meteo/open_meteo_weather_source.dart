@@ -20,12 +20,19 @@ class OpenMeteoWeatherSource implements WeatherSource {
 
   @override
   Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) async {
-    final cached = await _latestCached(lat, lon);
-    if (cached != null && now.difference(cached.fetchedAt) <= freshness) {
-      return _toSnapshot(cached, stale: false);
+    final nowUtc = now.toUtc();
+    final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
+
+    final cached = await _cachedForDay(lat, lon, requestedDay);
+    if (cached != null) {
+      final diff = nowUtc.difference(cached.fetchedAt as DateTime);
+      if (!diff.isNegative && diff <= freshness) {
+        return _toSnapshot(cached, stale: false);
+      }
     }
+
     try {
-      final diffDays = DateTime.now().difference(now).inDays.abs();
+      final diffDays = DateTime.now().toUtc().difference(nowUtc).inDays.abs();
       final pastDays = diffDays.clamp(1, 90);
       final forecastRes = await client.get(OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays));
       final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon));
@@ -35,7 +42,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
       }
       await db.into(db.weatherSnapshots).insert(
             WeatherSnapshotsCompanion.insert(
-              fetchedAt: now,
+              fetchedAt: nowUtc,
               lat: lat,
               lon: lon,
               forecastJson: forecastRes.body,
@@ -45,7 +52,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
       return WeatherSnapshot(
         weather: OpenMeteoParser.parseForecast(forecastRes.body),
         airQuality: OpenMeteoParser.parseAirQuality(aqRes.body),
-        fetchedAt: now,
+        fetchedAt: nowUtc,
         stale: false,
       );
     } catch (_) {
@@ -54,9 +61,15 @@ class OpenMeteoWeatherSource implements WeatherSource {
     }
   }
 
-  Future<dynamic> _latestCached(double lat, double lon) async {
+  Future<dynamic> _cachedForDay(double lat, double lon, DateTime day) async {
+    final start = day;
+    final end = day.add(const Duration(days: 1));
     final q = db.select(db.weatherSnapshots)
-      ..where((t) => t.lat.equals(lat) & t.lon.equals(lon))
+      ..where((t) =>
+          t.lat.equals(lat) &
+          t.lon.equals(lon) &
+          t.fetchedAt.isBiggerOrEqualValue(start) &
+          t.fetchedAt.isSmallerThanValue(end))
       ..orderBy([(t) => OrderingTerm.desc(t.fetchedAt)])
       ..limit(1);
     final rows = await q.get();
