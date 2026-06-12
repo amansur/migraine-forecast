@@ -1,3 +1,4 @@
+import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -56,5 +57,78 @@ void main() {
 
     expect(find.text('Risk Assessment'), findsOneWidget);
     expect(find.text('Logged Migraines'), findsOneWidget);
+  });
+
+  testWidgets('detail sheet shows "No end time recorded" when endedAt null and not inProgress',
+      (tester) async {
+    final attack = Attack(
+      startedAt: DateTime.utc(2026, 6, 5, 12),
+      endedAt: null,
+      severity: 5,
+      inProgress: false,
+    );
+    final day = DateTime.utc(2026, 6, 5);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          insightsEligibleProvider.overrideWith((ref) => Stream.value(true)),
+          recentAttacksProvider.overrideWith((ref) => Stream.value([attack])),
+          correlationResultsProvider.overrideWith((ref) async => []),
+          suggestionsProvider.overrideWith((ref) async => []),
+          dayAssessmentProvider.overrideWith((ref, date) async => null),
+          dayAttacksProvider.overrideWith((ref, date) => Stream.value([attack])),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const InsightsScreen()),
+          ]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap a day to open the detail sheet
+    final dayWidget = find.byType(InkWell).first;
+    await tester.tap(dayWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('In progress'), findsNothing);
+    expect(find.textContaining('No end time recorded'), findsOneWidget);
+  });
+
+  testWidgets('detail sheet shows "In progress" only when inProgress=true', (tester) async {
+    final attack = Attack(
+      startedAt: DateTime.utc(2026, 6, 5, 12),
+      endedAt: null,
+      severity: 5,
+      inProgress: true,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          insightsEligibleProvider.overrideWith((ref) => Stream.value(true)),
+          recentAttacksProvider.overrideWith((ref) => Stream.value([attack])),
+          correlationResultsProvider.overrideWith((ref) async => []),
+          suggestionsProvider.overrideWith((ref) async => []),
+          dayAssessmentProvider.overrideWith((ref, date) async => null),
+          dayAttacksProvider.overrideWith((ref, date) => Stream.value([attack])),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const InsightsScreen()),
+          ]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap a day to open the detail sheet
+    final dayWidget = find.byType(InkWell).first;
+    await tester.tap(dayWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('In progress'), findsOneWidget);
   });
 }

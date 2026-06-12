@@ -242,13 +242,15 @@ class _DayDetailSheet extends ConsumerWidget {
                     else
                       ...list.map((a) {
                         final start = DateFormat('jm').format(a.startedAt.toLocal());
-                        final end = a.endedAt != null
-                            ? DateFormat('jm').format(a.endedAt!.toLocal())
-                            : 'In progress';
+                        final endLabel = a.inProgress
+                            ? 'In progress'
+                            : a.endedAt != null
+                                ? DateFormat('jm').format(a.endedAt!.toLocal())
+                                : 'No end time recorded';
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text('Severity ${a.severity}'),
-                          subtitle: Text('$start - $end'),
+                          subtitle: Text('$start - $endLabel'),
                           leading: const Icon(Icons.bolt, color: Colors.orange),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
