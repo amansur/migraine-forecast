@@ -2,6 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers.dart';
+import 'trigger_flags_provider.dart';
 
 final riskAssessmentProvider =
     AsyncNotifierProvider<RiskAssessmentNotifier, RiskAssessment>(RiskAssessmentNotifier.new);
@@ -9,6 +10,7 @@ final riskAssessmentProvider =
 class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
   @override
   Future<RiskAssessment> build() async {
+    await ref.watch(triggerFlagsProvider.future);
     return _compute();
   }
 
@@ -38,6 +40,7 @@ final tomorrowRiskAssessmentProvider =
 class TomorrowRiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
   @override
   Future<RiskAssessment> build() async {
+    await ref.watch(triggerFlagsProvider.future);
     return _compute();
   }
 
