@@ -53,15 +53,39 @@ void main() {
     });
 
     test('tomorrow (future): reads forecast, uses future tense', () {
+      // Tomorrow window is [tomorrow midnight, day-after midnight].
       final samples = [
+        // Today samples — outside the tomorrow window.
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
-        WeatherSample(at: now.add(const Duration(hours: 24)), pressureMsl: 1015, temperatureC: 20, humidityPct: 85),
+        // Tomorrow forecast samples.
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 6)), pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 18)), pressureMsl: 1015, temperatureC: 20, humidityPct: 85),
       ];
       final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
       expect(s.weight, 6);
       expect(s.explanation, contains('reaching 85%'));
-      expect(s.explanation, contains('rising'));
+      expect(s.explanation, contains('rising 20%'));
       expect(s.explanation, contains('over next 24h'));
+    });
+
+    test('tomorrow (future): falling trend renders positive magnitude', () {
+      final samples = [
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 2)), pressureMsl: 1015, temperatureC: 20, humidityPct: 85),
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 20)), pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
+      ];
+      final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
+      expect(s.explanation, contains('falling 20%'));
+      expect(s.explanation, isNot(contains('-20')));
+    });
+
+    test('today (past): falling trend renders "fell N%" without minus', () {
+      final samples = [
+        WeatherSample(at: now.subtract(const Duration(hours: 23)), pressureMsl: 1015, temperatureC: 20, humidityPct: 75),
+        WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
+      ];
+      final s = module.evaluate(withSamples(samples), params);
+      expect(s.explanation, contains('fell 10%'));
+      expect(s.explanation, isNot(contains('-10')));
     });
   });
 }

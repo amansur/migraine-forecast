@@ -23,12 +23,8 @@ class HumidityModule implements TriggerModule {
       );
     }
     final threshold = params.getDouble('humidity_pct', 60);
-    final window = const Duration(hours: 24);
     final direction = directionFor(ctx);
-    final (start, end) = switch (direction) {
-      WindowDirection.past => (ctx.now.subtract(window), ctx.now),
-      WindowDirection.future => (ctx.now, ctx.targetDate.add(window)),
-    };
+    final (start, end) = windowFor(ctx, const Duration(hours: 24));
     final maxHumidity = ctx.weather!.maxHumidityInWindow(start, end);
     if (maxHumidity == null) {
       return TriggerSignal.zero(
@@ -38,22 +34,20 @@ class HumidityModule implements TriggerModule {
       );
     }
     final trend = ctx.weather!.humidityTrendInWindow(start, end);
-    final delta = trend == null
-        ? ''
-        : trend >= 0
-            ? ' +${trend.round()}%'
-            : ' ${trend.round()}%';
-    final risingFalling = trend == null ? '' : trend > 0 ? 'rising' : 'falling';
+    // Magnitude only; the verb (rose/fell/rising/falling) carries the sign.
+    final magnitude = trend == null ? null : trend.abs().round();
     final maxStr = maxHumidity.toStringAsFixed(0);
     final explanation = switch (direction) {
       WindowDirection.past => trend == null
           ? 'Humidity $maxStr% in last 24h'
           : trend >= 0
-              ? 'Humidity $maxStr%, rose$delta in last 24h'
-              : 'Humidity $maxStr%, fell$delta in last 24h',
+              ? 'Humidity $maxStr%, rose $magnitude% in last 24h'
+              : 'Humidity $maxStr%, fell $magnitude% in last 24h',
       WindowDirection.future => trend == null
           ? 'Humidity reaching $maxStr% over next 24h'
-          : 'Humidity reaching $maxStr%, $risingFalling$delta over next 24h',
+          : trend >= 0
+              ? 'Humidity reaching $maxStr%, rising $magnitude% over next 24h'
+              : 'Humidity reaching $maxStr%, falling $magnitude% over next 24h',
     };
     if (maxHumidity <= threshold) {
       return TriggerSignal(moduleId: id, weight: 0, confidence: 1.0, explanation: explanation);
