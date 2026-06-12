@@ -46,6 +46,13 @@ A local-first Flutter application designed to predict daily migraine risk by ana
 - **Unit Formatting:** Use `lib/ui/shared/unit_formatter.dart` for temperature and pressure display logic. Note: Temperature *deltas* (e.g., temp swing) use `°ΔC` and convert with 9/5 only.
 - **Design:** Follow the "Calm/Wellness" tone. Use Sage greens and warm ivory. Risk bands (low/moderate/high) use green/amber/red accents.
 
+### Rigorous Logic & Verification
+- **Never bypass logic to satisfy tests:** If a test fails due to a complex dependency (e.g., a background backfill), fix the **test setup** (stubs/mocks) rather than making the **app logic** less robust (e.g., fire-and-forget) to pass the test.
+- **Audit Caching Math:** When implementing or extending caching logic, always check for "negative duration" masks. Use `.abs()` when comparing `DateTime` differences to ensure current data doesn't shadow historical or future requests.
+- **Prevent Race Conditions in Save Paths:** Ensure that data linking (e.g., attaching a `riskAssessmentId` to an `Attack`) is always `awaited` if the data is available or can be computed. Avoid "fire-and-forget" for data that needs to be cross-referenced immediately.
+- **Time-Travel Awareness:** When implementing historical data features (backfilling), verify that **every** data source (Weather, Health, Journal, etc.) is actually querying the requested past window rather than defaulting to the current 24 hours.
+- **Audit Implementation Before Assumption:** Before stating a bug is fixed, perform a surgical read of the implementation (not just the interface) to verify that the logic actually supports the fix (e.g., check that HealthSource actually uses the 'now' parameter).
+
 ## Key Files & Directories
 - `docs/superpowers/specs/`: Architectural source of truth and research citations.
 - `docs/handoff/`: Session-by-session history and current branch state.

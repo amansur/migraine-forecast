@@ -101,7 +101,9 @@ class _Body extends ConsumerWidget {
             }
             final d = DateTime.now();
             final now = DateTime.utc(d.year, d.month, d.day);
-            // Show 8 weeks (56 days) for a compact, week-aligned view.
+            // The heatmap window (8 weeks) is intentionally narrower than the
+            // correlation engine's 90-day query window — attacks 9+ weeks old
+            // still influence correlation results but won't show as cells.
             return CalendarHeatmap(
               severityByDay: severityByDay,
               windowStart: now.subtract(const Duration(days: 55)),

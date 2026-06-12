@@ -68,7 +68,7 @@ class CalendarHeatmap extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final totalGap = (cols - 1) * _gap;
+        const totalGap = (cols - 1) * _gap;
         final cellSize = (constraints.maxWidth - totalGap) / cols;
 
         // Which days are the first of their month (for month labels)

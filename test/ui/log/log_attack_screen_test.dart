@@ -67,13 +67,6 @@ class _StubWeather implements WeatherSource {
       );
 }
 
-class _ThrowingWeather implements WeatherSource {
-  @override
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) {
-    throw StateError('simulated network failure');
-  }
-}
-
 class _ThrowingBackfillNotifier extends RiskAssessmentNotifier {
   @override
   Future<RiskAssessment> build() async => RiskAssessment(

@@ -38,6 +38,9 @@ class ContextBuilder {
       try {
         weatherSnap = await weather.fetch(lat: loc.lat, lon: loc.lon, now: now);
       } catch (_) {
+        // Foreground risk should degrade gracefully when weather is unavailable
+        // (we can still score from sleep/HRV/journal). Backfill callers that
+        // need weather to be present should check ctx.weather != null after.
         weatherSnap = null;
       }
     }

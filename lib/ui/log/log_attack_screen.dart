@@ -143,40 +143,41 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
     final repo = ref.read(assessmentRepoProvider);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      final startUtc = _start.toUtc();
+      final dayMarker = DateTime.utc(startUtc.year, startUtc.month, startUtc.day);
 
-    final startUtc = _start.toUtc();
-    final dayMarker = DateTime.utc(startUtc.year, startUtc.month, startUtc.day);
-
-    var activeId = await repo.activeAtRowId(startUtc);
-    final assessmentForDay = await repo.latestForDate(target: dayMarker, horizon: RiskHorizon.today);
-
-    if (assessmentForDay == null) {
-      try {
-        await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
-        // Use date-based lookup since backfilled rows have computedAt = now, not endOfDay.
-        activeId = await repo.rowIdForDate(target: dayMarker, horizon: RiskHorizon.today);
-      } catch (e) {
-        debugPrint('Backfill failed: $e');
-        if (mounted) {
-          messenger.showSnackBar(
-            const SnackBar(content: Text("Couldn't fetch weather — risk for this day will be unavailable.")),
-          );
+      final assessmentForDay =
+          await repo.latestForDate(target: dayMarker, horizon: RiskHorizon.today);
+      int? activeId;
+      if (assessmentForDay == null) {
+        try {
+          await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
+          // Backfilled rows have computedAt = now(), so look up by targetDate.
+          activeId = await repo.rowIdForDate(target: dayMarker, horizon: RiskHorizon.today);
+        } catch (e) {
+          debugPrint('Backfill failed: $e');
+          if (mounted) {
+            messenger.showSnackBar(
+              const SnackBar(content: Text("Couldn't fetch weather — risk for this day will be unavailable.")),
+            );
+          }
         }
+      } else {
+        activeId = await repo.activeAtRowId(startUtc);
       }
-    }
 
-    final current = Attack(
-      startedAt: startUtc,
-      endedAt: _inProgress ? null : _end?.toUtc(),
-      severity: _severity.round(),
-      inProgress: _inProgress,
-    );
+      final current = Attack(
+        startedAt: startUtc,
+        endedAt: _inProgress ? null : _end?.toUtc(),
+        severity: _severity.round(),
+        inProgress: _inProgress,
+      );
 
-    if (widget.initialAttack != null) {
-      await journal.updateAttack(widget.initialAttack!, current);
-    } else {
-      await journal.addAttack(current, riskAssessmentId: activeId);
-    }
+      if (widget.initialAttack != null) {
+        await journal.updateAttack(widget.initialAttack!, current);
+      } else {
+        await journal.addAttack(current, riskAssessmentId: activeId);
+      }
 
       if (mounted) {
         try {
