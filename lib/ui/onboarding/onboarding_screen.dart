@@ -97,7 +97,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     
     try {
       await ref.read(permissionServiceProvider).requestLocation();
-    } catch (e) {
+    } on Exception catch (e) {
+      // Permission/Geolocator failures are non-fatal — onboarding still completes
+      // and the Today lifecycle hook handles re-fetching once a fix is available.
       debugPrint('Location request failed: $e');
     }
 
