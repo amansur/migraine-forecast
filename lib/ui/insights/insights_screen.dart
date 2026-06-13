@@ -11,6 +11,7 @@ import '../../state/providers.dart';
 import '../../state/settings_provider.dart';
 import '../../state/suggestions_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
+import '../shared/contributor_order.dart';
 import 'calendar_heatmap.dart';
 import 'correlation_card.dart';
 import 'phase_ribbon.dart';
@@ -216,7 +217,9 @@ class DayDetailSheet extends ConsumerWidget {
               error: (e, _) => Text('Error loading assessment: $e'),
               data: (a) {
                 if (a == null) return const Text('No risk data recorded for this day.');
-                final factors = a.contributors.where((c) => c.contribution > 0).toList();
+                final factors = sortContributorsForDisplay(
+                  a.contributors.where((c) => c.contribution > 0),
+                );
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

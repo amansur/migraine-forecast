@@ -1,6 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 
+import '../shared/contributor_order.dart';
 import 'contributor_chip.dart';
 
 class WhyChips extends StatelessWidget {
@@ -9,8 +10,10 @@ class WhyChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visible = contributors.where((c) => c.contribution > 0).take(4).toList();
-    if (visible.isEmpty) return const SizedBox.shrink();
+    final shown = sortContributorsForDisplay(
+      contributors.where((c) => c.contribution > 0),
+    ).take(4).toList();
+    if (shown.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19,7 +22,7 @@ class WhyChips extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: visible.map((c) => ContributorChip(signal: c)).toList(),
+          children: shown.map((c) => ContributorChip(signal: c)).toList(),
         ),
       ],
     );
