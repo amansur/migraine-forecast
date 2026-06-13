@@ -23,11 +23,13 @@ class OpenMeteoWeatherSource implements WeatherSource {
     final nowUtc = now.toUtc();
     final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
 
-    final cached = await _cachedForDay(lat, lon, requestedDay);
-    // Bypass cache for backfills (past days) to avoid returning historically bad caches.
-    final todayStart = DateTime.now().toUtc().subtract(const Duration(days: 1)); // allow yesterday/today cache
-    final isBackfill = requestedDay.isBefore(todayStart);
+    final today = DateTime.now().toUtc();
+    final todayStart = DateTime.utc(today.year, today.month, today.day);
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+    // Bypass cache for backfills (older than yesterday) to avoid returning historically bad caches.
+    final isBackfill = requestedDay.isBefore(yesterdayStart);
 
+    final cached = await _cachedForDay(lat, lon, requestedDay);
     if (cached != null && !isBackfill) {
       final diff = nowUtc.difference(cached.fetchedAt as DateTime);
       if (!diff.isNegative && diff <= freshness) {
@@ -36,8 +38,6 @@ class OpenMeteoWeatherSource implements WeatherSource {
     }
 
     try {
-      final today = DateTime.now().toUtc();
-      final todayStart = DateTime.utc(today.year, today.month, today.day);
       final diffDays = todayStart.difference(requestedDay).inDays.abs();
       // Add 2 days of padding because triggers need historical data (leadTime up to 48h)
       // prior to the requested day to calculate trends/drops.
