@@ -49,7 +49,7 @@ final setNotificationsEnabledProvider = Provider<Future<void> Function(bool)>((r
 
 final temperatureUnitProvider = FutureProvider<TemperatureUnit>((ref) async {
   final s = await ref.watch(settingsRepoProvider).getString('temperature_unit');
-  return s == 'fahrenheit' ? TemperatureUnit.fahrenheit : TemperatureUnit.celsius;
+  return s == 'celsius' ? TemperatureUnit.celsius : TemperatureUnit.fahrenheit;
 });
 
 final setTemperatureUnitProvider = Provider<Future<void> Function(TemperatureUnit)>((ref) {
@@ -62,7 +62,7 @@ final setTemperatureUnitProvider = Provider<Future<void> Function(TemperatureUni
 
 final pressureUnitProvider = FutureProvider<PressureUnit>((ref) async {
   final s = await ref.watch(settingsRepoProvider).getString('pressure_unit');
-  return s == 'mmhg' ? PressureUnit.mmhg : PressureUnit.hpa;
+  return s == 'hpa' ? PressureUnit.hpa : PressureUnit.mmhg;
 });
 
 final setPressureUnitProvider = Provider<Future<void> Function(PressureUnit)>((ref) {
