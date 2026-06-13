@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../data/sources/location_source.dart';
 import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
 import '../../state/cycle_provider.dart';
+import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
@@ -209,6 +210,37 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 }).toList(),
               );
+            },
+          ),
+          const Divider(),
+          Text('Danger Zone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.red)),
+          ListTile(
+            title: const Text('Clear all data', style: TextStyle(color: Colors.red)),
+            subtitle: const Text('Permanently delete all logs, settings, and risk history. Resets the app to the onboarding state.'),
+            trailing: const Icon(Icons.delete_forever, color: Colors.red),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Clear all data?'),
+                  content: const Text('This will permanently delete all your logs, settings, and risk history. This action cannot be undone.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Delete Everything'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await ref.read(databaseProvider).clearAllData();
+                ref.invalidate(onboardingCompletedProvider);
+                if (context.mounted) {
+                  context.go('/onboarding');
+                }
+              }
             },
           ),
         ],

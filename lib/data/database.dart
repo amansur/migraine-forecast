@@ -124,6 +124,14 @@ class AppDatabase extends _$AppDatabase {
           }
         },
       );
+
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      for (final table in allTables) {
+        await delete(table).go();
+      }
+    });
+  }
 }
 
 QueryExecutor _openConnection() {

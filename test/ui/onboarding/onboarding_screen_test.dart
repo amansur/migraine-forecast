@@ -37,6 +37,7 @@ void main() {
           flagsRepoProvider.overrideWithValue(flagsRepo),
           permissionServiceProvider.overrideWithValue(_StubPermissionService()),
           markOnboardingCompletedProvider.overrideWithValue(() async { onboardingDone = true; }),
+          onboardingCompletedProvider.overrideWith((ref) => Future.value(onboardingDone)),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
