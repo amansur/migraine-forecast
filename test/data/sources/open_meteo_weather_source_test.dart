@@ -24,7 +24,8 @@ void main() {
       return http.Response(await fx('air_quality_typical.json'), 200);
     });
     final source = OpenMeteoWeatherSource(client: client, db: db, freshness: const Duration(hours: 1));
-    final now = DateTime.utc(2026, 6, 10, 6);
+    final realNow = DateTime.now().toUtc();
+    final now = DateTime.utc(realNow.year, realNow.month, realNow.day, 6); // Use real now so it isn't treated as a backfill
     final first = await source.fetch(lat: 40.7, lon: -74.0, now: now);
     expect(first.stale, isFalse);
     expect(calls, 2);
@@ -50,7 +51,8 @@ void main() {
       throw const SocketException('offline');
     });
     final source = OpenMeteoWeatherSource(client: client, db: db, freshness: const Duration(hours: 1));
-    final now = DateTime.utc(2026, 6, 10, 6);
+    final realNow = DateTime.now().toUtc();
+    final now = DateTime.utc(realNow.year, realNow.month, realNow.day, 6); // start at 6am to avoid crossing midnight when adding 3 hours
     await source.fetch(lat: 40.7, lon: -74.0, now: now);
 
     final stale = await source.fetch(lat: 40.7, lon: -74.0, now: now.add(const Duration(hours: 3)));
@@ -94,7 +96,7 @@ void main() {
     expect(snapshot.stale, isFalse);
   });
 
-  test('past-day fetch is cached on subsequent calls for the same day', () async {
+  test('past-day fetch ALWAYS hits network to ensure self-healing', () async {
     final pastDay = DateTime.utc(2026, 6, 6, 12);
     var calls = 0;
     final client = MockClient((req) async {
@@ -110,13 +112,14 @@ void main() {
     await source.fetch(lat: 40.7, lon: -74.0, now: pastDay);
     expect(calls, 2);
 
-    // Re-fetch the same past day 10 minutes later — should hit cache.
+    // Re-fetch the same past day 10 minutes later — it WILL hit network again because
+    // backfills bypass cache to guarantee historical healing.
     final second = await source.fetch(
       lat: 40.7,
       lon: -74.0,
       now: pastDay.add(const Duration(minutes: 10)),
     );
-    expect(calls, 2, reason: 'same-day cache hit must not hit the network');
+    expect(calls, 4, reason: 'backfills always bypass cache');
     expect(second.stale, isFalse);
   });
 }

@@ -24,7 +24,11 @@ class OpenMeteoWeatherSource implements WeatherSource {
     final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
 
     final cached = await _cachedForDay(lat, lon, requestedDay);
-    if (cached != null) {
+    // Bypass cache for backfills (past days) to avoid returning historically bad caches.
+    final todayStart = DateTime.now().toUtc().subtract(const Duration(days: 1)); // allow yesterday/today cache
+    final isBackfill = requestedDay.isBefore(todayStart);
+
+    if (cached != null && !isBackfill) {
       final diff = nowUtc.difference(cached.fetchedAt as DateTime);
       if (!diff.isNegative && diff <= freshness) {
         return _toSnapshot(cached, stale: false);
@@ -32,10 +36,14 @@ class OpenMeteoWeatherSource implements WeatherSource {
     }
 
     try {
-      final diffDays = DateTime.now().toUtc().difference(nowUtc).inDays.abs();
-      final pastDays = diffDays.clamp(1, 90);
+      final today = DateTime.now().toUtc();
+      final todayStart = DateTime.utc(today.year, today.month, today.day);
+      final diffDays = todayStart.difference(requestedDay).inDays.abs();
+      // Add 2 days of padding because triggers need historical data (leadTime up to 48h)
+      // prior to the requested day to calculate trends/drops.
+      final pastDays = (diffDays + 2).clamp(1, 90);
       final forecastRes = await client.get(OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays));
-      final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon));
+      final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon, pastDays: pastDays));
       if (forecastRes.statusCode >= 400 || aqRes.statusCode >= 400) {
         if (cached != null) return _toSnapshot(cached, stale: true);
         throw StateError('Open-Meteo fetch failed (no cache)');

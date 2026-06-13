@@ -149,7 +149,8 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
       final assessmentForDay =
           await repo.latestForDate(target: dayMarker, horizon: RiskHorizon.today);
       int? activeId;
-      if (assessmentForDay == null) {
+      // If no assessment exists, or if it was saved with missing data (confidence 0 for all triggers), try to re-backfill
+      if (assessmentForDay == null || assessmentForDay.isOnboarding) {
         try {
           await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
           // Backfilled rows have computedAt = now(), so look up by targetDate.
