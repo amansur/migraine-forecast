@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
 import 'package:migraine_weatherr/data/context_builder.dart' show UserTriggerFlagsRepo;
 import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
 import 'package:migraine_weatherr/data/sources/journal_source.dart';
@@ -37,6 +37,15 @@ class _RecordingJournal implements JournalSource {
   Future<void> updateAttack(Attack old, Attack updated) async {
     lastAttack = updated;
   }
+
+  @override Future<int> addPeriod(PeriodEvent period) async => 1;
+  @override Future<void> endPeriod(DateTime startedAt, DateTime endedAt) async {}
+  @override Future<void> deletePeriod(DateTime startedAt) async {}
+  @override Future<List<PeriodEvent>> recentPeriods(Duration window, {required DateTime now}) async => const [];
+  @override Stream<List<PeriodEvent>> watchRecentPeriods(Duration window, {required DateTime now}) => Stream.value(const []);
+  @override Future<void> upsertPeriodDaySeverity(PeriodDaySeverity override) async {}
+  @override Future<List<PeriodDaySeverity>> recentPeriodDaySeverities(Duration window, {required DateTime now}) async => const [];
+  @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration window, {required DateTime now}) => Stream.value(const []);
 }
 
 class _MockRiskAssessmentNotifier extends RiskAssessmentNotifier {

@@ -76,6 +76,20 @@ class NotificationsSent extends Table {
   DateTimeColumn get sentAt => dateTime()();
 }
 
+class Periods extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get startedAt => dateTime()();
+  DateTimeColumn get endedAt => dateTime().nullable()();
+  IntColumn get baselineSeverity => integer()();
+}
+
+class PeriodDaySeverities extends Table {
+  DateTimeColumn get day => dateTime()();
+  IntColumn get severity => integer()();
+  @override
+  Set<Column> get primaryKey => {day};
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -85,13 +99,15 @@ class NotificationsSent extends Table {
   RiskAssessments,
   Settings,
   NotificationsSent,
+  Periods,
+  PeriodDaySeverities,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -101,6 +117,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(attacks, attacks.inProgress);
             await m.addColumn(riskAssessments, riskAssessments.backfilled);
+          }
+          if (from < 4) {
+            await m.createTable(periods);
+            await m.createTable(periodDaySeverities);
           }
         },
       );

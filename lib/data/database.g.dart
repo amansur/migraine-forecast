@@ -2828,6 +2828,533 @@ class NotificationsSentCompanion
   }
 }
 
+class $PeriodsTable extends Periods with TableInfo<$PeriodsTable, Period> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PeriodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endedAt = GeneratedColumn<DateTime>(
+    'ended_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baselineSeverityMeta = const VerificationMeta(
+    'baselineSeverity',
+  );
+  @override
+  late final GeneratedColumn<int> baselineSeverity = GeneratedColumn<int>(
+    'baseline_severity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    startedAt,
+    endedAt,
+    baselineSeverity,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'periods';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Period> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('ended_at')) {
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
+    }
+    if (data.containsKey('baseline_severity')) {
+      context.handle(
+        _baselineSeverityMeta,
+        baselineSeverity.isAcceptableOrUnknown(
+          data['baseline_severity']!,
+          _baselineSeverityMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baselineSeverityMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Period map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Period(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      endedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ended_at'],
+      ),
+      baselineSeverity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}baseline_severity'],
+      )!,
+    );
+  }
+
+  @override
+  $PeriodsTable createAlias(String alias) {
+    return $PeriodsTable(attachedDatabase, alias);
+  }
+}
+
+class Period extends DataClass implements Insertable<Period> {
+  final int id;
+  final DateTime startedAt;
+  final DateTime? endedAt;
+  final int baselineSeverity;
+  const Period({
+    required this.id,
+    required this.startedAt,
+    this.endedAt,
+    required this.baselineSeverity,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    if (!nullToAbsent || endedAt != null) {
+      map['ended_at'] = Variable<DateTime>(endedAt);
+    }
+    map['baseline_severity'] = Variable<int>(baselineSeverity);
+    return map;
+  }
+
+  PeriodsCompanion toCompanion(bool nullToAbsent) {
+    return PeriodsCompanion(
+      id: Value(id),
+      startedAt: Value(startedAt),
+      endedAt: endedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedAt),
+      baselineSeverity: Value(baselineSeverity),
+    );
+  }
+
+  factory Period.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Period(
+      id: serializer.fromJson<int>(json['id']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      endedAt: serializer.fromJson<DateTime?>(json['endedAt']),
+      baselineSeverity: serializer.fromJson<int>(json['baselineSeverity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'endedAt': serializer.toJson<DateTime?>(endedAt),
+      'baselineSeverity': serializer.toJson<int>(baselineSeverity),
+    };
+  }
+
+  Period copyWith({
+    int? id,
+    DateTime? startedAt,
+    Value<DateTime?> endedAt = const Value.absent(),
+    int? baselineSeverity,
+  }) => Period(
+    id: id ?? this.id,
+    startedAt: startedAt ?? this.startedAt,
+    endedAt: endedAt.present ? endedAt.value : this.endedAt,
+    baselineSeverity: baselineSeverity ?? this.baselineSeverity,
+  );
+  Period copyWithCompanion(PeriodsCompanion data) {
+    return Period(
+      id: data.id.present ? data.id.value : this.id,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+      baselineSeverity: data.baselineSeverity.present
+          ? data.baselineSeverity.value
+          : this.baselineSeverity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Period(')
+          ..write('id: $id, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('baselineSeverity: $baselineSeverity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, startedAt, endedAt, baselineSeverity);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Period &&
+          other.id == this.id &&
+          other.startedAt == this.startedAt &&
+          other.endedAt == this.endedAt &&
+          other.baselineSeverity == this.baselineSeverity);
+}
+
+class PeriodsCompanion extends UpdateCompanion<Period> {
+  final Value<int> id;
+  final Value<DateTime> startedAt;
+  final Value<DateTime?> endedAt;
+  final Value<int> baselineSeverity;
+  const PeriodsCompanion({
+    this.id = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.baselineSeverity = const Value.absent(),
+  });
+  PeriodsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime startedAt,
+    this.endedAt = const Value.absent(),
+    required int baselineSeverity,
+  }) : startedAt = Value(startedAt),
+       baselineSeverity = Value(baselineSeverity);
+  static Insertable<Period> custom({
+    Expression<int>? id,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? endedAt,
+    Expression<int>? baselineSeverity,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (startedAt != null) 'started_at': startedAt,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (baselineSeverity != null) 'baseline_severity': baselineSeverity,
+    });
+  }
+
+  PeriodsCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? startedAt,
+    Value<DateTime?>? endedAt,
+    Value<int>? baselineSeverity,
+  }) {
+    return PeriodsCompanion(
+      id: id ?? this.id,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
+      baselineSeverity: baselineSeverity ?? this.baselineSeverity,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<DateTime>(endedAt.value);
+    }
+    if (baselineSeverity.present) {
+      map['baseline_severity'] = Variable<int>(baselineSeverity.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodsCompanion(')
+          ..write('id: $id, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('baselineSeverity: $baselineSeverity')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PeriodDaySeveritiesTable extends PeriodDaySeverities
+    with TableInfo<$PeriodDaySeveritiesTable, PeriodDaySeverity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PeriodDaySeveritiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _severityMeta = const VerificationMeta(
+    'severity',
+  );
+  @override
+  late final GeneratedColumn<int> severity = GeneratedColumn<int>(
+    'severity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [day, severity];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'period_day_severities';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PeriodDaySeverity> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('severity')) {
+      context.handle(
+        _severityMeta,
+        severity.isAcceptableOrUnknown(data['severity']!, _severityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_severityMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {day};
+  @override
+  PeriodDaySeverity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PeriodDaySeverity(
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      severity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}severity'],
+      )!,
+    );
+  }
+
+  @override
+  $PeriodDaySeveritiesTable createAlias(String alias) {
+    return $PeriodDaySeveritiesTable(attachedDatabase, alias);
+  }
+}
+
+class PeriodDaySeverity extends DataClass
+    implements Insertable<PeriodDaySeverity> {
+  final DateTime day;
+  final int severity;
+  const PeriodDaySeverity({required this.day, required this.severity});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['day'] = Variable<DateTime>(day);
+    map['severity'] = Variable<int>(severity);
+    return map;
+  }
+
+  PeriodDaySeveritiesCompanion toCompanion(bool nullToAbsent) {
+    return PeriodDaySeveritiesCompanion(
+      day: Value(day),
+      severity: Value(severity),
+    );
+  }
+
+  factory PeriodDaySeverity.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PeriodDaySeverity(
+      day: serializer.fromJson<DateTime>(json['day']),
+      severity: serializer.fromJson<int>(json['severity']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'day': serializer.toJson<DateTime>(day),
+      'severity': serializer.toJson<int>(severity),
+    };
+  }
+
+  PeriodDaySeverity copyWith({DateTime? day, int? severity}) =>
+      PeriodDaySeverity(
+        day: day ?? this.day,
+        severity: severity ?? this.severity,
+      );
+  PeriodDaySeverity copyWithCompanion(PeriodDaySeveritiesCompanion data) {
+    return PeriodDaySeverity(
+      day: data.day.present ? data.day.value : this.day,
+      severity: data.severity.present ? data.severity.value : this.severity,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodDaySeverity(')
+          ..write('day: $day, ')
+          ..write('severity: $severity')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(day, severity);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PeriodDaySeverity &&
+          other.day == this.day &&
+          other.severity == this.severity);
+}
+
+class PeriodDaySeveritiesCompanion extends UpdateCompanion<PeriodDaySeverity> {
+  final Value<DateTime> day;
+  final Value<int> severity;
+  final Value<int> rowid;
+  const PeriodDaySeveritiesCompanion({
+    this.day = const Value.absent(),
+    this.severity = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PeriodDaySeveritiesCompanion.insert({
+    required DateTime day,
+    required int severity,
+    this.rowid = const Value.absent(),
+  }) : day = Value(day),
+       severity = Value(severity);
+  static Insertable<PeriodDaySeverity> custom({
+    Expression<DateTime>? day,
+    Expression<int>? severity,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (day != null) 'day': day,
+      if (severity != null) 'severity': severity,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PeriodDaySeveritiesCompanion copyWith({
+    Value<DateTime>? day,
+    Value<int>? severity,
+    Value<int>? rowid,
+  }) {
+    return PeriodDaySeveritiesCompanion(
+      day: day ?? this.day,
+      severity: severity ?? this.severity,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (severity.present) {
+      map['severity'] = Variable<int>(severity.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodDaySeveritiesCompanion(')
+          ..write('day: $day, ')
+          ..write('severity: $severity, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2845,6 +3372,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SettingsTable settings = $SettingsTable(this);
   late final $NotificationsSentTable notificationsSent =
       $NotificationsSentTable(this);
+  late final $PeriodsTable periods = $PeriodsTable(this);
+  late final $PeriodDaySeveritiesTable periodDaySeverities =
+      $PeriodDaySeveritiesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2858,6 +3388,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     riskAssessments,
     settings,
     notificationsSent,
+    periods,
+    periodDaySeverities,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -4466,6 +4998,336 @@ typedef $$NotificationsSentTableProcessedTableManager =
       NotificationsSentData,
       PrefetchHooks Function()
     >;
+typedef $$PeriodsTableCreateCompanionBuilder =
+    PeriodsCompanion Function({
+      Value<int> id,
+      required DateTime startedAt,
+      Value<DateTime?> endedAt,
+      required int baselineSeverity,
+    });
+typedef $$PeriodsTableUpdateCompanionBuilder =
+    PeriodsCompanion Function({
+      Value<int> id,
+      Value<DateTime> startedAt,
+      Value<DateTime?> endedAt,
+      Value<int> baselineSeverity,
+    });
+
+class $$PeriodsTableFilterComposer
+    extends Composer<_$AppDatabase, $PeriodsTable> {
+  $$PeriodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baselineSeverity => $composableBuilder(
+    column: $table.baselineSeverity,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PeriodsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PeriodsTable> {
+  $$PeriodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baselineSeverity => $composableBuilder(
+    column: $table.baselineSeverity,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PeriodsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PeriodsTable> {
+  $$PeriodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get baselineSeverity => $composableBuilder(
+    column: $table.baselineSeverity,
+    builder: (column) => column,
+  );
+}
+
+class $$PeriodsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PeriodsTable,
+          Period,
+          $$PeriodsTableFilterComposer,
+          $$PeriodsTableOrderingComposer,
+          $$PeriodsTableAnnotationComposer,
+          $$PeriodsTableCreateCompanionBuilder,
+          $$PeriodsTableUpdateCompanionBuilder,
+          (Period, BaseReferences<_$AppDatabase, $PeriodsTable, Period>),
+          Period,
+          PrefetchHooks Function()
+        > {
+  $$PeriodsTableTableManager(_$AppDatabase db, $PeriodsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PeriodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PeriodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PeriodsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> endedAt = const Value.absent(),
+                Value<int> baselineSeverity = const Value.absent(),
+              }) => PeriodsCompanion(
+                id: id,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                baselineSeverity: baselineSeverity,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime startedAt,
+                Value<DateTime?> endedAt = const Value.absent(),
+                required int baselineSeverity,
+              }) => PeriodsCompanion.insert(
+                id: id,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                baselineSeverity: baselineSeverity,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PeriodsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PeriodsTable,
+      Period,
+      $$PeriodsTableFilterComposer,
+      $$PeriodsTableOrderingComposer,
+      $$PeriodsTableAnnotationComposer,
+      $$PeriodsTableCreateCompanionBuilder,
+      $$PeriodsTableUpdateCompanionBuilder,
+      (Period, BaseReferences<_$AppDatabase, $PeriodsTable, Period>),
+      Period,
+      PrefetchHooks Function()
+    >;
+typedef $$PeriodDaySeveritiesTableCreateCompanionBuilder =
+    PeriodDaySeveritiesCompanion Function({
+      required DateTime day,
+      required int severity,
+      Value<int> rowid,
+    });
+typedef $$PeriodDaySeveritiesTableUpdateCompanionBuilder =
+    PeriodDaySeveritiesCompanion Function({
+      Value<DateTime> day,
+      Value<int> severity,
+      Value<int> rowid,
+    });
+
+class $$PeriodDaySeveritiesTableFilterComposer
+    extends Composer<_$AppDatabase, $PeriodDaySeveritiesTable> {
+  $$PeriodDaySeveritiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PeriodDaySeveritiesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PeriodDaySeveritiesTable> {
+  $$PeriodDaySeveritiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PeriodDaySeveritiesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PeriodDaySeveritiesTable> {
+  $$PeriodDaySeveritiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get severity =>
+      $composableBuilder(column: $table.severity, builder: (column) => column);
+}
+
+class $$PeriodDaySeveritiesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PeriodDaySeveritiesTable,
+          PeriodDaySeverity,
+          $$PeriodDaySeveritiesTableFilterComposer,
+          $$PeriodDaySeveritiesTableOrderingComposer,
+          $$PeriodDaySeveritiesTableAnnotationComposer,
+          $$PeriodDaySeveritiesTableCreateCompanionBuilder,
+          $$PeriodDaySeveritiesTableUpdateCompanionBuilder,
+          (
+            PeriodDaySeverity,
+            BaseReferences<
+              _$AppDatabase,
+              $PeriodDaySeveritiesTable,
+              PeriodDaySeverity
+            >,
+          ),
+          PeriodDaySeverity,
+          PrefetchHooks Function()
+        > {
+  $$PeriodDaySeveritiesTableTableManager(
+    _$AppDatabase db,
+    $PeriodDaySeveritiesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PeriodDaySeveritiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PeriodDaySeveritiesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PeriodDaySeveritiesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> day = const Value.absent(),
+                Value<int> severity = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PeriodDaySeveritiesCompanion(
+                day: day,
+                severity: severity,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required DateTime day,
+                required int severity,
+                Value<int> rowid = const Value.absent(),
+              }) => PeriodDaySeveritiesCompanion.insert(
+                day: day,
+                severity: severity,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PeriodDaySeveritiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PeriodDaySeveritiesTable,
+      PeriodDaySeverity,
+      $$PeriodDaySeveritiesTableFilterComposer,
+      $$PeriodDaySeveritiesTableOrderingComposer,
+      $$PeriodDaySeveritiesTableAnnotationComposer,
+      $$PeriodDaySeveritiesTableCreateCompanionBuilder,
+      $$PeriodDaySeveritiesTableUpdateCompanionBuilder,
+      (
+        PeriodDaySeverity,
+        BaseReferences<
+          _$AppDatabase,
+          $PeriodDaySeveritiesTable,
+          PeriodDaySeverity
+        >,
+      ),
+      PeriodDaySeverity,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4486,4 +5348,8 @@ class $AppDatabaseManager {
       $$SettingsTableTableManager(_db, _db.settings);
   $$NotificationsSentTableTableManager get notificationsSent =>
       $$NotificationsSentTableTableManager(_db, _db.notificationsSent);
+  $$PeriodsTableTableManager get periods =>
+      $$PeriodsTableTableManager(_db, _db.periods);
+  $$PeriodDaySeveritiesTableTableManager get periodDaySeverities =>
+      $$PeriodDaySeveritiesTableTableManager(_db, _db.periodDaySeverities);
 }
