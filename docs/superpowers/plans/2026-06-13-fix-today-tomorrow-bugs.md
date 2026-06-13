@@ -71,3 +71,53 @@ Do **not** invalidate the providers from `OnboardingScreen._finish` — the prov
 - Changing `RiskAssessment.targetDate`'s storage semantics or UTC contract.
 - Reworking `PermissionService` into a reactive stream (overkill for this bug).
 - Adding a separate health-permission onboarding step.
+
+## Addendum (2026-06-13): related fixes folded into this branch
+
+The original "narrow" scope (the two bugs above) grew once the team started running the app end-to-end on real devices and found adjacent issues in the same code paths. The work below was added to the same branch:
+
+### Onboarding race condition
+**File:** `lib/ui/onboarding/onboarding_screen.dart` (+ `test/ui/onboarding/onboarding_screen_test.dart`)
+
+After `markOnboardingCompletedProvider()`, `_finish` now awaits `ref.read(onboardingCompletedProvider.future)` before navigating. Without this, the go_router redirect saw the stale `false` value and bounced the user back to `/onboarding`. The button is also gated by an `_isLoading` flag with an inline spinner so the user can't double-tap. `requestLocation()` is wrapped in `try/on Exception` — permission failures are non-fatal because the Today lifecycle hook re-fetches once a fix arrives.
+
+### "No Data" card on Today
+**File:** `lib/ui/today/today_screen.dart`
+
+When `permissionServiceProvider.locationGranted == true` but the cached assessment is still `isOnboarding == true` (weather null, all contributors zero-confidence), we now render a `_NoDataCard` ("Data unavailable — open Settings") instead of the "Set up your risk profile" onboarding card. The original plan said the Geolocator hardening alone would fix this; in practice some users still end up without a fix (location services off device-wide), and the onboarding card is misleading in that state.
+
+### Default units → Fahrenheit / mmHg
+**File:** `lib/state/settings_provider.dart`
+
+Defaults flipped to °F and mmHg because the initial user cohort is US-based. Existing users with a stored preference are unaffected; users with no stored preference will see their units change on next launch.
+
+### Past-day weather cache bypass + lookback padding
+**File:** `lib/data/sources/open_meteo/open_meteo_weather_source.dart`, `lib/data/sources/open_meteo/open_meteo_url_builder.dart`
+
+Two changes to support reliable historical backfill (also a prerequisite for the bulk-historical-backfill plan dated the same day):
+- Bypass the in-process cache for requested days older than yesterday so a previously-bad cache entry can self-heal on a re-fetch. The boundary is day-truncated UTC (`yesterdayStart`), not a wall-clock offset, so it doesn't drift across local noon.
+- Pad `pastDays` by 2 days on both the forecast and air-quality calls because contributor lookback windows (pressure drop, temp swing) need up to 48 h before the target day.
+
+### Auto-dispose for day providers
+**File:** `lib/state/providers.dart`
+
+`dayAssessmentProvider` and `dayAttacksProvider` are now `autoDispose` family providers. Without this, an old cached value lingered after a backfill ran and the heatmap kept showing stale data.
+
+### "Clear all data" in Settings + reset-to-auto-location button
+**Files:** `lib/ui/settings/settings_screen.dart`, `lib/data/database.dart`
+
+- Added a "Danger Zone" → "Clear all data" entry that calls `AppDatabase.clearAllData()` (wipes journal, assessments, weather snapshots, settings), invalidates the relevant providers, awaits the new `onboardingCompletedProvider` future, and navigates to `/onboarding`. Colors use `colorScheme.error` (not hardcoded red) so the palette stays theme-aware.
+- The manual-location row now exposes an explicit "Reset to auto location" button instead of an unlabelled `Icons.clear` chip.
+
+### Settings icon on Insights
+**File:** `lib/ui/insights/insights_screen.dart`
+
+Adds an `IconButton(Icons.settings)` in the Insights AppBar so settings is reachable from more than just the Today screen.
+
+### Verification (addendum)
+
+Beyond the verification steps above, also:
+- Fresh install → onboarding → grant location → verify the gauge appears (not the No Data card or the "Set up your risk profile" card).
+- Fresh install → onboarding → **deny** location → verify Today shows the No Data card with an "Open Settings" affordance.
+- Backfill a past day (log a migraine for 30 days ago) → verify the heatmap updates the same frame (autoDispose) and the weather row for that day populates (cache bypass).
+- Settings → Danger Zone → Clear all data → confirm → verify the app navigates to onboarding with a fresh DB.
