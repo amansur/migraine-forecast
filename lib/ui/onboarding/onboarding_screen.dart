@@ -32,7 +32,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to Migraine Weatherr')),
+      appBar: AppBar(title: const Text('Welcome to Migraine Forecast')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -105,7 +105,7 @@ class _Disclaimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Migraine Weatherr is decision-support, not medical advice. Please consult a clinician for diagnosis or treatment.',
+      'Migraine Forecast is decision-support, not medical advice. Please consult a clinician for diagnosis or treatment.',
       style: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
     );
   }

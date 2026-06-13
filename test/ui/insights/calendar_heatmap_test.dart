@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/app/theme.dart';
-import 'package:migraine_weatherr/ui/insights/calendar_heatmap.dart';
+import 'package:migraine_forecast/app/theme.dart';
+import 'package:migraine_forecast/ui/insights/calendar_heatmap.dart';
 
 Widget _wrapHeatmap(CalendarHeatmap heatmap) {
   return MaterialApp(

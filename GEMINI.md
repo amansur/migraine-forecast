@@ -1,4 +1,4 @@
-# Migraine Weatherr - Project Instructions
+# Migraine Forecast - Project Instructions
 
 A local-first Flutter application designed to predict daily migraine risk by analyzing evidence-backed triggers such as barometric pressure, sleep quality, HRV, and lifestyle factors.
 

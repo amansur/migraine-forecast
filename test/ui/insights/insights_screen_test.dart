@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migraine_weatherr/state/correlation_provider.dart';
-import 'package:migraine_weatherr/state/insights_eligibility_provider.dart';
-import 'package:migraine_weatherr/state/providers.dart';
-import 'package:migraine_weatherr/state/suggestions_provider.dart';
-import 'package:migraine_weatherr/ui/insights/insights_screen.dart';
+import 'package:migraine_forecast/state/correlation_provider.dart';
+import 'package:migraine_forecast/state/insights_eligibility_provider.dart';
+import 'package:migraine_forecast/state/providers.dart';
+import 'package:migraine_forecast/state/suggestions_provider.dart';
+import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
 void main() {
   testWidgets('shows calibrating state when ineligible', (tester) async {

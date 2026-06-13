@@ -20,8 +20,8 @@ import '../data/sources/open_meteo/open_meteo_weather_source.dart';
 import 'high_risk_notifier.dart';
 import 'notification_service.dart';
 
-const morningTask = 'com.migraineweatherr.morning_refresh';
-const eveningTask = 'com.migraineweatherr.evening_refresh';
+const morningTask = 'com.migraineforecast.morning_refresh';
+const eveningTask = 'com.migraineforecast.evening_refresh';
 
 class BackgroundScheduler {
   Future<void> register() async {

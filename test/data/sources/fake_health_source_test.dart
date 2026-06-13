@@ -1,7 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
-import 'package:migraine_weatherr/data/sources/health_source.dart';
+import 'package:migraine_forecast/data/sources/fake_health_source.dart';
+import 'package:migraine_forecast/data/sources/health_source.dart';
 
 void main() {
   test('returns canned values for each call', () async {

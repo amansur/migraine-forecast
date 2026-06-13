@@ -1,10 +1,10 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
-import 'package:migraine_weatherr/data/repos/assessment_repository.dart';
-import 'package:migraine_weatherr/state/last_refresh_provider.dart';
-import 'package:migraine_weatherr/state/providers.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_forecast/data/repos/assessment_repository.dart';
+import 'package:migraine_forecast/state/last_refresh_provider.dart';
+import 'package:migraine_forecast/state/providers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

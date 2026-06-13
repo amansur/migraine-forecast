@@ -1,6 +1,6 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/services/suggestion_engine.dart';
+import 'package:migraine_forecast/services/suggestion_engine.dart';
 
 CorrelationResult _hit(String moduleId) => CorrelationResult(
       moduleId: moduleId,

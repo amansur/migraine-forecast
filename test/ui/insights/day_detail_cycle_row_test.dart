@@ -2,9 +2,9 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/sources/journal_source.dart';
-import 'package:migraine_weatherr/state/providers.dart';
-import 'package:migraine_weatherr/ui/insights/insights_screen.dart';
+import 'package:migraine_forecast/data/sources/journal_source.dart';
+import 'package:migraine_forecast/state/providers.dart';
+import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
 
 class _FakeJournal implements JournalSource {

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migraine_weatherr/state/risk_assessment_provider.dart';
-import 'package:migraine_weatherr/state/settings_provider.dart';
-import 'package:migraine_weatherr/ui/today/tomorrow_detail_screen.dart';
+import 'package:migraine_forecast/state/risk_assessment_provider.dart';
+import 'package:migraine_forecast/state/settings_provider.dart';
+import 'package:migraine_forecast/ui/today/tomorrow_detail_screen.dart';
 
 class _FakeTomorrowNotifier extends TomorrowRiskAssessmentNotifier {
   final RiskAssessment fixed;

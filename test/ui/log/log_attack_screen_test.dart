@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
-import 'package:migraine_weatherr/data/context_builder.dart' show UserTriggerFlagsRepo;
-import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
-import 'package:migraine_weatherr/data/sources/journal_source.dart';
-import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
-import 'package:migraine_weatherr/data/sources/weather_source.dart';
-import 'package:migraine_weatherr/state/providers.dart';
-import 'package:migraine_weatherr/state/risk_assessment_provider.dart';
-import 'package:migraine_weatherr/ui/log/log_attack_screen.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
+import 'package:migraine_forecast/data/context_builder.dart' show UserTriggerFlagsRepo;
+import 'package:migraine_forecast/data/sources/fake_health_source.dart';
+import 'package:migraine_forecast/data/sources/journal_source.dart';
+import 'package:migraine_forecast/data/sources/manual_location_source.dart';
+import 'package:migraine_forecast/data/sources/weather_source.dart';
+import 'package:migraine_forecast/state/providers.dart';
+import 'package:migraine_forecast/state/risk_assessment_provider.dart';
+import 'package:migraine_forecast/ui/log/log_attack_screen.dart';
 
 class _RecordingJournal implements JournalSource {
   Attack? lastAttack;

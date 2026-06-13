@@ -1,9 +1,9 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
-import 'package:migraine_weatherr/data/repos/notification_dedup_repo.dart';
-import 'package:migraine_weatherr/services/high_risk_notifier.dart';
-import 'package:migraine_weatherr/services/notification_service.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_forecast/data/repos/notification_dedup_repo.dart';
+import 'package:migraine_forecast/services/high_risk_notifier.dart';
+import 'package:migraine_forecast/services/notification_service.dart';
 
 class _FakeNotifications implements NotificationService {
   final calls = <_Call>[];
