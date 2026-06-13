@@ -10,6 +10,12 @@ abstract final class BrandColors {
   static const bandModerate = Color(0xFFE6C98C);
   static const bandHigh     = Color(0xFFD89B7A);
   static const bandVeryHigh = Color(0xFFB46A6A);
+
+  // Cycle phase palette — picked to avoid collision with severity bands.
+  static const phaseMenses     = Color(0xFFC15B7A);
+  static const phaseFollicular = Color(0xFF9FBEDF);
+  static const phaseOvulatory  = Color(0xFFBFA5D9);
+  static const phaseLuteal     = Color(0xFFCBB088);
 }
 
 ThemeData buildLightTheme() {

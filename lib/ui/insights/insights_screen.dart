@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/correlation_provider.dart';
+import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/providers.dart';
 import '../../state/suggestions_provider.dart';
 import 'calendar_heatmap.dart';
 import 'correlation_card.dart';
+import 'phase_ribbon.dart';
 import 'suggestion_card.dart';
 
 class InsightsScreen extends ConsumerWidget {
@@ -95,11 +97,25 @@ class _Body extends ConsumerWidget {
             // The heatmap window (8 weeks) is intentionally narrower than the
             // correlation engine's 90-day query window — attacks 9+ weeks old
             // still influence correlation results but won't show as cells.
-            return CalendarHeatmap(
-              severityByDay: severityByDay,
-              windowStart: now.subtract(const Duration(days: 55)),
-              windowEnd: now,
-              onTap: (day) => _showDayDetail(context, day),
+            final windowStart = now.subtract(const Duration(days: 55));
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Consumer(builder: (context, ref, _) {
+                  return PhaseRibbon(
+                    windowStart: windowStart,
+                    windowEnd: now,
+                    resolver: (day) => ref.read(dayPhaseProvider(day)),
+                  );
+                }),
+                const SizedBox(height: 6),
+                CalendarHeatmap(
+                  severityByDay: severityByDay,
+                  windowStart: windowStart,
+                  windowEnd: now,
+                  onTap: (day) => _showDayDetail(context, day),
+                ),
+              ],
             );
           },
         ),
