@@ -15,7 +15,6 @@ void main() {
       ProviderScope(
         overrides: [
           insightsEligibleProvider.overrideWith((ref) => Stream.value(false)),
-          attackCountProvider.overrideWith((ref) => Stream.value(1)),
         ],
         child: MaterialApp.router(
           routerConfig: GoRouter(routes: [
@@ -26,7 +25,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('Calibrating'), findsOneWidget);
-    expect(find.textContaining('logged 1 so far'), findsOneWidget);
+    expect(find.textContaining('first logged migraine'), findsOneWidget);
   });
 
   testWidgets('tapping a day shows the detail sheet', (tester) async {

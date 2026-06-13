@@ -18,7 +18,6 @@ class InsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final eligible = ref.watch(insightsEligibleProvider);
-    final attackCount = ref.watch(attackCountProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Insights'),
@@ -27,21 +26,14 @@ class InsightsScreen extends ConsumerWidget {
       body: eligible.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (ok) {
-          if (!ok) {
-            final count = attackCount.asData?.value ?? 0;
-            return _NotEligible(count: count);
-          }
-          return const _Body();
-        },
+        data: (ok) => ok ? const _Body() : const _NotEligible(),
       ),
     );
   }
 }
 
 class _NotEligible extends StatelessWidget {
-  final int count;
-  const _NotEligible({required this.count});
+  const _NotEligible();
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +45,8 @@ class _NotEligible extends StatelessWidget {
           children: [
             Text('Calibrating', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(
-              'Insights unlock after you\'ve logged 3 migraines. '
-              'You\'ve logged $count so far.',
+            const Text(
+              'Insights will appear after your first logged migraine.',
               textAlign: TextAlign.center,
             ),
           ],
