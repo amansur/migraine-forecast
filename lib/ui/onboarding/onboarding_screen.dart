@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
+import '../../state/risk_assessment_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 
 /// User-facing labels for the multi-select. Each maps to one or more module IDs;
@@ -28,6 +29,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final Set<String> _selected = {};
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +75,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _finish,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('Finish'),
+                  onPressed: _isLoading ? null : _finish,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: _isLoading 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                        : const Text('Finish'),
                   ),
                 ),
               ),
@@ -88,15 +92,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    await ref.read(permissionServiceProvider).requestLocation();
-    final saveFlags = ref.read(saveTriggerFlagsProvider);
-    final moduleIds = <String>{
-      for (final label in _selected) ...?_triggerOptions[label],
-    };
-    await saveFlags(UserTriggerFlags(flaggedModuleIds: moduleIds));
-    final markDone = ref.read(markOnboardingCompletedProvider);
-    await markDone();
-    if (mounted) context.go('/today');
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    
+    try {
+      await ref.read(permissionServiceProvider).requestLocation();
+    } catch (e) {
+      debugPrint('Location request failed: $e');
+    }
+
+    try {
+      final saveFlags = ref.read(saveTriggerFlagsProvider);
+      final moduleIds = <String>{
+        for (final label in _selected) ...?_triggerOptions[label],
+      };
+      await saveFlags(UserTriggerFlags(flaggedModuleIds: moduleIds));
+      final markDone = ref.read(markOnboardingCompletedProvider);
+      await markDone();
+      
+      // Wait for the provider to resolve before navigating, otherwise the router redirect will bounce us back
+      await ref.read(onboardingCompletedProvider.future);
+      
+      // Invalidate the risk assessment provider so that it re-runs with the new location permission.
+      ref.invalidate(riskAssessmentProvider);
+      ref.invalidate(tomorrowRiskAssessmentProvider);
+      
+      if (mounted) context.go('/today');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
 

@@ -14,11 +14,40 @@ import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
 
-class TodayScreen extends ConsumerWidget {
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final granted = ref.read(permissionServiceProvider).locationGranted;
+      final ass = ref.read(riskAssessmentProvider);
+      if (granted && (ass.asData?.value.isOnboarding ?? false)) {
+        ref.read(riskAssessmentProvider.notifier).refresh();
+        ref.read(tomorrowRiskAssessmentProvider.notifier).refresh();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ass = ref.watch(riskAssessmentProvider);
     final mode = ref.watch(riskDisplayModeProvider).asData?.value ?? RiskDisplayMode.gauge;
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
@@ -62,7 +91,12 @@ class TodayScreen extends ConsumerWidget {
               ),
               data: (a) {
                 if (a.isOnboarding) {
-                  return _OnboardingCard(onSetup: () => context.push('/settings'));
+                  final granted = ref.read(permissionServiceProvider).locationGranted;
+                  if (!granted) {
+                    return _OnboardingCard(onSetup: () => context.push('/settings'));
+                  } else {
+                    return _NoDataCard(onSetup: () => context.push('/settings'));
+                  }
                 }
                 final hasChips = a.contributors.any((c) => c.contribution > 0);
                 return Column(
@@ -157,6 +191,31 @@ class _OnboardingCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             const Text('Grant location and Health permissions to start seeing risk predictions.'),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onSetup, child: const Text('Open Settings')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoDataCard extends StatelessWidget {
+  final VoidCallback onSetup;
+  const _NoDataCard({required this.onSetup});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Data unavailable',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            const Text('We could not fetch data for your triggers. Please check your network connection or set a manual location in Settings.'),
             const SizedBox(height: 16),
             FilledButton(onPressed: onSetup, child: const Text('Open Settings')),
           ],
