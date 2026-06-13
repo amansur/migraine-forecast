@@ -10,6 +10,7 @@ import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
+import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
@@ -237,6 +238,10 @@ class SettingsScreen extends ConsumerWidget {
               if (confirm == true) {
                 await ref.read(databaseProvider).clearAllData();
                 ref.invalidate(onboardingCompletedProvider);
+                ref.invalidate(riskAssessmentProvider);
+                ref.invalidate(tomorrowRiskAssessmentProvider);
+                // Wait for the new false value to resolve before navigating
+                await ref.read(onboardingCompletedProvider.future);
                 if (context.mounted) {
                   context.go('/onboarding');
                 }
