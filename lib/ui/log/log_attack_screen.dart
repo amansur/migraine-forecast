@@ -154,6 +154,8 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
           await ref.read(riskAssessmentProvider.notifier).backfill(dayMarker);
           // Backfilled rows have computedAt = now(), so look up by targetDate.
           activeId = await repo.rowIdForDate(target: dayMarker, horizon: RiskHorizon.today);
+          // Invalidate the provider so the UI shows the newly backfilled data
+          ref.invalidate(dayAssessmentProvider(dayMarker));
         } catch (e) {
           debugPrint('Backfill failed: $e');
           if (mounted) {
