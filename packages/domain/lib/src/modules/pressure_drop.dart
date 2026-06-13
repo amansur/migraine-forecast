@@ -1,6 +1,5 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
-import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -27,8 +26,9 @@ class PressureDropModule implements TriggerModule {
     final thresholdHpa = params.getDouble('threshold_hpa', 5);
     final lookaheadHours = params.getInt('lookahead_hours', 24);
     final direction = directionFor(ctx);
-    final (start, end) = windowFor(ctx, Duration(hours: lookaheadHours));
-    final drop = ctx.weather!.maxPressureDropInWindow(start, end);
+    final anchor = direction == WindowDirection.past ? ctx.now : ctx.targetDate;
+    final window = Duration(hours: lookaheadHours);
+    final drop = ctx.weather!.maxPressureDropAround(anchor, window, now: ctx.now);
     if (drop == null) {
       return TriggerSignal.zero(
         moduleId: id,

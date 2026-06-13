@@ -1,6 +1,5 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
-import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -24,8 +23,9 @@ class TempSwingModule implements TriggerModule {
     }
     final threshold = params.getDouble('temp_delta_c', 5);
     final direction = directionFor(ctx);
-    final (start, end) = windowFor(ctx, const Duration(hours: 24));
-    final swing = ctx.weather!.tempSwingInWindow(start, end);
+    final anchor = direction == WindowDirection.past ? ctx.now : ctx.targetDate;
+    const window = Duration(hours: 24);
+    final swing = ctx.weather!.tempSwingAround(anchor, window, now: ctx.now);
     if (swing == null) {
       return TriggerSignal.zero(
         moduleId: id,
@@ -33,7 +33,7 @@ class TempSwingModule implements TriggerModule {
         missing: DataRequirement.weatherTemperature,
       );
     }
-    final trend = ctx.weather!.tempTrendInWindow(start, end);
+    final trend = ctx.weather!.tempTrendAround(anchor, window, now: ctx.now);
     final dirWord = trend == null ? '' : trend > 0 ? ', warming' : ', cooling';
     final swingStr = swing.toStringAsFixed(1);
     final explanation = switch (direction) {

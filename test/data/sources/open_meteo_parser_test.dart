@@ -17,7 +17,8 @@ void main() {
   test('parses a pressure-drop scenario and the WeatherSeries surfaces the drop', () {
     final json = File('test/data/sources/fixtures/open_meteo/forecast_pressure_drop.json').readAsStringSync();
     final series = OpenMeteoParser.parseForecast(json);
-    final drop = series.maxPressureDropOver(const Duration(hours: 24));
+    final anchor = series.samples.last.at;
+    final drop = series.maxPressureDropAround(anchor, const Duration(hours: 24), now: anchor);
     expect(drop, closeTo(14.0, 0.1)); // 1020 -> 1006 over 24h
   });
 

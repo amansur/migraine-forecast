@@ -1,6 +1,5 @@
 import '../config/rules_config.dart';
 import '../engine/trigger_module.dart';
-import '../engine/window_direction.dart';
 import '../types/data_requirement.dart';
 import '../types/evaluation_context.dart';
 import '../types/trigger_signal.dart';
@@ -25,8 +24,8 @@ class AirQualityModule implements TriggerModule {
     }
     final threshold = params.getDouble('pm25_threshold', 35);
     final direction = directionFor(ctx);
-    final (start, end) = windowFor(ctx, const Duration(hours: 24));
-    final maxPm25 = aq.maxPm25InWindow(start, end);
+    final anchor = direction == WindowDirection.past ? ctx.now : ctx.targetDate;
+    final maxPm25 = aq.maxPm25Around(anchor, const Duration(hours: 24), now: ctx.now);
     if (maxPm25 == null) {
       return TriggerSignal.zero(
         moduleId: id,

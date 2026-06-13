@@ -52,7 +52,7 @@ void main() {
       expect(s.weight, 0);
     });
 
-    test('tomorrow (future): reads forecast, uses future tense', () {
+    test('tomorrow (future): reads forecast, uses future tense with signed delta', () {
       // Tomorrow window is [tomorrow midnight, day-after midnight].
       final samples = [
         // Today samples — outside the tomorrow window.
@@ -64,28 +64,46 @@ void main() {
       final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
       expect(s.weight, 6);
       expect(s.explanation, contains('reaching 85%'));
-      expect(s.explanation, contains('rising 20%'));
+      expect(s.explanation, contains('rising +20%'));
       expect(s.explanation, contains('over next 24h'));
     });
 
-    test('tomorrow (future): falling trend renders positive magnitude', () {
+    test('tomorrow (future): falling trend keeps its sign', () {
       final samples = [
         WeatherSample(at: tomorrowTarget.add(const Duration(hours: 2)), pressureMsl: 1015, temperatureC: 20, humidityPct: 85),
         WeatherSample(at: tomorrowTarget.add(const Duration(hours: 20)), pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
       ];
       final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
-      expect(s.explanation, contains('falling 20%'));
-      expect(s.explanation, isNot(contains('-20')));
+      expect(s.explanation, contains('falling -20%'));
     });
 
-    test('today (past): falling trend renders "fell N%" without minus', () {
+    test('today (past): falling trend renders "fell -N%"', () {
       final samples = [
         WeatherSample(at: now.subtract(const Duration(hours: 23)), pressureMsl: 1015, temperatureC: 20, humidityPct: 75),
         WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
       ];
       final s = module.evaluate(withSamples(samples), params);
-      expect(s.explanation, contains('fell 10%'));
-      expect(s.explanation, isNot(contains('-10')));
+      expect(s.explanation, contains('fell -10%'));
+    });
+
+    test('today (past): flat trend renders "stayed flat"', () {
+      final samples = [
+        WeatherSample(at: now.subtract(const Duration(hours: 23)), pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
+        WeatherSample(at: now, pressureMsl: 1015, temperatureC: 20, humidityPct: 65),
+      ];
+      final s = module.evaluate(withSamples(samples), params);
+      expect(s.explanation, contains('stayed flat at 65%'));
+      expect(s.explanation, contains('in last 24h'));
+    });
+
+    test('tomorrow (future): flat trend renders "staying flat"', () {
+      final samples = [
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 2)), pressureMsl: 1015, temperatureC: 20, humidityPct: 70),
+        WeatherSample(at: tomorrowTarget.add(const Duration(hours: 20)), pressureMsl: 1015, temperatureC: 20, humidityPct: 70),
+      ];
+      final s = module.evaluate(withSamples(samples, targetDate: tomorrowTarget), params);
+      expect(s.explanation, contains('staying flat at 70%'));
+      expect(s.explanation, contains('over next 24h'));
     });
   });
 }

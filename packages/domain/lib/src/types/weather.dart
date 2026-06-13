@@ -20,75 +20,31 @@ class WeatherSeries extends Equatable {
   final List<WeatherSample> samples;
   const WeatherSeries({required this.samples});
 
-  /// Returns the maximum drop in pressure within any [window]-sized sliding pair.
-  /// Returns null if the series is empty or has only one sample.
-  double? maxPressureDropOver(Duration window) {
-    if (samples.length < 2) return null;
-    double maxDrop = 0;
-    int j = 0;
-    for (int i = 0; i < samples.length; i++) {
-      while (j < samples.length && samples[j].at.difference(samples[i].at) <= window) {
-        j++;
-      }
-      for (int k = i + 1; k < j; k++) {
-        final drop = samples[i].pressureMsl - samples[k].pressureMsl;
-        if (drop > maxDrop) maxDrop = drop;
-      }
+  /// Past when [anchor] ≤ [now]: [anchor - window, anchor]. Future otherwise:
+  /// [anchor, anchor + window]. Inclusive at both ends.
+  Iterable<WeatherSample> _around(DateTime anchor, Duration window, DateTime now) {
+    if (anchor.isAfter(now)) {
+      return samples.where((s) => !s.at.isBefore(anchor) && !s.at.isAfter(anchor.add(window)));
     }
-    return maxDrop;
+    return samples.where((s) => !s.at.isBefore(anchor.subtract(window)) && !s.at.isAfter(anchor));
   }
 
-  /// Returns the max minus min temperature within [window] of the latest sample.
-  double? tempSwingInLast(Duration window) {
-    if (samples.isEmpty) return null;
-    final cutoff = samples.last.at.subtract(window);
-    final inWindow = samples.where((s) => !s.at.isBefore(cutoff)).toList();
-    if (inWindow.isEmpty) return null;
-    final max = inWindow.map((s) => s.temperatureC).reduce((a, b) => a > b ? a : b);
-    final min = inWindow.map((s) => s.temperatureC).reduce((a, b) => a < b ? a : b);
-    return max - min;
-  }
-
-  /// Returns last - first temperature within [window] of the latest sample.
-  /// Positive = warming, negative = cooling.
-  double? tempTrendInLast(Duration window) {
-    if (samples.isEmpty) return null;
-    final cutoff = samples.last.at.subtract(window);
-    final inWindow = samples.where((s) => !s.at.isBefore(cutoff)).toList();
-    if (inWindow.length < 2) return null;
-    return inWindow.last.temperatureC - inWindow.first.temperatureC;
-  }
-
-  /// Returns last - first humidity within [window] of the latest sample.
-  /// Positive = rising, negative = falling.
-  double? humidityTrendInLast(Duration window) {
-    if (samples.isEmpty) return null;
-    final cutoff = samples.last.at.subtract(window);
-    final inWindow = samples.where((s) => !s.at.isBefore(cutoff)).toList();
-    if (inWindow.length < 2) return null;
-    return inWindow.last.humidityPct - inWindow.first.humidityPct;
-  }
-
-  /// Maximum humidity value across the next [window] starting from [from].
-  double? maxHumidityFrom(DateTime from, Duration window) {
-    final inWindow = samples.where(
-      (s) => !s.at.isBefore(from) && s.at.isBefore(from.add(window)),
-    );
-    if (inWindow.isEmpty) return null;
-    return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
-  }
-
-  List<WeatherSample> _between(DateTime start, DateTime end) =>
-      samples.where((s) => !s.at.isBefore(start) && !s.at.isAfter(end)).toList();
-
-  /// Max pressure drop within any 24h-or-smaller sliding pair in [start, end].
-  double? maxPressureDropInWindow(DateTime start, DateTime end) {
-    final inWindow = _between(start, end);
+  /// Max pressure drop across any pair within [slidingSpan] of each other, where
+  /// both samples lie in the outer window of [anchor]±[window]. [slidingSpan]
+  /// defaults to 24h — the migraine-relevant timeframe — independent of how far
+  /// the outer horizon reaches.
+  double? maxPressureDropAround(
+    DateTime anchor,
+    Duration window, {
+    required DateTime now,
+    Duration slidingSpan = const Duration(hours: 24),
+  }) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.length < 2) return null;
     double maxDrop = 0;
     int j = 0;
     for (int i = 0; i < inWindow.length; i++) {
-      while (j < inWindow.length && inWindow[j].at.difference(inWindow[i].at) <= const Duration(hours: 24)) {
+      while (j < inWindow.length && inWindow[j].at.difference(inWindow[i].at) <= slidingSpan) {
         j++;
       }
       for (int k = i + 1; k < j; k++) {
@@ -99,32 +55,28 @@ class WeatherSeries extends Equatable {
     return maxDrop;
   }
 
-  /// Max minus min temperature within [start, end].
-  double? tempSwingInWindow(DateTime start, DateTime end) {
-    final inWindow = _between(start, end);
+  double? tempSwingAround(DateTime anchor, Duration window, {required DateTime now}) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.isEmpty) return null;
     final max = inWindow.map((s) => s.temperatureC).reduce((a, b) => a > b ? a : b);
     final min = inWindow.map((s) => s.temperatureC).reduce((a, b) => a < b ? a : b);
     return max - min;
   }
 
-  /// Last minus first temperature within [start, end]. Positive = warming.
-  double? tempTrendInWindow(DateTime start, DateTime end) {
-    final inWindow = _between(start, end);
+  double? tempTrendAround(DateTime anchor, Duration window, {required DateTime now}) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.length < 2) return null;
     return inWindow.last.temperatureC - inWindow.first.temperatureC;
   }
 
-  /// Last minus first humidity within [start, end]. Positive = rising.
-  double? humidityTrendInWindow(DateTime start, DateTime end) {
-    final inWindow = _between(start, end);
+  double? humidityTrendAround(DateTime anchor, Duration window, {required DateTime now}) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.length < 2) return null;
     return inWindow.last.humidityPct - inWindow.first.humidityPct;
   }
 
-  /// Peak humidity within [start, end].
-  double? maxHumidityInWindow(DateTime start, DateTime end) {
-    final inWindow = _between(start, end);
+  double? maxHumidityAround(DateTime anchor, Duration window, {required DateTime now}) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.isEmpty) return null;
     return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
   }
@@ -145,19 +97,15 @@ class AirQualitySeries extends Equatable {
   final List<AirQualitySample> samples;
   const AirQualitySeries({required this.samples});
 
-  double? maxPm25From(DateTime from, Duration window) {
-    final inWindow = samples.where(
-      (s) => !s.at.isBefore(from) && s.at.isBefore(from.add(window)),
-    );
-    if (inWindow.isEmpty) return null;
-    return inWindow.map((s) => s.pm25).reduce((a, b) => a > b ? a : b);
+  Iterable<AirQualitySample> _around(DateTime anchor, Duration window, DateTime now) {
+    if (anchor.isAfter(now)) {
+      return samples.where((s) => !s.at.isBefore(anchor) && !s.at.isAfter(anchor.add(window)));
+    }
+    return samples.where((s) => !s.at.isBefore(anchor.subtract(window)) && !s.at.isAfter(anchor));
   }
 
-  /// Peak PM2.5 within [start, end] inclusive.
-  double? maxPm25InWindow(DateTime start, DateTime end) {
-    final inWindow = samples.where(
-      (s) => !s.at.isBefore(start) && !s.at.isAfter(end),
-    );
+  double? maxPm25Around(DateTime anchor, Duration window, {required DateTime now}) {
+    final inWindow = _around(anchor, window, now).toList();
     if (inWindow.isEmpty) return null;
     return inWindow.map((s) => s.pm25).reduce((a, b) => a > b ? a : b);
   }
@@ -165,4 +113,3 @@ class AirQualitySeries extends Equatable {
   @override
   List<Object?> get props => [samples];
 }
-
