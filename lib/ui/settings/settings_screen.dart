@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:intl/intl.dart';
+
 import '../../data/sources/location_source.dart';
 import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
+import '../../state/cycle_provider.dart';
 import '../../state/providers.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
+import '../cycle/baseline_severity_dialog.dart';
 import '../shared/unit_formatter.dart';
 
 const _moduleLabels = <String, String>{
@@ -136,6 +140,9 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => _showLocationDialog(context, ref, loc),
             ),
           ),
+          const Divider(),
+          Text('Cycle', style: Theme.of(context).textTheme.titleSmall),
+          const _CycleSettingsSection(),
           const Divider(),
           Text('Triggers', style: Theme.of(context).textTheme.titleSmall),
           flagsAsync.when(
@@ -327,6 +334,104 @@ class _LocationSearchDialogState extends State<_LocationSearchDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      ],
+    );
+  }
+}
+
+class _CycleSettingsSection extends ConsumerWidget {
+  const _CycleSettingsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final periodsAsync = ref.watch(recentPeriodsProvider);
+    final current = ref.watch(currentPeriodProvider);
+    final inProgress = current != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          child: OutlinedButton.icon(
+            key: const Key('settings-period-button'),
+            icon: Icon(inProgress ? Icons.water_drop : Icons.water_drop_outlined),
+            label: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(inProgress ? 'End period' : 'Log period'),
+            ),
+            onPressed: () async {
+              final journal = ref.read(journalSourceProvider);
+              if (inProgress) {
+                await journal.endPeriod(current.startedAt, DateTime.now().toUtc());
+                return;
+              }
+              final v = await BaselineSeverityDialog.show(context);
+              if (v == null) return;
+              await journal.addPeriod(PeriodEvent(
+                startedAt: DateTime.now().toUtc(),
+                baselineSeverity: v,
+              ));
+            },
+          ),
+        ),
+        periodsAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => Text('Error: $e'),
+          data: (periods) {
+            if (periods.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('No periods logged yet.'),
+              );
+            }
+            final fmt = DateFormat('MMM d, y');
+            return Column(
+              children: periods.map((p) {
+                final start = fmt.format(p.startedAt.toLocal());
+                final endLabel = p.endedAt == null
+                    ? 'in progress'
+                    : '– ${fmt.format(p.endedAt!.toLocal())}';
+                return ListTile(
+                  key: Key('period-row-${p.startedAt.toIso8601String()}'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.water_drop, color: Color(0xFFC15B7A)),
+                  title: Text('$start $endLabel'),
+                  subtitle: Text('Severity ${p.baselineSeverity}'),
+                  trailing: IconButton(
+                    key: Key('period-delete-${p.startedAt.toIso8601String()}'),
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Remove this period?'),
+                          content: const Text('The period record and any per-day severity overrides inside it will be deleted.'),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel')),
+                            TextButton(
+                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await ref.read(journalSourceProvider).deletePeriod(p.startedAt);
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
       ],
     );
   }

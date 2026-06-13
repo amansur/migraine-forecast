@@ -116,7 +116,22 @@ class DriftJournalSource implements JournalSource {
   @override
   Future<void> deletePeriod(DateTime startedAt) async {
     final utc = startedAt.toUtc();
-    await (_db.delete(_db.periods)..where((t) => t.startedAt.equals(utc))).go();
+    // Look up the row first so we know the span to cascade overrides over.
+    final row = await (_db.select(_db.periods)..where((t) => t.startedAt.equals(utc)))
+        .getSingleOrNull();
+    if (row == null) return;
+
+    final startDay = DateTime.utc(row.startedAt.year, row.startedAt.month, row.startedAt.day);
+    final endRaw = row.endedAt ?? row.startedAt.add(const Duration(days: 4));
+    final endDay = DateTime.utc(endRaw.year, endRaw.month, endRaw.day);
+    final overrideCutoff = endDay.add(const Duration(days: 1));
+
+    await _db.transaction(() async {
+      await (_db.delete(_db.periodDaySeverities)
+            ..where((t) => t.day.isBiggerOrEqualValue(startDay) & t.day.isSmallerThanValue(overrideCutoff)))
+          .go();
+      await (_db.delete(_db.periods)..where((t) => t.startedAt.equals(utc))).go();
+    });
   }
 
   @override

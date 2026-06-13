@@ -11,11 +11,12 @@ abstract final class BrandColors {
   static const bandHigh     = Color(0xFFD89B7A);
   static const bandVeryHigh = Color(0xFFB46A6A);
 
-  // Cycle phase palette — picked to avoid collision with severity bands.
-  static const phaseMenses     = Color(0xFFC15B7A);
-  static const phaseFollicular = Color(0xFF9FBEDF);
-  static const phaseOvulatory  = Color(0xFFBFA5D9);
-  static const phaseLuteal     = Color(0xFFCBB088);
+  // Cycle phase palette — picked to avoid collision with severity bands and
+  // to keep adjacent phases visually distinct on the ribbon.
+  static const phaseMenses     = Color(0xFFC15B7A); // rose
+  static const phaseFollicular = Color(0xFF6FA8DC); // sharper sky blue
+  static const phaseOvulatory  = Color(0xFFB266C7); // saturated magenta-purple
+  static const phaseLuteal     = Color(0xFFCBB088); // warm tan
 }
 
 ThemeData buildLightTheme() {

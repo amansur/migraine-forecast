@@ -75,6 +75,51 @@ void main() {
       );
       expect(list, isEmpty);
     });
+
+    test('deletePeriod cascades day-severity overrides inside the span', () async {
+      final start = DateTime.utc(2026, 6, 10);
+      final end = DateTime.utc(2026, 6, 14);
+      await source.addPeriod(
+          PeriodEvent(startedAt: start, endedAt: end, baselineSeverity: 5));
+      await source.upsertPeriodDaySeverity(
+          PeriodDaySeverity(day: DateTime.utc(2026, 6, 11), severity: 9));
+      await source.upsertPeriodDaySeverity(
+          PeriodDaySeverity(day: DateTime.utc(2026, 6, 14), severity: 7));
+      // Override outside the span should survive.
+      await source.upsertPeriodDaySeverity(
+          PeriodDaySeverity(day: DateTime.utc(2026, 6, 20), severity: 8));
+
+      await source.deletePeriod(start);
+
+      final overrides = await source.recentPeriodDaySeverities(
+        const Duration(days: 60),
+        now: DateTime.utc(2026, 6, 30),
+      );
+      expect(overrides, hasLength(1));
+      expect(overrides.first.day, DateTime.utc(2026, 6, 20));
+    });
+
+    test('deletePeriod on in-progress cascades default 5-day span', () async {
+      final start = DateTime.utc(2026, 6, 10);
+      await source.addPeriod(PeriodEvent(startedAt: start, baselineSeverity: 5));
+      await source.upsertPeriodDaySeverity(
+          PeriodDaySeverity(day: DateTime.utc(2026, 6, 12), severity: 9));
+      await source.upsertPeriodDaySeverity(
+          PeriodDaySeverity(day: DateTime.utc(2026, 6, 16), severity: 6)); // day 7, outside default span
+
+      await source.deletePeriod(start);
+
+      final overrides = await source.recentPeriodDaySeverities(
+        const Duration(days: 60),
+        now: DateTime.utc(2026, 6, 30),
+      );
+      expect(overrides.map((o) => o.day), [DateTime.utc(2026, 6, 16)]);
+    });
+
+    test('deletePeriod is a no-op for an unknown start', () async {
+      await source.deletePeriod(DateTime.utc(2026, 6, 10));
+      // no exception
+    });
   });
 
   group('PeriodDaySeverity overrides', () {

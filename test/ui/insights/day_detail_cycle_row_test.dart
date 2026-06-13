@@ -13,6 +13,7 @@ class _FakeJournal implements JournalSource {
   final List<PeriodDaySeverity> upserts = [];
   final List<PeriodEvent> addedPeriods = [];
   final List<({DateTime startedAt, DateTime endedAt})> ends = [];
+  final List<DateTime> deletedStarts = [];
 
   _FakeJournal({this.periods = const [], this.overrides = const []});
 
@@ -32,7 +33,10 @@ class _FakeJournal implements JournalSource {
   @override Future<void> endPeriod(DateTime startedAt, DateTime endedAt) async {
     ends.add((startedAt: startedAt, endedAt: endedAt));
   }
-  @override Future<void> deletePeriod(DateTime startedAt) async {}
+  @override Future<void> deletePeriod(DateTime startedAt) async {
+    deletedStarts.add(startedAt);
+    periods = periods.where((p) => !p.startedAt.isAtSameMomentAs(startedAt)).toList();
+  }
   @override Future<List<PeriodEvent>> recentPeriods(Duration window, {required DateTime now}) async => periods;
   @override Stream<List<PeriodEvent>> watchRecentPeriods(Duration window, {required DateTime now}) => Stream.value(periods);
   @override Future<void> upsertPeriodDaySeverity(PeriodDaySeverity override) async {
@@ -112,6 +116,39 @@ void main() {
     await tester.tap(find.byKey(const Key('mark-period-end')));
     await tester.pumpAndSettle();
     expect(fake.ends, hasLength(1));
+  });
+
+  testWidgets('remove-period on a day overlapping a closed period deletes on confirm', (tester) async {
+    final fake = _FakeJournal(periods: [
+      PeriodEvent(
+          startedAt: DateTime.utc(2026, 6, 10),
+          endedAt: DateTime.utc(2026, 6, 14),
+          baselineSeverity: 5),
+    ]);
+    await tester.pumpWidget(_PumpSheet(fake: fake, day: DateTime.utc(2026, 6, 12)));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('remove-period')), findsOneWidget);
+    expect(find.byKey(const Key('mark-period-start')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('remove-period')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove this period?'), findsOneWidget);
+
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+    expect(fake.deletedStarts, [DateTime.utc(2026, 6, 10)]);
+  });
+
+  testWidgets('remove-period and mark-period-end both show on a day inside an in-progress period', (tester) async {
+    final fake = _FakeJournal(periods: [
+      PeriodEvent(startedAt: DateTime.utc(2026, 6, 10), baselineSeverity: 5),
+    ]);
+    await tester.pumpWidget(_PumpSheet(fake: fake, day: DateTime.utc(2026, 6, 12)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mark-period-end')), findsOneWidget);
+    expect(find.byKey(const Key('remove-period')), findsOneWidget);
+    expect(find.byKey(const Key('mark-period-start')), findsNothing);
   });
 }
 

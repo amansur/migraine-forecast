@@ -421,10 +421,10 @@ class _PeriodMarkAction extends ConsumerWidget {
       }
     }
 
-    if (overlap != null && overlap.endedAt != null) return const SizedBox.shrink();
+    final actions = <Widget>[];
 
     if (openBefore != null) {
-      return TextButton.icon(
+      actions.add(TextButton.icon(
         key: const Key('mark-period-end'),
         onPressed: () async {
           await ref
@@ -433,11 +433,11 @@ class _PeriodMarkAction extends ConsumerWidget {
         },
         icon: const Icon(Icons.water_drop),
         label: const Text('Mark period end'),
-      );
+      ));
     }
 
-    if (overlap == null) {
-      return TextButton.icon(
+    if (overlap == null && openBefore == null) {
+      actions.add(TextButton.icon(
         key: const Key('mark-period-start'),
         onPressed: () async {
           final v = await BaselineSeverityDialog.show(context);
@@ -449,8 +449,38 @@ class _PeriodMarkAction extends ConsumerWidget {
         },
         icon: const Icon(Icons.water_drop_outlined),
         label: const Text('Mark period start'),
-      );
+      ));
     }
-    return const SizedBox.shrink();
+
+    if (overlap != null) {
+      actions.add(TextButton.icon(
+        key: const Key('remove-period'),
+        onPressed: () async {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Remove this period?'),
+              content: const Text('The period record and any per-day severity overrides inside it will be deleted.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Remove'),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true) {
+            await ref.read(journalSourceProvider).deletePeriod(overlap!.startedAt);
+          }
+        },
+        icon: const Icon(Icons.delete_outline, color: Colors.red),
+        label: const Text('Remove period', style: TextStyle(color: Colors.red)),
+      ));
+    }
+
+    if (actions.isEmpty) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: actions);
   }
 }
