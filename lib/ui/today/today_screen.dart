@@ -1,11 +1,15 @@
+import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
+import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
+import '../cycle/baseline_severity_dialog.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
@@ -88,12 +92,48 @@ class TodayScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    const _PeriodButton(),
                   ],
                 );
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PeriodButton extends ConsumerWidget {
+  const _PeriodButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(currentPeriodProvider);
+    final inProgress = current != null;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        key: const Key('period-button'),
+        icon: Icon(inProgress ? Icons.water_drop : Icons.water_drop_outlined),
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(inProgress ? 'End period' : 'Log period'),
+        ),
+        onPressed: () async {
+          final journal = ref.read(journalSourceProvider);
+          if (inProgress) {
+            await journal.endPeriod(current.startedAt, DateTime.now().toUtc());
+            return;
+          }
+          final severity = await BaselineSeverityDialog.show(context);
+          if (severity == null) return;
+          await journal.addPeriod(PeriodEvent(
+            startedAt: DateTime.now().toUtc(),
+            baselineSeverity: severity,
+          ));
+        },
       ),
     );
   }
