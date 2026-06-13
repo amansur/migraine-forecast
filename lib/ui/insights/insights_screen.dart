@@ -9,6 +9,7 @@ import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/providers.dart';
 import '../../state/suggestions_provider.dart';
+import '../cycle/baseline_severity_dialog.dart';
 import 'calendar_heatmap.dart';
 import 'correlation_card.dart';
 import 'phase_ribbon.dart';
@@ -65,7 +66,7 @@ class _Body extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _DayDetailSheet(day: day),
+      builder: (_) => DayDetailSheet(day: day),
     );
   }
 
@@ -163,9 +164,9 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _DayDetailSheet extends ConsumerWidget {
+class DayDetailSheet extends ConsumerWidget {
   final DateTime day;
-  const _DayDetailSheet({required this.day});
+  const DayDetailSheet({super.key, required this.day});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -195,7 +196,9 @@ class _DayDetailSheet extends ConsumerWidget {
               dateTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            _CycleRow(day: day),
+            const SizedBox(height: 12),
             Text('Risk Assessment', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             assessment.when(
@@ -309,6 +312,7 @@ class _DayDetailSheet extends ConsumerWidget {
                       icon: const Icon(Icons.add),
                       label: const Text('Add migraine'),
                     ),
+                    _PeriodMarkAction(day: day),
                   ],
                 );
               },
@@ -317,5 +321,136 @@ class _DayDetailSheet extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+class _CycleRow extends ConsumerWidget {
+  final DateTime day;
+  const _CycleRow({required this.day});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phase = ref.watch(dayPhaseProvider(day));
+    if (phase is PhaseUnknown) return const SizedBox.shrink();
+
+    final (CyclePhase cyclePhase, int dayOfCycle, bool predicted) = switch (phase) {
+      PhaseConfirmed(:final phase, :final dayOfCycle) => (phase, dayOfCycle, false),
+      PhasePredicted(:final phase, :final dayOfCycle) => (phase, dayOfCycle, true),
+      _ => throw StateError('unreachable'),
+    };
+
+    final inMenses = cyclePhase == CyclePhase.menses;
+    final effectiveSeverity =
+        inMenses ? ref.watch(effectiveDaySeverityProvider(day)) : null;
+
+    final phaseName = cyclePhase.name;
+    final predictedSuffix = predicted ? ' (predicted)' : '';
+    final severitySuffix =
+        (inMenses && effectiveSeverity != null) ? ' · Severity $effectiveSeverity' : '';
+    final tapSuffix = (inMenses && !predicted) ? ' (tap to adjust)' : '';
+    final label =
+        'Day $dayOfCycle · ${phaseName[0].toUpperCase()}${phaseName.substring(1)}$severitySuffix$predictedSuffix$tapSuffix';
+
+    final row = Row(
+      children: [
+        const Icon(Icons.water_drop, size: 16, color: Color(0xFFC15B7A)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: predicted
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)
+                      : null,
+                ),
+          ),
+        ),
+      ],
+    );
+
+    if (!inMenses || predicted) {
+      return Padding(padding: const EdgeInsets.only(bottom: 4), child: row);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: InkWell(
+        key: const Key('cycle-row-tap'),
+        onTap: () async {
+          final v = await BaselineSeverityDialog.show(
+            context,
+            title: 'Severity for this day',
+            initial: effectiveSeverity ?? 5,
+          );
+          if (v == null) return;
+          await ref.read(journalSourceProvider).upsertPeriodDaySeverity(
+                PeriodDaySeverity(
+                  day: DateTime.utc(day.year, day.month, day.day),
+                  severity: v,
+                ),
+              );
+        },
+        child: row,
+      ),
+    );
+  }
+}
+
+class _PeriodMarkAction extends ConsumerWidget {
+  final DateTime day;
+  const _PeriodMarkAction({required this.day});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final periods = ref.watch(recentPeriodsProvider).asData?.value ?? const <PeriodEvent>[];
+    final dayUtc = DateTime.utc(day.year, day.month, day.day);
+    final noon = dayUtc.add(const Duration(hours: 12));
+
+    PeriodEvent? overlap;
+    PeriodEvent? openBefore;
+    for (final p in periods) {
+      final start = DateTime.utc(p.startedAt.year, p.startedAt.month, p.startedAt.day);
+      final end = p.endedAt != null
+          ? DateTime.utc(p.endedAt!.year, p.endedAt!.month, p.endedAt!.day)
+          : start.add(const Duration(days: 4));
+      if (!dayUtc.isBefore(start) && !dayUtc.isAfter(end)) {
+        overlap = p;
+      }
+      if (p.endedAt == null && start.isBefore(dayUtc)) {
+        openBefore = p;
+      }
+    }
+
+    if (overlap != null && overlap.endedAt != null) return const SizedBox.shrink();
+
+    if (openBefore != null) {
+      return TextButton.icon(
+        key: const Key('mark-period-end'),
+        onPressed: () async {
+          await ref
+              .read(journalSourceProvider)
+              .endPeriod(openBefore!.startedAt, noon);
+        },
+        icon: const Icon(Icons.water_drop),
+        label: const Text('Mark period end'),
+      );
+    }
+
+    if (overlap == null) {
+      return TextButton.icon(
+        key: const Key('mark-period-start'),
+        onPressed: () async {
+          final v = await BaselineSeverityDialog.show(context);
+          if (v == null) return;
+          await ref.read(journalSourceProvider).addPeriod(PeriodEvent(
+                startedAt: noon,
+                baselineSeverity: v,
+              ));
+        },
+        icon: const Icon(Icons.water_drop_outlined),
+        label: const Text('Mark period start'),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
