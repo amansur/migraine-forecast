@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:migraine_forecast/state/risk_assessment_provider.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
 import 'package:migraine_forecast/ui/today/tomorrow_detail_screen.dart';
@@ -58,6 +59,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final expectedDate = DateFormat('EEE, MMM d').format(DateTime.now().add(const Duration(days: 1)));
+    expect(find.text(expectedDate), findsOneWidget);
     expect(find.text('Tomorrow'), findsOneWidget);
     expect(find.text('62'), findsOneWidget);
     expect(find.text('Pressure dropping 6.1 hPa over next 24h'), findsOneWidget);

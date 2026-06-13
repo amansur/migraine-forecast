@@ -14,16 +14,14 @@ class TomorrowDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ass = ref.watch(tomorrowRiskAssessmentProvider);
     final mode = ref.watch(riskDisplayModeProvider).asData?.value ?? RiskDisplayMode.gauge;
-    final targetDate = ass.asData?.value.targetDate.toLocal();
-    final dateStr = targetDate == null ? '' : DateFormat('EEE, MMM d').format(targetDate);
+    final dateStr = DateFormat('EEE, MMM d').format(DateTime.now().add(const Duration(days: 1)));
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           children: [
             const Text('Tomorrow'),
-            if (dateStr.isNotEmpty)
-              Text(dateStr, style: Theme.of(context).textTheme.labelSmall),
+            Text(dateStr, style: Theme.of(context).textTheme.labelSmall),
           ],
         ),
       ),
