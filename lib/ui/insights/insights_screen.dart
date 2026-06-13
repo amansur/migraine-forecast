@@ -26,6 +26,12 @@ class InsightsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Insights'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
       ),
       body: eligible.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -306,7 +312,7 @@ class DayDetailSheet extends ConsumerWidget {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: () {
