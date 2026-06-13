@@ -214,11 +214,16 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const Divider(),
-          Text('Danger Zone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.red)),
-          ListTile(
-            title: const Text('Clear all data', style: TextStyle(color: Colors.red)),
+          Builder(builder: (context) {
+            final errorColor = Theme.of(context).colorScheme.error;
+            return Text('Danger Zone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: errorColor));
+          }),
+          Builder(builder: (context) {
+            final errorColor = Theme.of(context).colorScheme.error;
+            return ListTile(
+            title: Text('Clear all data', style: TextStyle(color: errorColor)),
             subtitle: const Text('Permanently delete all logs, settings, and risk history. Resets the app to the onboarding state.'),
-            trailing: const Icon(Icons.delete_forever, color: Colors.red),
+            trailing: Icon(Icons.delete_forever, color: errorColor),
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
@@ -228,7 +233,7 @@ class SettingsScreen extends ConsumerWidget {
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
                     TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: const Text('Delete Everything'),
                     ),
@@ -247,7 +252,8 @@ class SettingsScreen extends ConsumerWidget {
                 }
               }
             },
-          ),
+          );
+          }),
         ],
       ),
     );
