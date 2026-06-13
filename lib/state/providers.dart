@@ -117,8 +117,11 @@ final dayAssessmentProvider = FutureProvider.autoDispose.family<RiskAssessment?,
 
 final dayAttacksProvider = StreamProvider.autoDispose.family<List<Attack>, DateTime>((ref, date) {
   final journal = ref.watch(journalSourceProvider);
-  final d = date.toUtc();
-  final startOfDay = DateTime.utc(d.year, d.month, d.day);
-  final endOfDay = startOfDay.add(const Duration(days: 1));
-  return journal.watchRecentAttacks(const Duration(days: 1), now: endOfDay);
+  // `date` arrives as a UTC-midnight key carrying the LOCAL calendar date
+  // (that's how the heatmap builds its tile keys). Translate it to the
+  // matching local-day UTC instant range so attacks logged near midnight
+  // land on the day the tile represents, not the UTC day.
+  final startOfLocalDay = DateTime(date.year, date.month, date.day).toUtc();
+  final endOfLocalDay = startOfLocalDay.add(const Duration(days: 1));
+  return journal.watchRecentAttacks(const Duration(days: 1), now: endOfLocalDay);
 });

@@ -93,11 +93,15 @@ class _Body extends ConsumerWidget {
           loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
           error: (e, _) => Text('Error loading heatmap: $e'),
           data: (attacks) {
-            // Build day → max severity map (UTC midnight keys).
+            // Build day → max severity map. Bin by LOCAL date (wrapped in
+            // a UTC midnight key) so the bucket matches the heatmap tile,
+            // which is also keyed off local-now. Binning by UTC date would
+            // push attacks logged late-evening (negative offsets) or
+            // shortly past midnight (positive offsets) onto the wrong tile.
             final severityByDay = <DateTime, int>{};
             for (final a in attacks) {
-              final utc = a.startedAt.toUtc();
-              final day = DateTime.utc(utc.year, utc.month, utc.day);
+              final local = a.startedAt.toLocal();
+              final day = DateTime.utc(local.year, local.month, local.day);
               final prev = severityByDay[day] ?? 0;
               if (a.severity > prev) severityByDay[day] = a.severity;
             }
