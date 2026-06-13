@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 
 import 'location_source.dart';
@@ -18,9 +19,11 @@ class GeolocatorLocationSource implements LocationSource {
           permission == LocationPermission.deniedForever) {
         return fallback.current();
       }
-      final lastPos = await Geolocator.getLastKnownPosition();
-      if (lastPos != null) {
-        return UserLocation(lat: lastPos.latitude, lon: lastPos.longitude);
+      if (!kIsWeb) {
+        final lastPos = await Geolocator.getLastKnownPosition();
+        if (lastPos != null) {
+          return UserLocation(lat: lastPos.latitude, lon: lastPos.longitude);
+        }
       }
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
