@@ -73,6 +73,18 @@ final setPressureUnitProvider = Provider<Future<void> Function(PressureUnit)>((r
   };
 });
 
+final autoComfortModeProvider = FutureProvider<bool>((ref) async {
+  final s = await ref.watch(settingsRepoProvider).getString('auto_comfort_mode');
+  return s != 'false';
+});
+
+final setAutoComfortModeProvider = Provider<Future<void> Function(bool)>((ref) {
+  return (enabled) async {
+    await ref.read(settingsRepoProvider).setBool('auto_comfort_mode', enabled);
+    ref.invalidate(autoComfortModeProvider);
+  };
+});
+
 final unitFormatterProvider = FutureProvider<UnitFormatter>((ref) async {
   final temp = await ref.watch(temperatureUnitProvider.future);
   final pressure = await ref.watch(pressureUnitProvider.future);

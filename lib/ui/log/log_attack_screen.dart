@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 
@@ -43,7 +44,9 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Theme(
+      data: buildComfortTheme(),
+      child: Scaffold(
       appBar: AppBar(title: const Text('Log a migraine')),
       body: Stack(
         children: [
@@ -106,6 +109,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
               child: Center(child: CircularProgressIndicator()),
             ),
         ],
+      ),
       ),
     );
   }

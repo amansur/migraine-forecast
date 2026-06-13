@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "modules": {
     "pressure_drop":        { "enabled": true, "weight_max": 18, "params": { "threshold_hpa": 5, "lookahead_hours": 48 } },
     "humidity":             { "enabled": true, "weight_max": 6,  "params": { "humidity_pct": 60 } },
@@ -12,7 +12,8 @@
     "alcohol":              { "enabled": true, "weight_max": 12, "params": { "lookback_hours": 24 } },
     "caffeine":             { "enabled": true, "weight_max": 8,  "params": { "delta_mg_threshold": 100 } },
     "stress":               { "enabled": true, "weight_max": 12, "params": {} },
-    "hydration":            { "enabled": true, "weight_max": 8,  "params": { "min_liters": 1.5 } }
+    "hydration":            { "enabled": true, "weight_max": 8,  "params": { "min_liters": 1.5 } },
+    "intraday_pressure_swing": { "enabled": true, "weight_max": 12, "params": { "threshold_volatility_hpa": 10.0, "lookback_hours": 24 } }
   },
   "score_bands": { "low": 25, "moderate": 50, "high": 75 },
   "unflagged_trigger_confidence_multiplier": 0.6

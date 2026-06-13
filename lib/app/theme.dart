@@ -49,6 +49,51 @@ ThemeData buildLightTheme() {
   );
 }
 
+ThemeData buildComfortTheme() {
+  const background = Color(0xFF232120);
+  const surface = Color(0xFF2E2C2B);
+  const onSurface = Color(0xFFDFD9D0);
+  const primary = Color(0xFF8B9D88);
+  const scaffoldUnder = Color(0xFF1C1A19);
+
+  const scheme = ColorScheme(
+    brightness: Brightness.dark,
+    primary: primary,
+    onPrimary: scaffoldUnder,
+    secondary: primary,
+    onSecondary: scaffoldUnder,
+    error: Color(0xFFCF6679),
+    onError: scaffoldUnder,
+    surface: surface,
+    onSurface: onSurface,
+  );
+
+  final base = ThemeData(useMaterial3: true, colorScheme: scheme);
+  return base.copyWith(
+    scaffoldBackgroundColor: background,
+    textTheme: base.textTheme.apply(
+      bodyColor: onSurface,
+      displayColor: onSurface,
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        side: BorderSide(color: onSurface.withAlpha(30)),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      centerTitle: true,
+      backgroundColor: background,
+      foregroundColor: onSurface,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+    ),
+  );
+}
+
 Color colorForBand(String bandName) {
   switch (bandName) {
     case 'low': return BrandColors.bandLow;

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/lifecycle_observer.dart';
 import '../state/providers.dart';
 import '../state/risk_assessment_provider.dart';
+import '../state/settings_provider.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -41,9 +42,14 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
   @override
   Widget build(BuildContext context) {
     final router = buildRouter(ref);
+    final hasActiveAttack = ref.watch(activeAttackProvider).asData?.value ?? false;
+    final autoComfort = ref.watch(autoComfortModeProvider).asData?.value ?? true;
+    final comfort = autoComfort && hasActiveAttack;
+    final activeTheme = comfort ? buildComfortTheme() : buildLightTheme();
     return MaterialApp.router(
       title: 'Migraine Forecast',
-      theme: buildLightTheme(),
+      theme: activeTheme,
+      darkTheme: activeTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

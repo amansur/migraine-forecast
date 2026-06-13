@@ -81,6 +81,20 @@ class WeatherSeries extends Equatable {
     return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
   }
 
+  double? hourlyPressureVolatilityAround(
+    DateTime anchor,
+    Duration window, {
+    required DateTime now,
+  }) {
+    final inWindow = _around(anchor, window, now).toList();
+    if (inWindow.length < 2) return null;
+    double total = 0;
+    for (int i = 1; i < inWindow.length; i++) {
+      total += (inWindow[i].pressureMsl - inWindow[i - 1].pressureMsl).abs();
+    }
+    return total;
+  }
+
   @override
   List<Object?> get props => [samples];
 }

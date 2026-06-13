@@ -18,6 +18,7 @@ const _moduleIds = [
   'caffeine',
   'stress',
   'hydration',
+  'intraday_pressure_swing',
 ];
 
 final correlationRepoProvider = Provider<CorrelationRepo>((ref) {

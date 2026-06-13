@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import '../data/repos/assessment_repository.dart';
 import '../data/repos/baseline_snapshot_builder.dart';
+import '../data/repos/export_repo.dart';
 import '../data/repos/notification_dedup_repo.dart';
 import '../data/repos/settings_repo.dart';
 import '../data/repos/user_trigger_flags_repo_drift.dart';
@@ -58,6 +59,8 @@ final settingsRepoProvider = Provider<SettingsRepo>((ref) => SettingsRepo(ref.wa
 
 final flagsRepoProvider = Provider<UserTriggerFlagsRepo>((ref) => UserTriggerFlagsRepoDrift(ref.watch(databaseProvider)));
 
+final exportRepoProvider = Provider<ExportRepo>((ref) => ExportRepo(ref.watch(databaseProvider)));
+
 final assessmentRepoProvider = Provider<AssessmentRepository>((ref) => AssessmentRepository(ref.watch(databaseProvider)));
 
 final baselineBuilderProvider = Provider<BaselineSnapshotBuilder>(
@@ -91,6 +94,7 @@ final riskEngineProvider = Provider<RiskEngine>((_) => RiskEngine(modules: [
       CaffeineModule(),
       StressModule(),
       HydrationModule(),
+      IntradayPressureSwingModule(),
     ]));
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -113,6 +117,12 @@ final dayAssessmentProvider = FutureProvider.autoDispose.family<RiskAssessment?,
   final today = await repo.latestForDate(target: date, horizon: RiskHorizon.today);
   if (today != null) return today;
   return repo.latestForDate(target: date, horizon: RiskHorizon.tomorrow);
+});
+
+final activeAttackProvider = StreamProvider<bool>((ref) {
+  final db = ref.watch(databaseProvider);
+  final q = db.select(db.attacks)..where((t) => t.inProgress.equals(true));
+  return q.watch().map((rows) => rows.isNotEmpty);
 });
 
 final dayAttacksProvider = StreamProvider.autoDispose.family<List<Attack>, DateTime>((ref, date) {

@@ -48,5 +48,71 @@ void main() {
       expect(s.tempSwingAround(out, const Duration(hours: 1), now: out), isNull);
       expect(s.humidityTrendAround(out, const Duration(hours: 1), now: out), isNull);
     });
+
+    group('hourlyPressureVolatilityAround', () {
+      test('returns null for empty series', () {
+        const empty = WeatherSeries(samples: []);
+        expect(
+          empty.hourlyPressureVolatilityAround(t0, const Duration(hours: 24), now: t0),
+          isNull,
+        );
+      });
+
+      test('returns null for single sample', () {
+        final single = WeatherSeries(samples: [
+          WeatherSample(at: t0, pressureMsl: 1013, temperatureC: 20, humidityPct: 50),
+        ]);
+        expect(
+          single.hourlyPressureVolatilityAround(t0, const Duration(hours: 24), now: t0),
+          isNull,
+        );
+      });
+
+      test('monotonic rise equals total range', () {
+        final anchor = t0.add(const Duration(hours: 24));
+        // samples at t0, t0+12h, t0+24h with pressures 1010, 1015, 1020
+        // volatility = |1015-1010| + |1020-1015| = 5 + 5 = 10
+        final series = WeatherSeries(samples: [
+          WeatherSample(at: t0, pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: t0.add(const Duration(hours: 12)), pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: anchor, pressureMsl: 1020, temperatureC: 20, humidityPct: 50),
+        ]);
+        expect(
+          series.hourlyPressureVolatilityAround(anchor, const Duration(hours: 24), now: anchor),
+          closeTo(10.0, 0.01),
+        );
+      });
+
+      test('oscillating samples sum absolute steps', () {
+        // drop-rebound-drop: net delta ≈ 0, but volatility is high
+        // pressures: 1010, 1005, 1010, 1005 => steps 5+5+5 = 15
+        final anchor = t0.add(const Duration(hours: 3));
+        final series = WeatherSeries(samples: [
+          WeatherSample(at: t0, pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: t0.add(const Duration(hours: 1)), pressureMsl: 1005, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: t0.add(const Duration(hours: 2)), pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: anchor, pressureMsl: 1005, temperatureC: 20, humidityPct: 50),
+        ]);
+        expect(
+          series.hourlyPressureVolatilityAround(anchor, const Duration(hours: 3), now: anchor),
+          closeTo(15.0, 0.01),
+        );
+      });
+
+      test('samples outside window are excluded', () {
+        // anchor at t0+24h (past window [t0, t0+24h]), sample at t0-1h excluded
+        final anchor = t0.add(const Duration(hours: 24));
+        final series = WeatherSeries(samples: [
+          WeatherSample(at: t0.subtract(const Duration(hours: 1)), pressureMsl: 980, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: t0, pressureMsl: 1010, temperatureC: 20, humidityPct: 50),
+          WeatherSample(at: anchor, pressureMsl: 1015, temperatureC: 20, humidityPct: 50),
+        ]);
+        // only 1010 and 1015 in window => volatility = 5
+        expect(
+          series.hourlyPressureVolatilityAround(anchor, const Duration(hours: 24), now: anchor),
+          closeTo(5.0, 0.01),
+        );
+      });
+    });
   });
 }

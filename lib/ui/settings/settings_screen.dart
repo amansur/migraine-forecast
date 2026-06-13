@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../data/sources/location_source.dart';
 import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
@@ -103,6 +106,17 @@ class SettingsScreen extends ConsumerWidget {
                 selected: {unit},
                 onSelectionChanged: (s) => ref.read(setPressureUnitProvider)(s.first),
               ),
+            ),
+          ),
+          ref.watch(autoComfortModeProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => Text('Error: $e'),
+            data: (enabled) => SwitchListTile(
+              key: const Key('auto-comfort-mode-toggle'),
+              title: const Text('Auto Comfort Mode during attacks'),
+              subtitle: const Text('Switches to a low-contrast warm theme while a migraine is in progress.'),
+              value: enabled,
+              onChanged: (v) => ref.read(setAutoComfortModeProvider)(v),
             ),
           ),
           const Divider(),
@@ -214,6 +228,14 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const Divider(),
+          Text('Manage Data', style: Theme.of(context).textTheme.titleSmall),
+          ListTile(
+            title: const Text('Export JSON Data'),
+            subtitle: const Text('Copy or save your attacks, journal entries, and settings.'),
+            trailing: const Icon(Icons.download_outlined),
+            onTap: () => _showExportDialog(context, ref),
+          ),
+          const Divider(),
           Text('Danger Zone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.error)),
           ListTile(
             title: Text('Clear all data', style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -250,6 +272,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showExportDialog(BuildContext context, WidgetRef ref) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => _ExportDataDialog(ref: ref),
     );
   }
 
@@ -485,6 +514,70 @@ class _CycleSettingsSection extends ConsumerWidget {
         ),
         ],
       ],
+    );
+  }
+}
+
+class _ExportDataDialog extends StatefulWidget {
+  final WidgetRef ref;
+  const _ExportDataDialog({required this.ref});
+
+  @override
+  State<_ExportDataDialog> createState() => _ExportDataDialogState();
+}
+
+class _ExportDataDialogState extends State<_ExportDataDialog> {
+  bool _loading = false;
+
+  Future<void> _copyToClipboard() async {
+    setState(() => _loading = true);
+    try {
+      final json = await widget.ref.read(exportRepoProvider).buildJson();
+      await Clipboard.setData(ClipboardData(text: json));
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _saveToDocuments() async {
+    setState(() => _loading = true);
+    try {
+      final json = await widget.ref.read(exportRepoProvider).buildJson();
+      final dir = await getApplicationDocumentsDirectory();
+      final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final path = '${dir.path}/migraine_forecast_export_$dateStr.json';
+      await File(path).writeAsString(json);
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+        messenger.showSnackBar(
+          SnackBar(content: Text('Saved to $path')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Export JSON Data'),
+      content: const Text('Choose how to export your data. Derived data (risk assessments, weather snapshots) is excluded.'),
+      actions: _loading
+          ? [const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())]
+          : [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              TextButton(onPressed: _copyToClipboard, child: const Text('Copy to Clipboard')),
+              TextButton(onPressed: _saveToDocuments, child: const Text('Save to Documents')),
+            ],
     );
   }
 }
