@@ -120,24 +120,27 @@ class SettingsScreen extends ConsumerWidget {
           ref.watch(manualLocationProvider).when(
             loading: () => const SizedBox.shrink(),
             error: (e, _) => Text('Error: $e'),
-            data: (loc) => ListTile(
-              title: const Text('Manual location'),
-              subtitle: loc != null
-                  ? Text('${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}')
-                  : const Text('Not set — using GPS'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (loc != null)
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      tooltip: 'Clear manual location',
+            data: (loc) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  title: const Text('Location'),
+                  subtitle: loc != null
+                      ? Text('${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}')
+                      : const Text('Auto (GPS)'),
+                  trailing: const Icon(Icons.edit_outlined),
+                  onTap: () => _showLocationDialog(context, ref, loc),
+                ),
+                if (loc != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4, bottom: 8),
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.my_location),
+                      label: const Text('Reset to auto location'),
                       onPressed: () => ref.read(clearManualLocationProvider)(),
                     ),
-                  const Icon(Icons.edit_outlined),
-                ],
-              ),
-              onTap: () => _showLocationDialog(context, ref, loc),
+                  ),
+              ],
             ),
           ),
           const Divider(),
