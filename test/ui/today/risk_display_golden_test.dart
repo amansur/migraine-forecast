@@ -1,9 +1,9 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/app/theme.dart';
-import 'package:migraine_weatherr/state/settings_provider.dart';
-import 'package:migraine_weatherr/ui/today/risk_display.dart';
+import 'package:migraine_forecast/app/theme.dart';
+import 'package:migraine_forecast/state/settings_provider.dart';
+import 'package:migraine_forecast/ui/today/risk_display.dart';
 
 RiskAssessment _ass(int score, RiskBand band) => RiskAssessment(
       score: score,

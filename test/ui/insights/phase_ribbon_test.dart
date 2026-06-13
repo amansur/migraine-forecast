@@ -1,7 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/ui/insights/phase_ribbon.dart';
+import 'package:migraine_forecast/ui/insights/phase_ribbon.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 

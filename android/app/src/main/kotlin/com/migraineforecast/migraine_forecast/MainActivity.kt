@@ -1,4 +1,4 @@
-package com.migraineweatherr.migraine_weatherr
+package com.migraineforecast.migraine_forecast
 
 import io.flutter.embedding.android.FlutterActivity
 

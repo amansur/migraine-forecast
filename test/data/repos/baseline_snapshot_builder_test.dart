@@ -1,6 +1,6 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/repos/baseline_snapshot_builder.dart';
+import 'package:migraine_forecast/data/repos/baseline_snapshot_builder.dart';
 
 void main() {
   test('builds a snapshot from health + journal history', () {

@@ -46,5 +46,5 @@ Future<void> main() async {
       // Plugin not available on this platform — silently skip.
     }
   }
-  runApp(const ProviderScope(child: MigraineWeatherrApp()));
+  runApp(const ProviderScope(child: MigraineForecastApp()));
 }

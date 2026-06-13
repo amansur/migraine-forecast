@@ -7,14 +7,14 @@ import '../state/risk_assessment_provider.dart';
 import 'router.dart';
 import 'theme.dart';
 
-class MigraineWeatherrApp extends ConsumerStatefulWidget {
-  const MigraineWeatherrApp({super.key});
+class MigraineForecastApp extends ConsumerStatefulWidget {
+  const MigraineForecastApp({super.key});
 
   @override
-  ConsumerState<MigraineWeatherrApp> createState() => _MigraineWeatherrAppState();
+  ConsumerState<MigraineForecastApp> createState() => _MigraineForecastAppState();
 }
 
-class _MigraineWeatherrAppState extends ConsumerState<MigraineWeatherrApp> {
+class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
   late final AppLifecycleObserver _observer;
 
   @override
@@ -42,7 +42,7 @@ class _MigraineWeatherrAppState extends ConsumerState<MigraineWeatherrApp> {
   Widget build(BuildContext context) {
     final router = buildRouter(ref);
     return MaterialApp.router(
-      title: 'Migraine Weatherr',
+      title: 'Migraine Forecast',
       theme: buildLightTheme(),
       routerConfig: router,
       debugShowCheckedModeBanner: false,

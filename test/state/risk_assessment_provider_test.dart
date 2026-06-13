@@ -1,15 +1,15 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/context_builder.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
-import 'package:migraine_weatherr/data/repos/assessment_repository.dart';
-import 'package:migraine_weatherr/data/sources/drift_journal_source.dart';
-import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
-import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
-import 'package:migraine_weatherr/data/sources/weather_source.dart';
-import 'package:migraine_weatherr/state/providers.dart';
-import 'package:migraine_weatherr/state/risk_assessment_provider.dart';
+import 'package:migraine_forecast/data/context_builder.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_forecast/data/repos/assessment_repository.dart';
+import 'package:migraine_forecast/data/sources/drift_journal_source.dart';
+import 'package:migraine_forecast/data/sources/fake_health_source.dart';
+import 'package:migraine_forecast/data/sources/manual_location_source.dart';
+import 'package:migraine_forecast/data/sources/weather_source.dart';
+import 'package:migraine_forecast/state/providers.dart';
+import 'package:migraine_forecast/state/risk_assessment_provider.dart';
 
 class _StubWeather implements WeatherSource {
   @override

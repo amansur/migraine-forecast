@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/sources/open_meteo/open_meteo_url_builder.dart';
+import 'package:migraine_forecast/data/sources/open_meteo/open_meteo_url_builder.dart';
 
 void main() {
   test('forecast URL includes required hourly params', () {

@@ -3,9 +3,9 @@
     "allow": [
       "Bash(dart pub *)",
       "Bash(flutter pub *)",
-      "Bash(git -C /Users/amansur/projects/migraine-weatherr add .gitignore .metadata README.md analysis_options.yaml android/ ios/ lib/ packages/ pubspec.lock pubspec.yaml test/ web/)",
-      "Bash(git -C /Users/amansur/projects/migraine-weatherr commit -m ' *)",
-      "Bash(git -C /Users/amansur/projects/migraine-weatherr log --oneline -3)",
+      "Bash(git -C /Users/amansur/projects/migraine-forecast add .gitignore .metadata README.md analysis_options.yaml android/ ios/ lib/ packages/ pubspec.lock pubspec.yaml test/ web/)",
+      "Bash(git -C /Users/amansur/projects/migraine-forecast commit -m ' *)",
+      "Bash(git -C /Users/amansur/projects/migraine-forecast log --oneline -3)",
       "Bash(git add *)",
       "Bash(git *)",
       "Bash(dart test *)",

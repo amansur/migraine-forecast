@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:migraine_weatherr/data/database.dart';
-import 'package:migraine_weatherr/data/sources/open_meteo/open_meteo_weather_source.dart';
+import 'package:migraine_forecast/data/database.dart';
+import 'package:migraine_forecast/data/sources/open_meteo/open_meteo_weather_source.dart';
 
 void main() {
   late AppDatabase db;

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.migraineweatherr.migraine_weatherr"
+    namespace = "com.migraineforecast.migraine_forecast"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.migraineweatherr.migraine_weatherr"
+        applicationId = "com.migraineforecast.migraine_forecast"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26

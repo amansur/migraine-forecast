@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Migraine Weatherr brand colors — sage greens + warm ivory.
+/// Migraine Forecast brand colors — sage greens + warm ivory.
 abstract final class BrandColors {
   static const sage = Color(0xFF7A9B7A);
   static const ivory = Color(0xFFFAF7F0);

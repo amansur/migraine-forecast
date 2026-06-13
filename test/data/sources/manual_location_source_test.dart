@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
+import 'package:migraine_forecast/data/sources/manual_location_source.dart';
 
 void main() {
   test('round-trips a set location', () async {

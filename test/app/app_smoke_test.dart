@@ -1,14 +1,14 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/app/app.dart';
-import 'package:migraine_weatherr/data/context_builder.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
-import 'package:migraine_weatherr/data/sources/drift_journal_source.dart';
-import 'package:migraine_weatherr/data/sources/fake_health_source.dart';
-import 'package:migraine_weatherr/data/sources/manual_location_source.dart';
-import 'package:migraine_weatherr/data/sources/weather_source.dart';
-import 'package:migraine_weatherr/state/providers.dart';
+import 'package:migraine_forecast/app/app.dart';
+import 'package:migraine_forecast/data/context_builder.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
+import 'package:migraine_forecast/data/sources/drift_journal_source.dart';
+import 'package:migraine_forecast/data/sources/fake_health_source.dart';
+import 'package:migraine_forecast/data/sources/manual_location_source.dart';
+import 'package:migraine_forecast/data/sources/weather_source.dart';
+import 'package:migraine_forecast/state/providers.dart';
 
 class _StubWeather implements WeatherSource {
   @override
@@ -41,11 +41,11 @@ void main() {
           locationSourceProvider.overrideWithValue(loc),
           flagsRepoProvider.overrideWithValue(_MemFlagsRepo()),
         ],
-        child: const MigraineWeatherrApp(),
+        child: const MigraineForecastApp(),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to Migraine Weatherr'), findsOneWidget);
+    expect(find.text('Welcome to Migraine Forecast'), findsOneWidget);
     addTearDown(db.close);
   });
 }

@@ -1,7 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/database.dart' hide Attack, JournalEntry, PeriodDaySeverity;
-import 'package:migraine_weatherr/data/sources/drift_journal_source.dart';
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, PeriodDaySeverity;
+import 'package:migraine_forecast/data/sources/drift_journal_source.dart';
 
 void main() {
   late AppDatabase db;

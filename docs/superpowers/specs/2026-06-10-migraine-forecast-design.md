@@ -1,4 +1,4 @@
-# Migraine Weatherr — v1 Design
+# Migraine Forecast — v1 Design
 
 **Status:** Draft for review
 **Date:** 2026-06-10

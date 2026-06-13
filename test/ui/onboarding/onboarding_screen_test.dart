@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migraine_weatherr/data/context_builder.dart';
-import 'package:migraine_weatherr/services/permission_service.dart';
-import 'package:migraine_weatherr/state/providers.dart';
-import 'package:migraine_weatherr/state/onboarding_provider.dart';
-import 'package:migraine_weatherr/ui/onboarding/onboarding_screen.dart';
+import 'package:migraine_forecast/data/context_builder.dart';
+import 'package:migraine_forecast/services/permission_service.dart';
+import 'package:migraine_forecast/state/providers.dart';
+import 'package:migraine_forecast/state/onboarding_provider.dart';
+import 'package:migraine_forecast/ui/onboarding/onboarding_screen.dart';
 
 class _MemFlagsRepo implements UserTriggerFlagsRepo {
   UserTriggerFlags _f = const UserTriggerFlags();

@@ -127,6 +127,9 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
+  // Drift DB filename kept as 'migraine_weatherr' even after the
+  // migraine-weatherr → migraine-forecast rename: changing it would orphan
+  // existing users' on-device data (attacks, baselines, settings).
   return driftDatabase(
     name: 'migraine_weatherr',
     web: DriftWebOptions(

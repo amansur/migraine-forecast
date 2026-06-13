@@ -1,7 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/database.dart' hide RiskAssessment;
-import 'package:migraine_weatherr/data/repos/assessment_repository.dart';
+import 'package:migraine_forecast/data/database.dart' hide RiskAssessment;
+import 'package:migraine_forecast/data/repos/assessment_repository.dart';
 
 void main() {
   late AppDatabase db;

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/services/permission_service.dart';
+import 'package:migraine_forecast/services/permission_service.dart';
 
 void main() {
   test('locationGranted defaults to false', () {

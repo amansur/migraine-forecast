@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/data/database.dart';
+import 'package:migraine_forecast/data/database.dart';
 
 void main() {
   test('in-memory database opens and accepts a journal entry', () async {

@@ -1,4 +1,6 @@
-# Migraine Weatherr
+# Migraine Forecast
+
+> Renamed from "Migraine Weatherr" on 2026-06-13.
 
 A Flutter app that predicts daily migraine risk from evidence-backed triggers (barometric pressure, sleep, HRV, hormones, hydration, alcohol, stress, etc.). Local-first — all data stays on the device.
 
@@ -69,7 +71,7 @@ Three layers, each independently testable:
 - `lib/data/` — concrete adapters (Open-Meteo, `health`, `geolocator`, Drift schema + repos), `ContextBuilder` orchestrator.
 - `lib/ui/` + `lib/state/` — Riverpod providers, screens (Onboarding, Today, Log, Settings), `RiskDisplay` widget with three variants.
 
-See the design spec at `docs/superpowers/specs/2026-06-10-migraine-weatherr-design.md` and the per-plan implementation docs under `docs/superpowers/plans/`.
+See the design spec at `docs/superpowers/specs/2026-06-10-migraine-forecast-design.md` and the per-plan implementation docs under `docs/superpowers/plans/`.
 
 ## Personalization
 
@@ -85,4 +87,4 @@ The 11 trigger modules and their thresholds are derived from peer-reviewed liter
 
 ## Disclaimer
 
-Migraine Weatherr is decision-support, not medical advice. The risk score is a probability estimate from rules-based scoring of measurable triggers — it is not a diagnosis, and the app cannot tell you whether you will or will not have a migraine.
+Migraine Forecast is decision-support, not medical advice. The risk score is a probability estimate from rules-based scoring of measurable triggers — it is not a diagnosis, and the app cannot tell you whether you will or will not have a migraine.

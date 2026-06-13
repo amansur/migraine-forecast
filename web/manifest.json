@@ -1,6 +1,6 @@
 {
-    "name": "migraine_weatherr",
-    "short_name": "migraine_weatherr",
+    "name": "Migraine Forecast",
+    "short_name": "Migraine Forecast",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_weatherr/services/lifecycle_observer.dart';
+import 'package:migraine_forecast/services/lifecycle_observer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
