@@ -8,6 +8,7 @@ import '../../state/correlation_provider.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/providers.dart';
+import '../../state/settings_provider.dart';
 import '../../state/suggestions_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import 'calendar_heatmap.dart';
@@ -99,17 +100,20 @@ class _Body extends ConsumerWidget {
             // correlation engine's 90-day query window — attacks 9+ weeks old
             // still influence correlation results but won't show as cells.
             final windowStart = now.subtract(const Duration(days: 55));
+            final cycleOn = ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Consumer(builder: (context, ref, _) {
-                  return PhaseRibbon(
-                    windowStart: windowStart,
-                    windowEnd: now,
-                    resolver: (day) => ref.read(dayPhaseProvider(day)),
-                  );
-                }),
-                const SizedBox(height: 6),
+                if (cycleOn) ...[
+                  Consumer(builder: (context, ref, _) {
+                    return PhaseRibbon(
+                      windowStart: windowStart,
+                      windowEnd: now,
+                      resolver: (day) => ref.read(dayPhaseProvider(day)),
+                    );
+                  }),
+                  const SizedBox(height: 6),
+                ],
                 CalendarHeatmap(
                   severityByDay: severityByDay,
                   windowStart: windowStart,
@@ -330,6 +334,8 @@ class _CycleRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
+    if (!enabled) return const SizedBox.shrink();
     final phase = ref.watch(dayPhaseProvider(day));
     if (phase is PhaseUnknown) return const SizedBox.shrink();
 
@@ -402,6 +408,8 @@ class _PeriodMarkAction extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
+    if (!enabled) return const SizedBox.shrink();
     final periods = ref.watch(recentPeriodsProvider).asData?.value ?? const <PeriodEvent>[];
     final dayUtc = DateTime.utc(day.year, day.month, day.day);
     final noon = dayUtc.add(const Duration(hours: 12));

@@ -26,6 +26,20 @@ final notificationsEnabledProvider = FutureProvider<bool>((ref) async {
   return ref.watch(settingsRepoProvider).getBool('notifications_enabled');
 });
 
+/// Cycle tracking is opt-out — defaults to true on a fresh install. The
+/// "off" state is stored explicitly as "false" in settings.
+final cycleTrackingEnabledProvider = FutureProvider<bool>((ref) async {
+  final s = await ref.watch(settingsRepoProvider).getString('cycle_tracking_enabled');
+  return s != 'false';
+});
+
+final setCycleTrackingEnabledProvider = Provider<Future<void> Function(bool)>((ref) {
+  return (enabled) async {
+    await ref.read(settingsRepoProvider).setBool('cycle_tracking_enabled', enabled);
+    ref.invalidate(cycleTrackingEnabledProvider);
+  };
+});
+
 final setNotificationsEnabledProvider = Provider<Future<void> Function(bool)>((ref) {
   return (enabled) async {
     await ref.read(settingsRepoProvider).setBool('notifications_enabled', enabled);

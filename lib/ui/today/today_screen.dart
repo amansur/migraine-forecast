@@ -110,6 +110,8 @@ class _PeriodButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
+    if (!enabled) return const SizedBox.shrink();
     final current = ref.watch(currentPeriodProvider);
     final inProgress = current != null;
     return SizedBox(

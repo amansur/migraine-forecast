@@ -30,8 +30,17 @@ class PhasePredicted extends PhaseResult {
   List<Object?> get props => [phase, dayOfCycle];
 }
 
+/// Biological minimum we'll accept as a meaningful cycle length. Below this,
+/// the phase boundary math collapses (follicular/ovulatory windows go to
+/// zero or negative) and the ribbon would show only menses + luteal. Two
+/// period starts <21 days apart almost always indicate a logging mistake
+/// (e.g. tapping "Log period" twice in the same week) rather than a real
+/// short cycle, so we treat them as no usable signal.
+const int _minCycleDays = 21;
+
 /// Mean gap (days) between the last ≤6 consecutive period starts. Null if
-/// fewer than 2 periods are logged.
+/// fewer than 2 periods are logged OR the mean is below the biological
+/// minimum (see [_minCycleDays]).
 int? meanCycleLength(List<PeriodEvent> periods) {
   if (periods.length < 2) return null;
   final sorted = [...periods]..sort((a, b) => a.startedAt.compareTo(b.startedAt));
@@ -41,7 +50,9 @@ int? meanCycleLength(List<PeriodEvent> periods) {
   }
   final recent = gaps.length <= 6 ? gaps : gaps.sublist(gaps.length - 6);
   final mean = recent.reduce((a, b) => a + b) / recent.length;
-  return mean.round();
+  final rounded = mean.round();
+  if (rounded < _minCycleDays) return null;
+  return rounded;
 }
 
 DateTime _utcDay(DateTime d) {

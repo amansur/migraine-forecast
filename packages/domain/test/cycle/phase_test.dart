@@ -45,6 +45,31 @@ void main() {
       expect(meanCycleLength(periods), 28);
     });
 
+    test('returns null when mean is below biological minimum (logging mistake)', () {
+      // Two starts only one day apart — almost certainly a double-tap.
+      final periods = [
+        _p(_d(2026, 6, 10)),
+        _p(_d(2026, 6, 11)),
+      ];
+      expect(meanCycleLength(periods), isNull);
+    });
+
+    test('returns null for a mean just below 21 days', () {
+      final periods = [
+        _p(_d(2026, 5, 1)),
+        _p(_d(2026, 5, 21)), // 20-day gap
+      ];
+      expect(meanCycleLength(periods), isNull);
+    });
+
+    test('accepts a mean of exactly 21 days', () {
+      final periods = [
+        _p(_d(2026, 5, 1)),
+        _p(_d(2026, 5, 22)),
+      ];
+      expect(meanCycleLength(periods), 21);
+    });
+
     test('rounds to nearest int', () {
       final periods = [
         _p(_d(2026, 1, 1)),

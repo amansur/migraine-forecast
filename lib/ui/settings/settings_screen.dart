@@ -344,6 +344,8 @@ class _CycleSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabledAsync = ref.watch(cycleTrackingEnabledProvider);
+    final enabled = enabledAsync.asData?.value ?? true;
     final periodsAsync = ref.watch(recentPeriodsProvider);
     final current = ref.watch(currentPeriodProvider);
     final inProgress = current != null;
@@ -351,6 +353,15 @@ class _CycleSettingsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        SwitchListTile(
+          key: const Key('cycle-tracking-toggle'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Cycle tracking'),
+          subtitle: const Text('Show period logging, phase ribbon, and cycle row. Existing data is kept when off.'),
+          value: enabled,
+          onChanged: (v) => ref.read(setCycleTrackingEnabledProvider)(v),
+        ),
+        if (!enabled) const SizedBox.shrink() else ...[
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 4),
           child: OutlinedButton.icon(
@@ -432,6 +443,7 @@ class _CycleSettingsSection extends ConsumerWidget {
             );
           },
         ),
+        ],
       ],
     );
   }

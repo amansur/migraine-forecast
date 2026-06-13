@@ -85,6 +85,28 @@ Widget _wrap(_FakeJournal fake) {
 }
 
 void main() {
+  testWidgets('button hidden when cycle tracking disabled', (tester) async {
+    final fake = _FakeJournal();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        journalSourceProvider.overrideWithValue(fake),
+        riskAssessmentProvider.overrideWith(() => _FakeNotifier(_ass())),
+        tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrow(_ass())),
+        riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.numeric),
+        cycleTrackingEnabledProvider.overrideWith((ref) async => false),
+      ],
+      child: MaterialApp.router(
+        routerConfig: GoRouter(routes: [
+          GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+          GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
+        ]),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('period-button')), findsNothing);
+    expect(find.text('Log period'), findsNothing);
+  });
+
   testWidgets('label is "Log period" when no in-progress period', (tester) async {
     final fake = _FakeJournal();
     await tester.pumpWidget(_wrap(fake));
