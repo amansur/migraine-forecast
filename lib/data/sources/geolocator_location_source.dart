@@ -18,8 +18,15 @@ class GeolocatorLocationSource implements LocationSource {
           permission == LocationPermission.deniedForever) {
         return fallback.current();
       }
+      final lastPos = await Geolocator.getLastKnownPosition();
+      if (lastPos != null) {
+        return UserLocation(lat: lastPos.latitude, lon: lastPos.longitude);
+      }
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 10),
+        ),
       );
       return UserLocation(lat: pos.latitude, lon: pos.longitude);
     } catch (_) {
