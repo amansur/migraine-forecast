@@ -63,6 +63,26 @@ cd packages/domain && dart run bin/score_cli.dart \
 
 CI runs both jobs on every push: `.github/workflows/ci.yaml`.
 
+## Releases
+
+Tag-driven via `.github/workflows/release.yaml`. Two triggers:
+
+- **`workflow_dispatch`** — Actions tab → "Release" → "Run workflow". Builds an unsigned release APK and uploads it as a workflow artifact (downloadable from the run page for 30 days). No GitHub Release is created. Use this for ad-hoc builds.
+- **`v*` tag push** — builds the same APK, creates a GitHub Release named after the tag with auto-generated notes from commits since the previous tag, and attaches the APK.
+
+Cutting a release:
+
+```bash
+# 1. Bump the version in pubspec.yaml (e.g. 1.0.0+1 → 0.1.0+2).
+#    Format: <version-name>+<version-code>. Android requires version-code
+#    to increase monotonically across installable builds.
+git commit -am "chore: bump version to 0.1.0"
+git tag v0.1.0
+git push && git push --tags
+```
+
+The APK is **unsigned** — installable via Android "unknown sources" but not Play Store-ready. Signed builds need a keystore + repo secrets, not yet wired up. iOS/web/desktop targets are not in the release workflow.
+
 ## Architecture
 
 Three layers, each independently testable:
