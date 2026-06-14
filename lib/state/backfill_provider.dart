@@ -11,6 +11,12 @@ import 'providers.dart';
 final backfillProgressProvider =
     StateProvider<({int done, int total})?>((_) => null);
 
+/// Holds the most recent completed [BackfillReport], or null if no backfill
+/// has finished in this session. The Insights screen surfaces this when
+/// daysFailed > 0 so the user knows the heatmap is incomplete.
+final lastBackfillReportProvider =
+    StateProvider<BackfillReport?>((_) => null);
+
 /// Module-level guard. The orchestrator's own `_running` flag is per-instance,
 /// but [launchBackfill] constructs a new orchestrator on every call, so the
 /// real concurrency check has to live here.
@@ -48,6 +54,7 @@ Future<void> launchBackfill(ProviderContainer container) async {
     );
 
     container.read(backfillProgressProvider.notifier).state = null;
+    container.read(lastBackfillReportProvider.notifier).state = report;
 
     if (report.daysProcessed > 0) {
       container.invalidate(correlationResultsProvider);
