@@ -59,6 +59,11 @@ class RiskAssessments extends Table {
   IntColumn get configVersion => integer()();
   TextColumn get contributorsJson => text()();
   BoolColumn get backfilled => boolean().withDefault(const Constant(false))();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {targetDate, horizon},
+      ];
 }
 
 class Settings extends Table {
@@ -107,7 +112,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,6 +126,26 @@ class AppDatabase extends _$AppDatabase {
           if (from < 4) {
             await m.createTable(periods);
             await m.createTable(periodDaySeverities);
+          }
+          if (from < 5) {
+            // Adds unique index on (targetDate, horizon) for idempotent upsert.
+            // The historical-location-override plan will require its own v6
+            // migration — do not pre-add those columns here.
+            //
+            // Pre-v5 the existing RiskAssessmentNotifier.backfill could append
+            // duplicate (target_date, horizon) rows when an attack was logged
+            // twice for the same day. Dedupe (keeping the most recent id, which
+            // corresponds to the latest computedAt) before creating the index,
+            // otherwise CREATE UNIQUE INDEX throws on existing duplicates.
+            await customStatement(
+              'DELETE FROM risk_assessments WHERE id NOT IN ('
+              'SELECT MAX(id) FROM risk_assessments GROUP BY target_date, horizon'
+              ')',
+            );
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS risk_assessments_target_horizon '
+              'ON risk_assessments (target_date, horizon)',
+            );
           }
         },
       );

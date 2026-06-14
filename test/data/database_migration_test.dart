@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
 
 void main() {
-  test('schema v4 adds Attacks.inProgress and RiskAssessments.backfilled with false defaults', () async {
+  test('schema v5 adds Attacks.inProgress and RiskAssessments.backfilled with false defaults', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 4);
+    expect(db.schemaVersion, 5);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
