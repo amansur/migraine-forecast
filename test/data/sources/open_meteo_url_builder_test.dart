@@ -17,6 +17,25 @@ void main() {
     expect(uri.queryParameters['timezone'], 'UTC');
   });
 
+  test('archive URL has correct host, path, and required params', () {
+    final uri = OpenMeteoUrlBuilder.archive(
+      lat: 40.7,
+      lon: -74.0,
+      startDate: DateTime.utc(2026, 3, 16),
+      endDate: DateTime.utc(2026, 5, 11),
+    );
+    expect(uri.host, 'archive-api.open-meteo.com');
+    expect(uri.path, '/v1/archive');
+    expect(uri.queryParameters['latitude'], '40.7');
+    expect(uri.queryParameters['longitude'], '-74.0');
+    expect(uri.queryParameters['start_date'], '2026-03-16');
+    expect(uri.queryParameters['end_date'], '2026-05-11');
+    expect(uri.queryParameters['hourly'], contains('pressure_msl'));
+    expect(uri.queryParameters['hourly'], contains('temperature_2m'));
+    expect(uri.queryParameters['hourly'], contains('relative_humidity_2m'));
+    expect(uri.queryParameters['timezone'], 'UTC');
+  });
+
   test('air quality URL targets the AQ endpoint', () {
     final uri = OpenMeteoUrlBuilder.airQuality(lat: 40.7, lon: -74.0);
     expect(uri.host, 'air-quality-api.open-meteo.com');

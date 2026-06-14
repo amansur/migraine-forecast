@@ -13,6 +13,24 @@ class OpenMeteoUrlBuilder {
         'timezone': 'UTC',
       });
 
+  static Uri archive({
+    required double lat,
+    required double lon,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) {
+    String fmt(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    return Uri.https('archive-api.open-meteo.com', '/v1/archive', {
+      'latitude': lat.toString(),
+      'longitude': lon.toString(),
+      'start_date': fmt(startDate),
+      'end_date': fmt(endDate),
+      'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m',
+      'timezone': 'UTC',
+    });
+  }
+
   static Uri airQuality({
     required double lat,
     required double lon,
