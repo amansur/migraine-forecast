@@ -66,8 +66,6 @@ void main() {
       severity: 5,
       inProgress: false,
     );
-    final day = DateTime.utc(2026, 6, 5);
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
