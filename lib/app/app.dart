@@ -43,8 +43,8 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
   Widget build(BuildContext context) {
     final router = buildRouter(ref);
     final hasActiveAttack = ref.watch(activeAttackProvider).asData?.value ?? false;
-    final autoComfort = ref.watch(autoComfortModeProvider).asData?.value ?? true;
-    final comfort = autoComfort && hasActiveAttack;
+    final mode = ref.watch(comfortModeProvider).asData?.value ?? ComfortMode.auto;
+    final comfort = mode == ComfortMode.always || (mode == ComfortMode.auto && hasActiveAttack);
     final activeTheme = comfort ? buildComfortTheme() : buildLightTheme();
     return MaterialApp.router(
       title: 'Migraine Forecast',

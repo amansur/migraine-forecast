@@ -73,15 +73,25 @@ final setPressureUnitProvider = Provider<Future<void> Function(PressureUnit)>((r
   };
 });
 
-final autoComfortModeProvider = FutureProvider<bool>((ref) async {
-  final s = await ref.watch(settingsRepoProvider).getString('auto_comfort_mode');
-  return s != 'false';
+enum ComfortMode { off, auto, always }
+
+final comfortModeProvider = FutureProvider<ComfortMode>((ref) async {
+  final repo = ref.watch(settingsRepoProvider);
+  final raw = await repo.getString('comfort_mode');
+  if (raw != null) {
+    return ComfortMode.values.firstWhere(
+      (m) => m.name == raw,
+      orElse: () => ComfortMode.auto,
+    );
+  }
+  final legacy = await repo.getString('auto_comfort_mode');
+  return legacy == 'false' ? ComfortMode.off : ComfortMode.auto;
 });
 
-final setAutoComfortModeProvider = Provider<Future<void> Function(bool)>((ref) {
-  return (enabled) async {
-    await ref.read(settingsRepoProvider).setBool('auto_comfort_mode', enabled);
-    ref.invalidate(autoComfortModeProvider);
+final setComfortModeProvider = Provider<Future<void> Function(ComfortMode)>((ref) {
+  return (mode) async {
+    await ref.read(settingsRepoProvider).setString('comfort_mode', mode.name);
+    ref.invalidate(comfortModeProvider);
   };
 });
 

@@ -108,15 +108,33 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
-          ref.watch(autoComfortModeProvider).when(
+          ref.watch(comfortModeProvider).when(
             loading: () => const SizedBox.shrink(),
             error: (e, _) => Text('Error: $e'),
-            data: (enabled) => SwitchListTile(
-              key: const Key('auto-comfort-mode-toggle'),
-              title: const Text('Auto Comfort Mode during attacks'),
-              subtitle: const Text('Switches to a low-contrast warm theme while a migraine is in progress.'),
-              value: enabled,
-              onChanged: (v) => ref.read(setAutoComfortModeProvider)(v),
+            data: (mode) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Comfort Mode'),
+                  const SizedBox(height: 4),
+                  Text(
+                    _comfortSubtitle(mode),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  SegmentedButton<ComfortMode>(
+                    key: const Key('comfort-mode-selector'),
+                    segments: const [
+                      ButtonSegment(value: ComfortMode.off, label: Text('Off')),
+                      ButtonSegment(value: ComfortMode.auto, label: Text('Auto')),
+                      ButtonSegment(value: ComfortMode.always, label: Text('Always')),
+                    ],
+                    selected: {mode},
+                    onSelectionChanged: (s) => ref.read(setComfortModeProvider)(s.first),
+                  ),
+                ],
+              ),
             ),
           ),
           const Divider(),
@@ -297,6 +315,14 @@ class SettingsScreen extends ConsumerWidget {
       case RiskDisplayMode.gauge: return 'Gauge';
       case RiskDisplayMode.numeric: return 'Number';
       case RiskDisplayMode.weatherIcon: return 'Weather icon';
+    }
+  }
+
+  String _comfortSubtitle(ComfortMode m) {
+    switch (m) {
+      case ComfortMode.off: return 'Standard theme always. Log Attack screen still uses Comfort.';
+      case ComfortMode.auto: return 'Warm low-contrast theme automatically while an attack is in progress.';
+      case ComfortMode.always: return 'Warm low-contrast theme at all times.';
     }
   }
 
