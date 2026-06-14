@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../state/backfill_provider.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
@@ -94,7 +97,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
-    
+
+    // Capture the long-lived container before any async gap so the post-await
+    // backfill kickoff doesn't read a disposed BuildContext.
+    final container = ProviderScope.containerOf(context, listen: false);
+
     try {
       await ref.read(permissionServiceProvider).requestLocation();
     } on Exception catch (e) {
@@ -118,7 +125,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       // Invalidate the risk assessment provider so that it re-runs with the new location permission.
       ref.invalidate(riskAssessmentProvider);
       ref.invalidate(tomorrowRiskAssessmentProvider);
-      
+
+      // Fire-and-forget: populate historical assessments in the background.
+      // Use the long-lived ProviderContainer rather than the widget's ref, so
+      // the run survives the imminent navigation away from this screen.
+      unawaited(launchBackfill(container));
+
       if (mounted) context.go('/today');
     } finally {
       if (mounted) setState(() => _isLoading = false);

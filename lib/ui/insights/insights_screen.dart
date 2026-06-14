@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../state/backfill_provider.dart';
 import '../../state/correlation_provider.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
@@ -83,10 +84,19 @@ class _Body extends ConsumerWidget {
     final recentAttacks = ref.watch(recentAttacksProvider);
     final correlations = ref.watch(correlationResultsProvider);
     final suggestions = ref.watch(suggestionsProvider);
+    final backfillProgress = ref.watch(backfillProgressProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (backfillProgress != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _BackfillProgressStrip(
+              done: backfillProgress.done,
+              total: backfillProgress.total,
+            ),
+          ),
         Text('Last 8 weeks', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         recentAttacks.when(
@@ -503,5 +513,27 @@ class _PeriodMarkAction extends ConsumerWidget {
 
     if (actions.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: actions);
+  }
+}
+
+class _BackfillProgressStrip extends StatelessWidget {
+  final int done;
+  final int total;
+  const _BackfillProgressStrip({required this.done, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total == 0 ? 0.0 : done / total;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Building history... $done / $total days',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(value: pct),
+      ],
+    );
   }
 }
