@@ -8,7 +8,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 5);
+    expect(db.schemaVersion, 6);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
@@ -70,5 +70,41 @@ void main() {
     final overrides = await db.select(db.periodDaySeverities).get();
     expect(overrides, hasLength(1));
     expect(overrides.first.severity, 7);
+  });
+
+  test('v6: weather_snapshots.source column defaults to forecast', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    // Insert a row without specifying source — the column default must apply.
+    final id = await db.into(db.weatherSnapshots).insert(
+          WeatherSnapshotsCompanion.insert(
+            fetchedAt: DateTime.utc(2026, 6, 1, 12),
+            lat: 37.7,
+            lon: -122.4,
+            forecastJson: '{}',
+          ),
+        );
+
+    final row = await (db.select(db.weatherSnapshots)..where((t) => t.id.equals(id))).getSingle();
+    expect(row.source, 'forecast');
+  });
+
+  test('v6: weather_snapshots.source can be set to archive', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    final id = await db.into(db.weatherSnapshots).insert(
+          WeatherSnapshotsCompanion.insert(
+            fetchedAt: DateTime.utc(2026, 6, 1, 12),
+            lat: 37.7,
+            lon: -122.4,
+            forecastJson: '{}',
+            source: const Value('archive'),
+          ),
+        );
+
+    final row = await (db.select(db.weatherSnapshots)..where((t) => t.id.equals(id))).getSingle();
+    expect(row.source, 'archive');
   });
 }

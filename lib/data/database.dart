@@ -29,6 +29,7 @@ class WeatherSnapshots extends Table {
   RealColumn get lon => real()();
   TextColumn get forecastJson => text()();
   TextColumn get airQualityJson => text().nullable()();
+  TextColumn get source => text().withDefault(const Constant('forecast'))();
 }
 
 class BaselinesKv extends Table {
@@ -112,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -146,6 +147,9 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX IF NOT EXISTS risk_assessments_target_horizon '
               'ON risk_assessments (target_date, horizon)',
             );
+          }
+          if (from < 6) {
+            await m.addColumn(weatherSnapshots, weatherSnapshots.source);
           }
         },
       );

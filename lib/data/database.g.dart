@@ -835,6 +835,16 @@ class $WeatherSnapshotsTable extends WeatherSnapshots
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('forecast'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -843,6 +853,7 @@ class $WeatherSnapshotsTable extends WeatherSnapshots
     lon,
     forecastJson,
     airQualityJson,
+    source,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -903,6 +914,12 @@ class $WeatherSnapshotsTable extends WeatherSnapshots
         ),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -936,6 +953,10 @@ class $WeatherSnapshotsTable extends WeatherSnapshots
         DriftSqlType.string,
         data['${effectivePrefix}air_quality_json'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
     );
   }
 
@@ -952,6 +973,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
   final double lon;
   final String forecastJson;
   final String? airQualityJson;
+  final String source;
   const WeatherSnapshot({
     required this.id,
     required this.fetchedAt,
@@ -959,6 +981,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
     required this.lon,
     required this.forecastJson,
     this.airQualityJson,
+    required this.source,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -971,6 +994,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
     if (!nullToAbsent || airQualityJson != null) {
       map['air_quality_json'] = Variable<String>(airQualityJson);
     }
+    map['source'] = Variable<String>(source);
     return map;
   }
 
@@ -984,6 +1008,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
       airQualityJson: airQualityJson == null && nullToAbsent
           ? const Value.absent()
           : Value(airQualityJson),
+      source: Value(source),
     );
   }
 
@@ -999,6 +1024,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
       lon: serializer.fromJson<double>(json['lon']),
       forecastJson: serializer.fromJson<String>(json['forecastJson']),
       airQualityJson: serializer.fromJson<String?>(json['airQualityJson']),
+      source: serializer.fromJson<String>(json['source']),
     );
   }
   @override
@@ -1011,6 +1037,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
       'lon': serializer.toJson<double>(lon),
       'forecastJson': serializer.toJson<String>(forecastJson),
       'airQualityJson': serializer.toJson<String?>(airQualityJson),
+      'source': serializer.toJson<String>(source),
     };
   }
 
@@ -1021,6 +1048,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
     double? lon,
     String? forecastJson,
     Value<String?> airQualityJson = const Value.absent(),
+    String? source,
   }) => WeatherSnapshot(
     id: id ?? this.id,
     fetchedAt: fetchedAt ?? this.fetchedAt,
@@ -1030,6 +1058,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
     airQualityJson: airQualityJson.present
         ? airQualityJson.value
         : this.airQualityJson,
+    source: source ?? this.source,
   );
   WeatherSnapshot copyWithCompanion(WeatherSnapshotsCompanion data) {
     return WeatherSnapshot(
@@ -1043,6 +1072,7 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
       airQualityJson: data.airQualityJson.present
           ? data.airQualityJson.value
           : this.airQualityJson,
+      source: data.source.present ? data.source.value : this.source,
     );
   }
 
@@ -1054,14 +1084,22 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
           ..write('lat: $lat, ')
           ..write('lon: $lon, ')
           ..write('forecastJson: $forecastJson, ')
-          ..write('airQualityJson: $airQualityJson')
+          ..write('airQualityJson: $airQualityJson, ')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, fetchedAt, lat, lon, forecastJson, airQualityJson);
+  int get hashCode => Object.hash(
+    id,
+    fetchedAt,
+    lat,
+    lon,
+    forecastJson,
+    airQualityJson,
+    source,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1071,7 +1109,8 @@ class WeatherSnapshot extends DataClass implements Insertable<WeatherSnapshot> {
           other.lat == this.lat &&
           other.lon == this.lon &&
           other.forecastJson == this.forecastJson &&
-          other.airQualityJson == this.airQualityJson);
+          other.airQualityJson == this.airQualityJson &&
+          other.source == this.source);
 }
 
 class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
@@ -1081,6 +1120,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
   final Value<double> lon;
   final Value<String> forecastJson;
   final Value<String?> airQualityJson;
+  final Value<String> source;
   const WeatherSnapshotsCompanion({
     this.id = const Value.absent(),
     this.fetchedAt = const Value.absent(),
@@ -1088,6 +1128,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
     this.lon = const Value.absent(),
     this.forecastJson = const Value.absent(),
     this.airQualityJson = const Value.absent(),
+    this.source = const Value.absent(),
   });
   WeatherSnapshotsCompanion.insert({
     this.id = const Value.absent(),
@@ -1096,6 +1137,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
     required double lon,
     required String forecastJson,
     this.airQualityJson = const Value.absent(),
+    this.source = const Value.absent(),
   }) : fetchedAt = Value(fetchedAt),
        lat = Value(lat),
        lon = Value(lon),
@@ -1107,6 +1149,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
     Expression<double>? lon,
     Expression<String>? forecastJson,
     Expression<String>? airQualityJson,
+    Expression<String>? source,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1115,6 +1158,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
       if (lon != null) 'lon': lon,
       if (forecastJson != null) 'forecast_json': forecastJson,
       if (airQualityJson != null) 'air_quality_json': airQualityJson,
+      if (source != null) 'source': source,
     });
   }
 
@@ -1125,6 +1169,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
     Value<double>? lon,
     Value<String>? forecastJson,
     Value<String?>? airQualityJson,
+    Value<String>? source,
   }) {
     return WeatherSnapshotsCompanion(
       id: id ?? this.id,
@@ -1133,6 +1178,7 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
       lon: lon ?? this.lon,
       forecastJson: forecastJson ?? this.forecastJson,
       airQualityJson: airQualityJson ?? this.airQualityJson,
+      source: source ?? this.source,
     );
   }
 
@@ -1157,6 +1203,9 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
     if (airQualityJson.present) {
       map['air_quality_json'] = Variable<String>(airQualityJson.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     return map;
   }
 
@@ -1168,7 +1217,8 @@ class WeatherSnapshotsCompanion extends UpdateCompanion<WeatherSnapshot> {
           ..write('lat: $lat, ')
           ..write('lon: $lon, ')
           ..write('forecastJson: $forecastJson, ')
-          ..write('airQualityJson: $airQualityJson')
+          ..write('airQualityJson: $airQualityJson, ')
+          ..write('source: $source')
           ..write(')'))
         .toString();
   }
@@ -3817,6 +3867,7 @@ typedef $$WeatherSnapshotsTableCreateCompanionBuilder =
       required double lon,
       required String forecastJson,
       Value<String?> airQualityJson,
+      Value<String> source,
     });
 typedef $$WeatherSnapshotsTableUpdateCompanionBuilder =
     WeatherSnapshotsCompanion Function({
@@ -3826,6 +3877,7 @@ typedef $$WeatherSnapshotsTableUpdateCompanionBuilder =
       Value<double> lon,
       Value<String> forecastJson,
       Value<String?> airQualityJson,
+      Value<String> source,
     });
 
 class $$WeatherSnapshotsTableFilterComposer
@@ -3864,6 +3916,11 @@ class $$WeatherSnapshotsTableFilterComposer
 
   ColumnFilters<String> get airQualityJson => $composableBuilder(
     column: $table.airQualityJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3906,6 +3963,11 @@ class $$WeatherSnapshotsTableOrderingComposer
     column: $table.airQualityJson,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WeatherSnapshotsTableAnnotationComposer
@@ -3938,6 +4000,9 @@ class $$WeatherSnapshotsTableAnnotationComposer
     column: $table.airQualityJson,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 }
 
 class $$WeatherSnapshotsTableTableManager
@@ -3983,6 +4048,7 @@ class $$WeatherSnapshotsTableTableManager
                 Value<double> lon = const Value.absent(),
                 Value<String> forecastJson = const Value.absent(),
                 Value<String?> airQualityJson = const Value.absent(),
+                Value<String> source = const Value.absent(),
               }) => WeatherSnapshotsCompanion(
                 id: id,
                 fetchedAt: fetchedAt,
@@ -3990,6 +4056,7 @@ class $$WeatherSnapshotsTableTableManager
                 lon: lon,
                 forecastJson: forecastJson,
                 airQualityJson: airQualityJson,
+                source: source,
               ),
           createCompanionCallback:
               ({
@@ -3999,6 +4066,7 @@ class $$WeatherSnapshotsTableTableManager
                 required double lon,
                 required String forecastJson,
                 Value<String?> airQualityJson = const Value.absent(),
+                Value<String> source = const Value.absent(),
               }) => WeatherSnapshotsCompanion.insert(
                 id: id,
                 fetchedAt: fetchedAt,
@@ -4006,6 +4074,7 @@ class $$WeatherSnapshotsTableTableManager
                 lon: lon,
                 forecastJson: forecastJson,
                 airQualityJson: airQualityJson,
+                source: source,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
