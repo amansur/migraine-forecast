@@ -122,4 +122,36 @@ void main() {
     expect(calls, 4, reason: 'backfills always bypass cache');
     expect(second.stale, isFalse);
   });
+
+  test('fetch routes to archive endpoint when requestedDay is > 30 days old',
+      () async {
+    final calls = <Uri>[];
+    final client = MockClient((req) async {
+      calls.add(req.url);
+      if (req.url.host.contains('archive-api')) {
+        return http.Response(
+          '{"hourly":{"time":[],"pressure_msl":[],"temperature_2m":[],"relative_humidity_2m":[]}}',
+          200,
+        );
+      }
+      if (req.url.host.contains('air-quality')) {
+        return http.Response('{"hourly":{"time":[],"pm2_5":[]}}', 200);
+      }
+      return http.Response('{"hourly":{"time":[],"pressure_msl":[],"temperature_2m":[],"relative_humidity_2m":[]}}', 200);
+    });
+    final source = OpenMeteoWeatherSource(client: client, db: db);
+
+    // 60 days ago relative to current real "today"
+    final realToday = DateTime.now().toUtc();
+    final old = DateTime.utc(realToday.year, realToday.month, realToday.day)
+        .subtract(const Duration(days: 60));
+
+    await source.fetch(lat: 0, lon: 0, now: old, forceRefresh: true);
+
+    expect(calls.any((u) => u.host.contains('archive-api')), isTrue);
+    expect(
+      calls.any((u) => u.host == 'api.open-meteo.com' && u.path == '/v1/forecast'),
+      isFalse,
+    );
+  });
 }

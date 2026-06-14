@@ -44,11 +44,30 @@ class OpenMeteoWeatherSource implements WeatherSource {
 
     try {
       final diffDays = todayStart.difference(requestedDay).inDays.abs();
-      // Add 2 days of padding because triggers need historical data (leadTime up to 48h)
-      // prior to the requested day to calculate trends/drops.
-      final pastDays = (diffDays + 2).clamp(1, 90);
-      final forecastRes = await client.get(OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays));
-      final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon, pastDays: pastDays));
+      final useArchive = diffDays > 30;
+      final http.Response forecastRes;
+      final String sourceTag;
+      if (useArchive) {
+        forecastRes = await client.get(
+          OpenMeteoUrlBuilder.archive(
+            lat: lat,
+            lon: lon,
+            startDate: requestedDay.subtract(const Duration(days: 2)),
+            endDate: requestedDay.add(const Duration(days: 1)),
+          ),
+        );
+        sourceTag = 'archive';
+      } else {
+        // Add 2 days of padding because triggers need historical data (leadTime up to 48h)
+        // prior to the requested day to calculate trends/drops.
+        final pastDays = (diffDays + 2).clamp(1, 90);
+        forecastRes = await client.get(
+          OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays),
+        );
+        sourceTag = 'forecast';
+      }
+      final aqPastDays = (diffDays + 2).clamp(1, 92);
+      final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon, pastDays: aqPastDays));
       if (forecastRes.statusCode >= 400 || aqRes.statusCode >= 400) {
         if (cached != null) return _toSnapshot(cached, stale: true);
         throw StateError('Open-Meteo fetch failed (no cache)');
@@ -60,6 +79,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
               lon: lon,
               forecastJson: forecastRes.body,
               airQualityJson: Value(aqRes.body),
+              source: Value(sourceTag),
             ),
           );
       return WeatherSnapshot(
