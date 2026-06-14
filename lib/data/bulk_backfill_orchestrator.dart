@@ -107,7 +107,9 @@ class BulkBackfillOrchestrator {
       );
     }
 
-    // Prime the weather cache with one forced fetch covering the full window.
+    // ContextBuilder.build pulls location and weather per-day; an upfront
+    // location null-check still gives a clean early return when permissions
+    // are denied so we don't waste 90 iterations.
     final loc = await locationSource.current();
     if (loc == null) {
       return BackfillReport(
@@ -116,24 +118,6 @@ class BulkBackfillOrchestrator {
         daysFailed: 0,
         weatherFetchSucceeded: false,
         firstError: 'location unavailable',
-      );
-    }
-
-    try {
-      await weatherSource.fetch(
-        lat: loc.lat,
-        lon: loc.lon,
-        now: now,
-        forceRefresh: true,
-      );
-    } catch (e) {
-      debugPrint('BulkBackfillOrchestrator: weather prime failed: $e');
-      return BackfillReport(
-        daysProcessed: 0,
-        daysSkipped: allDays.length,
-        daysFailed: 0,
-        weatherFetchSucceeded: false,
-        firstError: e,
       );
     }
 
