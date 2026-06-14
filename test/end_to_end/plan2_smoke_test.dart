@@ -15,7 +15,7 @@ class _StubWeather implements WeatherSource {
   final WeatherSnapshot snap;
   _StubWeather(this.snap);
   @override
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) async => snap;
+  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now, bool forceRefresh = false}) async => snap;
 }
 
 class _MemFlagsRepo implements UserTriggerFlagsRepo {

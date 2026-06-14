@@ -17,5 +17,14 @@ abstract class WeatherSource {
   /// Returns the latest cached snapshot if fresh (per the source's freshness
   /// policy), otherwise fetches a new one. Returns a stale snapshot if a fetch
   /// fails and a cached value exists.
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now});
+  ///
+  /// Pass [forceRefresh] = true to bypass the cache and issue a new network
+  /// request immediately (used by BulkBackfillOrchestrator to prime the cache
+  /// with a single 90-day fetch before the per-day loop).
+  Future<WeatherSnapshot> fetch({
+    required double lat,
+    required double lon,
+    required DateTime now,
+    bool forceRefresh = false,
+  });
 }

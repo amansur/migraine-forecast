@@ -12,7 +12,7 @@ import 'package:migraine_forecast/state/providers.dart';
 
 class _StubWeather implements WeatherSource {
   @override
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) async => WeatherSnapshot(
+  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now, bool forceRefresh = false}) async => WeatherSnapshot(
         weather: const WeatherSeries(samples: []),
         airQuality: const AirQualitySeries(samples: []),
         fetchedAt: now,

@@ -19,7 +19,12 @@ class OpenMeteoWeatherSource implements WeatherSource {
   });
 
   @override
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now}) async {
+  Future<WeatherSnapshot> fetch({
+    required double lat,
+    required double lon,
+    required DateTime now,
+    bool forceRefresh = false,
+  }) async {
     final nowUtc = now.toUtc();
     final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
 
@@ -30,7 +35,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
     final isBackfill = requestedDay.isBefore(yesterdayStart);
 
     final cached = await _cachedForDay(lat, lon, requestedDay);
-    if (cached != null && !isBackfill) {
+    if (cached != null && !isBackfill && !forceRefresh) {
       final diff = nowUtc.difference(cached.fetchedAt as DateTime);
       if (!diff.isNegative && diff <= freshness) {
         return _toSnapshot(cached, stale: false);
