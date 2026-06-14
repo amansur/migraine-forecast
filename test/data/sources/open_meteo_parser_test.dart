@@ -29,6 +29,15 @@ void main() {
     expect(aq.samples.last.pm25, 28.0);
   });
 
+  test('parses an archive-endpoint response with the same parser', () {
+    final json = File('test/data/sources/fixtures/open_meteo/archive_typical_day.json').readAsStringSync();
+    final series = OpenMeteoParser.parseForecast(json);
+    expect(series.samples, hasLength(6));
+    expect(series.samples.first.pressureMsl, 1012.4);
+    expect(series.samples.first.at, DateTime.utc(2026, 3, 16, 0));
+    expect(series.samples.last.humidityPct, 80);
+  });
+
   test('throws on malformed JSON', () {
     expect(() => OpenMeteoParser.parseForecast('not json'), throwsFormatException);
   });

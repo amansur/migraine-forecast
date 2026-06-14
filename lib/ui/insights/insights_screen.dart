@@ -554,7 +554,7 @@ class _BackfillFailureNotice extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final total = report.daysProcessed + report.daysFailed;
+    final total = report.daysProcessed + report.daysFailed + report.daysSkipped;
     final reason = report.firstError?.toString() ?? 'unknown';
     final truncated = reason.length > 120 ? '${reason.substring(0, 117)}…' : reason;
     return Card(
@@ -565,7 +565,8 @@ class _BackfillFailureNotice extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Filled ${report.daysProcessed} / $total days ''(${report.daysFailed} failed — $truncated)',
+              'Filled ${report.daysProcessed} / $total days '
+              '(${report.daysFailed} failed — $truncated)',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
