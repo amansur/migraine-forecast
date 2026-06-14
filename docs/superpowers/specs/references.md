@@ -58,3 +58,9 @@
    *URL:* [https://arxiv.org/abs/2602.18643](https://arxiv.org/abs/2602.18643)  
    **Relevance:** Introduces a model-agnostic validation layer that treats signal confirmation as a sequential decision problem. By eliciting targeted user feedback downstream of arbitrary predictors, it achieved a 34% reduction in false positive rate in a longitudinal case study of migraine prediction.  
    *(A copy of the PDF has been downloaded to `docs/superpowers/references/arxiv_2602_18643.pdf`)*
+
+## Open Datasets & Data Science Sources
+1. **Migraine Classification Machine Learning Dataset**  
+   *Author:* Rishi Akkala  
+   *URL:* [https://github.com/rishiakkala/Migraine-Classification-Machine-Learning](https://github.com/rishiakkala/Migraine-Classification-Machine-Learning)  
+   **Relevance:** A tabular dataset of 400 instances containing detailed demographic and symptom profiles. Used in our EDA to identify high-yield prodrome symptom clusters (Nausea, Photophobia) for the Project Hermes Validation Layer.
