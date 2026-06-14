@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migraine_forecast/data/bulk_backfill_orchestrator.dart';
+import 'package:migraine_forecast/state/backfill_provider.dart';
 import 'package:migraine_forecast/state/correlation_provider.dart';
 import 'package:migraine_forecast/state/insights_eligibility_provider.dart';
 import 'package:migraine_forecast/state/providers.dart';
@@ -127,5 +129,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('In progress'), findsOneWidget);
+  });
+
+  testWidgets('insights shows a failure notice when last backfill had daysFailed > 0',
+      (tester) async {
+    const report = BackfillReport(
+      daysProcessed: 33,
+      daysSkipped: 0,
+      daysFailed: 57,
+      weatherFetchSucceeded: true,
+      firstError: 'weather unavailable',
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          insightsEligibleProvider.overrideWith((ref) => Stream.value(true)),
+          recentAttacksProvider.overrideWith((ref) => Stream.value(const <Attack>[])),
+          correlationResultsProvider.overrideWith((ref) async => []),
+          suggestionsProvider.overrideWith((ref) async => []),
+          dayAssessmentProvider.overrideWith((ref, _) async => null),
+          dayAttacksProvider.overrideWith((ref, _) => Stream.value(const <Attack>[])),
+          lastBackfillReportProvider.overrideWith((_) => report),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const InsightsScreen()),
+          ]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('57 failed'), findsOneWidget);
   });
 }

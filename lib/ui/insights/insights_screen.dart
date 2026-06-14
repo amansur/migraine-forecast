@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/bulk_backfill_orchestrator.dart';
 import '../../state/backfill_provider.dart';
 import '../../state/correlation_provider.dart';
 import '../../state/cycle_provider.dart';
@@ -85,6 +86,7 @@ class _Body extends ConsumerWidget {
     final correlations = ref.watch(correlationResultsProvider);
     final suggestions = ref.watch(suggestionsProvider);
     final backfillProgress = ref.watch(backfillProgressProvider);
+    final lastReport = ref.watch(lastBackfillReportProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -96,6 +98,13 @@ class _Body extends ConsumerWidget {
               done: backfillProgress.done,
               total: backfillProgress.total,
             ),
+          ),
+        if (backfillProgress == null &&
+            lastReport != null &&
+            lastReport.daysFailed > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _BackfillFailureNotice(report: lastReport),
           ),
         Text('Last 8 weeks', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
@@ -534,6 +543,45 @@ class _BackfillProgressStrip extends StatelessWidget {
         const SizedBox(height: 4),
         LinearProgressIndicator(value: pct),
       ],
+    );
+  }
+}
+
+
+class _BackfillFailureNotice extends ConsumerWidget {
+  final BackfillReport report;
+  const _BackfillFailureNotice({required this.report});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = report.daysProcessed + report.daysFailed;
+    final reason = report.firstError?.toString() ?? 'unknown';
+    final truncated = reason.length > 120 ? '${reason.substring(0, 117)}…' : reason;
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filled ${report.daysProcessed} / $total days ''(${report.daysFailed} failed — $truncated)',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () =>
+                    ref.read(lastBackfillReportProvider.notifier).state = null,
+                child: const Text('Dismiss'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
