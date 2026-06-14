@@ -19,13 +19,6 @@ void main() {
           baselines: BaselineSnapshot.empty,
         );
 
-    WeatherSample sampleAt(Duration offset, double pressure) => WeatherSample(
-          at: now.subtract(Duration(hours: 24) - offset),
-          pressureMsl: pressure,
-          temperatureC: 20,
-          humidityPct: 50,
-        );
-
     test('null weather returns data-not-met signal', () {
       final ctx = EvaluationContext(
         now: now,
