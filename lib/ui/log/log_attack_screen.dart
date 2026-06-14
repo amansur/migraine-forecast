@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 
@@ -44,9 +43,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: buildComfortTheme(),
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(title: const Text('Log a migraine')),
       body: Stack(
         children: [
@@ -80,7 +77,12 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
                       onTap: _pickEnd,
                     ),
                   const SizedBox(height: 12),
-                  Text('Severity: ${_severity.round()}', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Severity: ${_severity.round()}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
                   Slider(value: _severity, min: 1, max: 10, divisions: 9, onChanged: (v) => setState(() => _severity = v)),
                   const SizedBox(height: 8),
                   TextField(
@@ -109,7 +111,6 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
               child: Center(child: CircularProgressIndicator()),
             ),
         ],
-      ),
       ),
     );
   }
