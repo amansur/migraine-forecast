@@ -10,12 +10,14 @@ import 'sources/weather_source.dart';
 class BackfillReport {
   final int daysProcessed;
   final int daysSkipped;
+  final int daysFailed;
   final bool weatherFetchSucceeded;
   final Object? firstError;
 
   const BackfillReport({
     required this.daysProcessed,
     required this.daysSkipped,
+    required this.daysFailed,
     required this.weatherFetchSucceeded,
     this.firstError,
   });
@@ -59,6 +61,7 @@ class BulkBackfillOrchestrator {
       return const BackfillReport(
         daysProcessed: 0,
         daysSkipped: 0,
+        daysFailed: 0,
         weatherFetchSucceeded: false,
         firstError: 'backfill already running',
       );
@@ -99,6 +102,7 @@ class BulkBackfillOrchestrator {
       return BackfillReport(
         daysProcessed: 0,
         daysSkipped: allDays.length,
+        daysFailed: 0,
         weatherFetchSucceeded: true,
       );
     }
@@ -109,6 +113,7 @@ class BulkBackfillOrchestrator {
       return BackfillReport(
         daysProcessed: 0,
         daysSkipped: allDays.length,
+        daysFailed: 0,
         weatherFetchSucceeded: false,
         firstError: 'location unavailable',
       );
@@ -126,6 +131,7 @@ class BulkBackfillOrchestrator {
       return BackfillReport(
         daysProcessed: 0,
         daysSkipped: allDays.length,
+        daysFailed: 0,
         weatherFetchSucceeded: false,
         firstError: e,
       );
@@ -165,6 +171,7 @@ class BulkBackfillOrchestrator {
     return BackfillReport(
       daysProcessed: processed,
       daysSkipped: allDays.length - missingDays.length,
+      daysFailed: missingDays.length - processed,
       weatherFetchSucceeded: true,
       firstError: firstError,
     );

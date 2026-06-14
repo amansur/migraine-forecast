@@ -18,10 +18,11 @@ import 'package:migraine_forecast/data/sources/weather_source.dart';
 
 class _FakeWeatherSource implements WeatherSource {
   final bool shouldThrow;
+  final Set<DateTime> failOnDay;
   int fetchCount = 0;
   int forceRefreshCount = 0;
 
-  _FakeWeatherSource({this.shouldThrow = false});
+  _FakeWeatherSource({this.shouldThrow = false, this.failOnDay = const {}});
 
   @override
   Future<WeatherSnapshot> fetch({
@@ -33,12 +34,35 @@ class _FakeWeatherSource implements WeatherSource {
     fetchCount++;
     if (forceRefresh) forceRefreshCount++;
     if (shouldThrow) throw StateError('network error');
+    final day = DateTime.utc(now.year, now.month, now.day);
+    if (failOnDay.contains(day)) throw StateError('per-day fail $day');
     return WeatherSnapshot(
       weather: const WeatherSeries(samples: []),
       airQuality: const AirQualitySeries(samples: []),
       fetchedAt: now,
     );
   }
+}
+
+class _FailingOnDayRepo extends AssessmentRepository {
+  final AssessmentRepository inner;
+  final Set<DateTime> failOnDay;
+  _FailingOnDayRepo(AppDatabase db, this.inner, this.failOnDay) : super(db);
+
+  @override
+  Future<int> save(RiskAssessment ass) {
+    final day = DateTime.utc(ass.targetDate.year, ass.targetDate.month, ass.targetDate.day);
+    if (failOnDay.contains(day)) {
+      throw StateError('per-day repo fail $day');
+    }
+    return inner.save(ass);
+  }
+
+  @override
+  Future<Set<DateTime>> existingDatesInWindow({
+    required DateTime cutoff,
+    required RiskHorizon horizon,
+  }) => inner.existingDatesInWindow(cutoff: cutoff, horizon: horizon);
 }
 
 class _NoFlagsRepo implements UserTriggerFlagsRepo {
@@ -53,13 +77,13 @@ class _NoFlagsRepo implements UserTriggerFlagsRepo {
 // ---------------------------------------------------------------------------
 
 Future<(BulkBackfillOrchestrator, AssessmentRepository, AppDatabase, _FakeWeatherSource)>
-    _buildStack({bool weatherFails = false}) async {
+    _buildStack({bool weatherFails = false, Set<DateTime> failOnDay = const {}}) async {
   final db = AppDatabase.memory();
   final journal = DriftJournalSource(db);
   final location = ManualLocationSource();
   await location.set(lat: 37.7, lon: -122.4);
 
-  final weather = _FakeWeatherSource(shouldThrow: weatherFails);
+  final weather = _FakeWeatherSource(shouldThrow: weatherFails, failOnDay: failOnDay);
   final health = FakeHealthSource();
 
   final builder = ContextBuilder(
@@ -197,6 +221,63 @@ void main() {
 
     final rows = await db.select(db.riskAssessments).get();
     expect(rows, isEmpty);
+  });
+
+  test('report.daysFailed counts per-day errors and records firstError', () async {
+    // Build the stack normally, then rebuild the orchestrator with an
+    // assessment repo that throws when saving today-2.
+    final (_, realRepo, db, weather) = await _buildStack();
+    addTearDown(db.close);
+
+    final now = DateTime.now().toUtc();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final failDay = today.subtract(const Duration(days: 2));
+    final failingRepo = _FailingOnDayRepo(db, realRepo, {failDay});
+
+    final journal = DriftJournalSource(db);
+    final location = ManualLocationSource();
+    await location.set(lat: 37.7, lon: -122.4);
+    final builder = ContextBuilder(
+      weather: weather,
+      health: FakeHealthSource(),
+      journal: journal,
+      location: location,
+      flagsRepo: _NoFlagsRepo(),
+      baselineBuilder: const BaselineSnapshotBuilder(BaselineStore()),
+      db: db,
+    );
+    final cfgText = await rootBundle.loadString('assets/rules_config_v1.json');
+    final cfg = RulesConfigLoader.parse(cfgText);
+    final engine = RiskEngine(modules: [
+      PressureDropModule(),
+      HumidityModule(),
+      TempSwingModule(),
+      AirQualityModule(),
+      SleepDeficitModule(),
+      HrvLetdownModule(),
+      MenstrualPhaseModule(),
+      RefractoryModule(),
+      AlcoholModule(),
+      CaffeineModule(),
+      StressModule(),
+      HydrationModule(),
+      IntradayPressureSwingModule(),
+    ]);
+    final orchestrator = BulkBackfillOrchestrator(
+      contextBuilder: builder,
+      riskEngine: engine,
+      rulesConfig: cfg,
+      assessmentRepo: failingRepo,
+      locationSource: location,
+      weatherSource: weather,
+    );
+
+    final report = await orchestrator.run(window: const Duration(days: 3));
+
+    expect(report.weatherFetchSucceeded, isTrue);
+    expect(report.daysFailed, 1);
+    expect(report.daysProcessed, 2);
+    expect(report.firstError, isNotNull);
   });
 
   test('repeat run on full DB: zero writes, idempotent', () async {
