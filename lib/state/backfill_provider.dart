@@ -1,0 +1,60 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../data/bulk_backfill_orchestrator.dart';
+import 'correlation_provider.dart';
+import 'insights_eligibility_provider.dart';
+import 'providers.dart';
+
+/// Holds the live progress of an in-flight backfill (done, total), or null
+/// when no backfill is running. The Insights screen subscribes to this to
+/// show a progress strip above the heatmap.
+final backfillProgressProvider =
+    StateProvider<({int done, int total})?>((_) => null);
+
+/// Module-level guard. The orchestrator's own `_running` flag is per-instance,
+/// but [launchBackfill] constructs a new orchestrator on every call, so the
+/// real concurrency check has to live here.
+bool _backfillRunning = false;
+
+/// Starts a backfill run fire-and-forget style. Safe to call multiple times;
+/// concurrent calls return immediately.
+///
+/// Takes a [ProviderContainer] rather than a `WidgetRef` so the caller can
+/// outlive the widget that triggered it (e.g. onboarding navigates away the
+/// same frame it kicks off backfill).
+///
+/// On completion, invalidates the providers that the heatmap and correlation
+/// cards depend on.
+Future<void> launchBackfill(ProviderContainer container) async {
+  if (_backfillRunning) return;
+  _backfillRunning = true;
+  try {
+    final config = await container.read(rulesConfigProvider.future);
+
+    final orchestrator = BulkBackfillOrchestrator(
+      contextBuilder: container.read(contextBuilderProvider),
+      riskEngine: container.read(riskEngineProvider),
+      rulesConfig: config,
+      assessmentRepo: container.read(assessmentRepoProvider),
+      locationSource: container.read(locationSourceProvider),
+      weatherSource: container.read(weatherSourceProvider),
+    );
+
+    final report = await orchestrator.run(
+      onProgress: (done, total) {
+        container.read(backfillProgressProvider.notifier).state =
+            (done: done, total: total);
+      },
+    );
+
+    container.read(backfillProgressProvider.notifier).state = null;
+
+    if (report.daysProcessed > 0) {
+      container.invalidate(correlationResultsProvider);
+      container.invalidate(recentAttacksProvider);
+      container.invalidate(dayAssessmentProvider);
+    }
+  } finally {
+    _backfillRunning = false;
+  }
+}
