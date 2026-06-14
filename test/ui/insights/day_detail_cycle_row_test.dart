@@ -9,13 +9,12 @@ import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
 class _FakeJournal implements JournalSource {
   List<PeriodEvent> periods;
-  List<PeriodDaySeverity> overrides;
   final List<PeriodDaySeverity> upserts = [];
   final List<PeriodEvent> addedPeriods = [];
   final List<({DateTime startedAt, DateTime endedAt})> ends = [];
   final List<DateTime> deletedStarts = [];
 
-  _FakeJournal({this.periods = const [], this.overrides = const []});
+  _FakeJournal({this.periods = const []});
 
   @override Future<int> addAttack(Attack attack, {int? riskAssessmentId}) async => 1;
   @override Future<void> addEntry(JournalEntry entry) async {}
@@ -42,8 +41,8 @@ class _FakeJournal implements JournalSource {
   @override Future<void> upsertPeriodDaySeverity(PeriodDaySeverity override) async {
     upserts.add(override);
   }
-  @override Future<List<PeriodDaySeverity>> recentPeriodDaySeverities(Duration window, {required DateTime now}) async => overrides;
-  @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration window, {required DateTime now}) => Stream.value(overrides);
+  @override Future<List<PeriodDaySeverity>> recentPeriodDaySeverities(Duration window, {required DateTime now}) async => const [];
+  @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration window, {required DateTime now}) => Stream.value(const []);
 }
 
 void main() {
