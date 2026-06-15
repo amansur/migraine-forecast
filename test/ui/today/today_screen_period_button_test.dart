@@ -30,7 +30,10 @@ class _FakeJournal implements JournalSource {
 
   @override Future<int> addAttack(Attack attack, {int? riskAssessmentId}) async => 1;
   @override Future<void> addEntry(JournalEntry entry) async {}
+  @override Future<void> updateEntry(JournalEntry entry) async {}
+  @override Future<void> deleteEntry(int id) async {}
   @override Future<List<JournalEntry>> recentEntries(Duration window, {required DateTime now}) async => const [];
+  @override Stream<List<JournalEntry>> watchRecentEntries(Duration window, {required DateTime now}) => Stream.value(const []);
   @override Future<List<Attack>> recentAttacks(Duration window, {required DateTime now}) async => const [];
   @override Stream<List<Attack>> watchRecentAttacks(Duration window, {required DateTime now}) => Stream.value(const []);
   @override Future<void> deleteAttack(DateTime startedAt) async {}

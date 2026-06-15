@@ -23,7 +23,10 @@ class _RecordingJournal implements JournalSource {
     return 1;
   }
   @override Future<void> addEntry(JournalEntry entry) async {}
+  @override Future<void> updateEntry(JournalEntry entry) async {}
+  @override Future<void> deleteEntry(int id) async {}
   @override Future<List<JournalEntry>> recentEntries(Duration window, {required DateTime now}) async => const [];
+  @override Stream<List<JournalEntry>> watchRecentEntries(Duration window, {required DateTime now}) => Stream.value(const []);
   @override
   Future<List<Attack>> recentAttacks(Duration window, {required DateTime now}) async => [];
 
