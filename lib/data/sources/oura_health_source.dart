@@ -53,7 +53,7 @@ class OuraHealthSource implements HealthSource {
       if (sleep.records.isNotEmpty) {
         await database.upsertOuraSleep(sleep.records.map((r) => db.OuraSleepCompanion(
               id: Value(r.id),
-              day: Value(DateTime.parse(r.day)),
+              day: Value(DateTime.parse('${r.day}T00:00:00Z')),
               lowestHeartRate: Value(r.lowestHeartRate),
               restlessPeriods: Value(r.restlessPeriods),
               averageHeartRate: Value(r.averageHeartRate?.round()),
@@ -65,7 +65,7 @@ class OuraHealthSource implements HealthSource {
       if (dailySleep.records.isNotEmpty) {
         await database.upsertOuraDailySleep(dailySleep.records.map((r) => db.OuraDailySleepCompanion(
               id: Value(r.id),
-              day: Value(DateTime.parse(r.day)),
+              day: Value(DateTime.parse('${r.day}T00:00:00Z')),
               score: Value(r.score),
               fetchedAt: Value(now),
             )).toList());
@@ -74,7 +74,7 @@ class OuraHealthSource implements HealthSource {
       if (activity.records.isNotEmpty) {
         await database.upsertOuraActivity(activity.records.map((r) => db.OuraActivityCompanion(
               id: Value(r.id),
-              day: Value(DateTime.parse(r.day)),
+              day: Value(DateTime.parse('${r.day}T00:00:00Z')),
               activityScore: Value(r.score),
               fetchedAt: Value(now),
             )).toList());
@@ -83,7 +83,7 @@ class OuraHealthSource implements HealthSource {
       if (readiness.records.isNotEmpty) {
         await database.upsertOuraReadiness(readiness.records.map((r) => db.OuraReadinessCompanion(
               id: Value(r.id),
-              day: Value(DateTime.parse(r.day)),
+              day: Value(DateTime.parse('${r.day}T00:00:00Z')),
               readinessScore: Value(r.score),
               temperatureDeviation: Value(r.temperatureDeviation),
               fetchedAt: Value(now),
