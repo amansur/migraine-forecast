@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Migraine Forecast — FAQ</title>
+  <meta name="description" content="Common questions about data, accounts, Oura integration, and native apps.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    // Inline, runs pre-paint to avoid flash-of-wrong-theme.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', preferred);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="/">Migraine Forecast</a>
+      <nav>
+        <a href="/how-it-works/">How it works</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/privacy/">Privacy</a>
+        <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </nav>
+    </header>
+
+    <main class="prose">
+      <section class="block">
+        <span class="label accent">FAQ</span>
+        <h1 class="hero">Common questions.</h1>
+        <p class="lead muted">If you don't see your question, the contact link in the footer is real.</p>
+      </section>
+
+      <section class="block">
+        <details class="faq-item surface" open>
+          <summary>What does Migraine Forecast actually do?</summary>
+          <p class="muted">It gives you a daily 0–100 migraine risk score based on eleven evidence-backed triggers — barometric pressure, sleep, HRV, hormones, hydration, alcohol, caffeine, meals, stress, light, activity. You see the top contributing factors next to the score. As you log headaches, the model learns which triggers matter for <em>you</em> and reweights accordingly.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>What data does it collect? Where does it live?</summary>
+          <p class="muted">All data stays on your device, in an encrypted local SQLite database. The app doesn't have a backend, doesn't require an account, and doesn't transmit your logs or biometric data anywhere. The only network traffic is to fetch weather forecasts (Open-Meteo) and — if you connect Oura — to fetch your Oura data using your own OAuth tokens. See the <a href="/privacy/">privacy policy</a> for the long version.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>How does Oura Ring integration work? Is it required?</summary>
+          <p class="muted">It's optional. By default the app reads from Apple Health (iOS) or Health Connect (Android). If you'd rather use Oura, connect it from Settings → Health Data Sources. Authentication happens through Oura's OAuth flow in a browser tab; tokens are stored in the device's secure keychain and never leave the device. You can disconnect at any time.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>Do I need an account?</summary>
+          <p class="muted">No. There is no signup, no email, no user ID. Open the app, answer a brief onboarding questionnaire, start using it.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>Is it a medical device? Can I rely on it for treatment decisions?</summary>
+          <p class="muted">No. Migraine Forecast is not a medical device. It does not diagnose, treat, prevent, or cure migraines. The score is a pattern-recognition aid — useful for spotting triggers and timing preventive actions you've already discussed with a clinician. If your headaches are severe, frequent, or changing, see a doctor.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>When will the iOS and Android apps be available?</summary>
+          <p class="muted">The web version works today — try it at <a href="/app/">/app/</a>. Native iOS and Android builds are in progress; they'll ship to the App Store and Play Store once they're ready. Until then, the web build is the canonical experience.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>Is the code open source?</summary>
+          <p class="muted">Yes, the source is on <a href="https://github.com/" rel="noopener">GitHub</a>. The Flutter app, the Pure-Dart domain core, and this marketing site are all in the same repository.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>Why does the web build ask for location or health permissions?</summary>
+          <p class="muted">Location is used to fetch local weather forecasts (barometric pressure, in particular). Health permissions are needed to read sleep and HRV from your device. Both prompts come from the browser, not from a server — the data goes from the browser API straight to the on-device store. Denying either is fine; the corresponding trigger modules just sit out and the score is built from the remaining signals.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>Can I export my data?</summary>
+          <p class="muted">Yes. Settings → Export produces a JSON file with your logs, scores, and configuration. You can re-import on a new device.</p>
+        </details>
+
+        <details class="faq-item surface">
+          <summary>How do I get in touch?</summary>
+          <p class="muted">Email is in the footer. For bug reports and feature requests, the GitHub issues tracker is the fastest path.</p>
+        </details>
+      </section>
+
+      <section class="block">
+        <h2>Still curious?</h2>
+        <div class="ctas">
+          <a class="cta cta-primary" href="/app/">Try in browser →</a>
+          <a class="cta cta-secondary" href="/how-it-works/">Read how it works</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer surface">
+      <div class="cols">
+        <div>
+          <strong>Migraine Forecast</strong>
+          <p class="dim">Daily risk forecasts from evidence-backed triggers. Local-first. Open source.</p>
+        </div>
+        <div>
+          <strong>Product</strong>
+          <a href="/how-it-works/">How it works</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/app/">Try in browser</a>
+        </div>
+        <div>
+          <strong>Legal</strong>
+          <a href="/privacy/">Privacy</a>
+          <a href="https://github.com/" rel="noopener">GitHub</a>
+          <a href="mailto:hello@example.com">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="/theme.js" defer></script>
+</body>
+</html>
