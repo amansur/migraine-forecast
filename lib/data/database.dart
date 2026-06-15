@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'native_database.dart'
     if (dart.library.js_interop) 'native_database_web.dart';
+import 'database/oura_tables.dart';
 
 part 'database.g.dart';
 
@@ -143,13 +144,16 @@ class DayLocationOverrides extends Table {
   PeriodDaySeverities,
   ManualSleepRecords,
   DayLocationOverrides,
+  OuraSleep,
+  OuraActivity,
+  OuraReadiness,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -221,6 +225,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 9) {
             await m.createTable(dayLocationOverrides);
           }
+          if (from < 10) {
+            await m.createTable(ouraSleep);
+            await m.createTable(ouraActivity);
+            await m.createTable(ouraReadiness);
+          }
         },
       );
 
@@ -238,6 +247,10 @@ class AppDatabase extends _$AppDatabase {
         .map((s) => DateTime.parse(s.endsWith('Z') || s.contains('+') ? s : '${s}Z'))
         .toList();
   }
+
+  Selectable<OuraSleepData> get allOuraSleep => select(ouraSleep);
+  Selectable<OuraActivityData> get allOuraActivity => select(ouraActivity);
+  Selectable<OuraReadinessData> get allOuraReadiness => select(ouraReadiness);
 
   Future<void> clearAllData() async {
     await transaction(() async {
