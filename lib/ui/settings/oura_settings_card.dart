@@ -10,11 +10,18 @@ import '../../state/settings_provider.dart';
 /// - Connection status (Connected / Not connected)
 /// - Connect/Disconnect button
 /// - Data source preference radio buttons (when authenticated)
-class OuraSettingsCard extends ConsumerWidget {
+class OuraSettingsCard extends ConsumerStatefulWidget {
   const OuraSettingsCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OuraSettingsCard> createState() => _OuraSettingsCardState();
+}
+
+class _OuraSettingsCardState extends ConsumerState<OuraSettingsCard> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
     final auth = ref.watch(ouraAuthStateProvider);
     final preference = ref.watch(healthSourcePreferenceProvider);
 
@@ -45,25 +52,38 @@ class OuraSettingsCard extends ConsumerWidget {
                 ),
               ),
               trailing: OutlinedButton(
-                onPressed: () async {
-                  if (auth.authenticated) {
-                    await ref.read(ouraAuthStateProvider.notifier).logout();
-                  } else {
-                    try {
-                      await ref.read(ouraOAuthFlowProvider).connect();
-                      await ref
-                          .read(ouraAuthStateProvider.notifier)
-                          .refreshFromManager();
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString())),
-                        );
-                      }
-                    }
-                  }
-                },
-                child: Text(auth.authenticated ? 'Disconnect' : 'Connect'),
+                onPressed: _busy
+                    ? null
+                    : () async {
+                        try {
+                          setState(() => _busy = true);
+                          if (auth.authenticated) {
+                            await ref.read(ouraAuthStateProvider.notifier).logout();
+                          } else {
+                            try {
+                              await ref.read(ouraOAuthFlowProvider).connect();
+                              await ref
+                                  .read(ouraAuthStateProvider.notifier)
+                                  .refreshFromManager();
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.toString())),
+                                );
+                              }
+                            }
+                          }
+                        } finally {
+                          if (mounted) setState(() => _busy = false);
+                        }
+                      },
+                child: _busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(auth.authenticated ? 'Disconnect' : 'Connect'),
               ),
             ),
             if (auth.authenticated) ...[
