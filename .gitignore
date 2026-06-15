@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter web build copied here by scripts/deploy-site.sh
+site/public/app/
