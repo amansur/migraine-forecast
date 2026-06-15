@@ -116,7 +116,7 @@ void main() {
       expect(find.text('Data Source Preference'), findsNothing);
     });
 
-    testWidgets('tapping Connect invokes connect() then refreshFromManager()',
+    testWidgets('tapping Connect invokes connect()',
         (tester) async {
       final mockFlow = MockOuraOAuthFlow();
       when(() => mockFlow.connect()).thenAnswer((_) async {});
