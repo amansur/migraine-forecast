@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../state/oura_settings_provider.dart';
 import '../../state/settings_provider.dart';
-
-// TODO: These providers will be created in Task 12 (Oura Auth Providers)
-// final ouraAuthStateProvider = FutureProvider<bool>((ref) async {
-//   return ref.watch(ouraAuthManagerProvider).isAuthenticated;
-// });
-//
-// final ouraUserEmailProvider = FutureProvider<String?>((ref) async {
-//   return ref.watch(ouraAuthManagerProvider).userEmail;
-// });
 
 /// Settings card for Oura Ring health data integration.
 ///
@@ -23,13 +15,8 @@ class OuraSettingsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Replace with actual providers when available in Task 12
-    // final authStateAsync = ref.watch(ouraAuthStateProvider);
-    // final userEmailAsync = ref.watch(ouraUserEmailProvider);
+    final auth = ref.watch(ouraAuthStateProvider);
     final preference = ref.watch(healthSourcePreferenceProvider);
-
-    // Placeholder values for now - will use actual providers after Task 12
-    const isAuthenticated = false;
 
     return Card(
       child: Padding(
@@ -50,63 +37,64 @@ class OuraSettingsCard extends ConsumerWidget {
               contentPadding: EdgeInsets.zero,
               title: const Text('Oura Ring'),
               subtitle: Text(
-                isAuthenticated ? 'Connected' : 'Not connected',
+                auth.authenticated ? (auth.email ?? 'Connected') : 'Not connected',
                 style: TextStyle(
-                  color: isAuthenticated
+                  color: auth.authenticated
                       ? Colors.green
                       : Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
               trailing: OutlinedButton(
-                onPressed: () {
-                  // TODO: Implement OAuth flow in Task 12
-                  // If authenticated: call logout action
-                  // If not authenticated: call login action
-                  if (isAuthenticated) {
-                    // ref.read(ouraLogoutProvider)();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('[TODO] Disconnect Oura will be implemented in Task 12'),
-                      ),
-                    );
+                onPressed: () async {
+                  if (auth.authenticated) {
+                    await ref.read(ouraAuthStateProvider.notifier).logout();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('[TODO] Connect Oura will be implemented in Task 12'),
-                      ),
-                    );
+                    try {
+                      await ref.read(ouraOAuthFlowProvider).connect();
+                      await ref
+                          .read(ouraAuthStateProvider.notifier)
+                          .refreshFromManager();
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString())),
+                        );
+                      }
+                    }
                   }
                 },
-                child: Text(isAuthenticated ? 'Disconnect' : 'Connect'),
+                child: Text(auth.authenticated ? 'Disconnect' : 'Connect'),
               ),
             ),
-            if (isAuthenticated) ...[
+            if (auth.authenticated) ...[
               const SizedBox(height: 16),
               Text(
                 'Data Source Preference',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              RadioListTile<HealthSourcePreference>(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Oura Ring'),
-                value: HealthSourcePreference.oura,
+              RadioGroup<HealthSourcePreference>(
                 groupValue: preference,
                 onChanged: (value) {
                   if (value != null) {
-                    ref.read(healthSourcePreferenceProvider.notifier).setPreference(value);
+                    ref
+                        .read(healthSourcePreferenceProvider.notifier)
+                        .setPreference(value);
                   }
                 },
-              ),
-              RadioListTile<HealthSourcePreference>(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Apple Health'),
-                value: HealthSourcePreference.appleHealth,
-                groupValue: preference,
-                onChanged: (value) {
-                  if (value != null) {
-                    ref.read(healthSourcePreferenceProvider.notifier).setPreference(value);
-                  }
-                },
+                child: Column(
+                  children: const [
+                    RadioListTile<HealthSourcePreference>(
+                      value: HealthSourcePreference.oura,
+                      title: Text('Oura Ring'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<HealthSourcePreference>(
+                      value: HealthSourcePreference.appleHealth,
+                      title: Text('Apple Health'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
