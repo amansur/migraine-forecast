@@ -25,6 +25,28 @@ class InsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final eligible = ref.watch(insightsEligibleProvider);
+    final backfillProgress = ref.watch(backfillProgressProvider);
+    final lastReport = ref.watch(lastBackfillReportProvider);
+
+    // Build the optional progress/failure banner shown above all content,
+    // regardless of eligibility. New users see this during their first backfill
+    // before they have any logged attacks (which would enable the full _Body).
+    Widget? progressBanner;
+    if (backfillProgress != null) {
+      progressBanner = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: _BackfillProgressStrip(
+          done: backfillProgress.done,
+          total: backfillProgress.total,
+        ),
+      );
+    } else if (lastReport != null && lastReport.daysFailed > 0) {
+      progressBanner = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: _BackfillFailureNotice(report: lastReport),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Insights'),
@@ -36,10 +58,18 @@ class InsightsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: eligible.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (ok) => ok ? const _Body() : const _NotEligible(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (progressBanner != null) progressBanner,
+          Expanded(
+            child: eligible.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
+              data: (ok) => ok ? const _Body() : const _NotEligible(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -85,27 +115,10 @@ class _Body extends ConsumerWidget {
     final recentAttacks = ref.watch(recentAttacksProvider);
     final correlations = ref.watch(correlationResultsProvider);
     final suggestions = ref.watch(suggestionsProvider);
-    final backfillProgress = ref.watch(backfillProgressProvider);
-    final lastReport = ref.watch(lastBackfillReportProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (backfillProgress != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _BackfillProgressStrip(
-              done: backfillProgress.done,
-              total: backfillProgress.total,
-            ),
-          ),
-        if (backfillProgress == null &&
-            lastReport != null &&
-            lastReport.daysFailed > 0)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _BackfillFailureNotice(report: lastReport),
-          ),
         Text('Last 8 weeks', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         recentAttacks.when(
