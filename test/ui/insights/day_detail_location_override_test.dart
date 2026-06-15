@@ -9,9 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart'
-    hide JournalEntry, WeatherSnapshot, RiskAssessment, Attack;
+    hide JournalEntry, WeatherSnapshot, RiskAssessment, Attack, PeriodDaySeverity;
 import 'package:migraine_forecast/data/repos/location_overrides_repo.dart';
 import 'package:migraine_forecast/data/sources/journal_source.dart';
+import 'package:migraine_forecast/data/sources/location_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
