@@ -13,6 +13,8 @@ import '../data/sources/drift_journal_source.dart';
 import '../data/sources/health_package_source.dart';
 import '../data/sources/health_source.dart';
 import '../data/sources/journal_source.dart';
+import '../data/sources/manual_sleep_source.dart';
+import '../data/sources/merged_health_source.dart';
 import '../data/sources/location_source.dart';
 import '../data/sources/geolocator_location_source.dart';
 import '../data/sources/persisted_manual_location_source.dart';
@@ -45,7 +47,10 @@ final geocoderProvider = Provider<OpenMeteoGeocoder>(
 final weatherSourceProvider = Provider<WeatherSource>((ref) =>
     OpenMeteoWeatherSource(client: ref.watch(httpClientProvider), db: ref.watch(databaseProvider)));
 
-final healthSourceProvider = Provider<HealthSource>((_) => HealthPackageSource());
+final healthSourceProvider = Provider<HealthSource>((ref) => MergedHealthSource(
+      HealthPackageSource(),
+      DriftManualSleepSource(ref.watch(databaseProvider)),
+    ));
 
 final journalSourceProvider = Provider<JournalSource>((ref) => DriftJournalSource(ref.watch(databaseProvider)));
 
