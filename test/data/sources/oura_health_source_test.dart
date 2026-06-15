@@ -1,5 +1,4 @@
 import 'package:domain/domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/models/oura_models.dart';
 import 'package:migraine_forecast/data/sources/health_source.dart';
@@ -16,17 +15,14 @@ void main() {
   group('OuraHealthSource', () {
     late MockOuraAuthManager mockAuthManager;
     late MockOuraApiClient mockApiClient;
-    late NativeDatabase database;
     late OuraHealthSource source;
 
     setUp(() {
       mockAuthManager = MockOuraAuthManager();
       mockApiClient = MockOuraApiClient();
-      database = NativeDatabase.memory();
       source = OuraHealthSource(
         authManager: mockAuthManager,
         apiClient: mockApiClient,
-        database: database,
       );
     });
 
