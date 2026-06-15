@@ -140,8 +140,6 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const Divider(),
-          const OuraSettingsCard(),
-          const Divider(),
           Text('Notifications', style: Theme.of(context).textTheme.titleSmall),
           notifAsync.when(
             loading: () => const SizedBox.shrink(),
@@ -312,6 +310,8 @@ class SettingsScreen extends ConsumerWidget {
               }
             },
           ),
+          const Divider(),
+          const OuraSettingsCard(),
         ],
       ),
     );

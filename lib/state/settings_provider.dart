@@ -131,6 +131,10 @@ final healthSourcePreferenceProvider = StateNotifierProvider<
   return HealthSourcePreferenceNotifier();
 });
 
+// TODO(oura): persist via SettingsRepo. Currently resets on app restart.
+// Migrating requires switching to FutureProvider<HealthSourcePreference> +
+// a setter provider (matching the pattern used by riskDisplayModeProvider),
+// which changes the type at all UI call sites.
 class HealthSourcePreferenceNotifier extends StateNotifier<HealthSourcePreference> {
   HealthSourcePreferenceNotifier() : super(HealthSourcePreference.appleHealth);
 
