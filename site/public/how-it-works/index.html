@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Migraine Forecast — how it works</title>
+  <meta name="description" content="The evidence base, the eleven triggers tracked, and how personalization sharpens your daily score.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    // Inline, runs pre-paint to avoid flash-of-wrong-theme.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', preferred);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="/">Migraine Forecast</a>
+      <nav>
+        <a href="/how-it-works/">How it works</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/privacy/">Privacy</a>
+        <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </nav>
+    </header>
+
+    <main class="prose">
+      <section class="block">
+        <span class="label accent">How it works</span>
+        <h1 class="hero">From evidence to your daily score.</h1>
+        <p class="lead muted">Each trigger is a module built from the migraine-research literature. The score blends them with confidence weights, then sharpens around your personal patterns as you log.</p>
+      </section>
+
+      <section class="block">
+        <h2>The evidence base</h2>
+        <p>Eleven triggers, each backed by published research on migraine prevalence and prodromal physiology. We don't claim to predict the unknown — we surface signals that have shown reproducible association with headache onset across multiple studies.</p>
+        <p>Each module contributes a 0–100 contribution and a confidence weight (how reliable the underlying data is for <em>you</em>). The daily score is a weighted blend; the UI shows the top drivers, never just a number.</p>
+      </section>
+
+      <section class="block">
+        <h2>Environmental triggers</h2>
+        <h3>Barometric pressure</h3>
+        <p>Rapid changes in atmospheric pressure are one of the most-cited migraine triggers. The app pulls hourly pressure forecasts from Open-Meteo for your location and looks for the rate-of-change windows that have historically preceded headaches.</p>
+        <h3>Light and screen exposure</h3>
+        <p>Photophobia is a defining feature of migraine. The light module accepts logged screen-time or device sensor data when available and treats sustained bright exposure as an elevating signal.</p>
+
+        <h2>Physiological triggers</h2>
+        <h3>Sleep</h3>
+        <p>Both deprivation and oversleep raise risk. The sleep module ingests total duration, sleep efficiency, and bedtime variability from Apple Health, Health Connect, or Oura Ring.</p>
+        <h3>Heart rate variability (HRV)</h3>
+        <p>Reduced HRV correlates with autonomic stress, a known prodromal signal. Pulled from the same health source as sleep.</p>
+        <h3>Hormones</h3>
+        <p>Cycle-related migraine has its own evidence base. The hormone module is optional and uses the on-device cycle tracker; nothing leaves the device.</p>
+        <h3>Hydration</h3>
+        <p>Logged water intake compared against personal baselines.</p>
+
+        <h2>Behavioral triggers</h2>
+        <h3>Alcohol</h3>
+        <p>Quantity and time-since-last-drink. Even modest intake near a sensitive window matters.</p>
+        <h3>Caffeine</h3>
+        <p>Both intake spikes and withdrawal show up as triggers. Tracked from logs.</p>
+        <h3>Meals</h3>
+        <p>Time-since-last-meal as a proxy for blood sugar — skipped meals are a common trigger.</p>
+        <h3>Stress</h3>
+        <p>A subjective daily log (1–5) plus any HRV signal as a corroborating biometric.</p>
+        <h3>Activity</h3>
+        <p>Heavy exertion outside your normal pattern can precipitate; absolute sedentary stretches show up too.</p>
+      </section>
+
+      <section class="block">
+        <h2>Personalization</h2>
+        <p>Generic triggers are a starting point, not the model. Each time you log a headache, the correlation engine looks back at the trigger contributions in the 24–48 hours before onset and updates the per-trigger weights that drive <em>your</em> future scores. After ~10 logs, the score is meaningfully tuned; after ~30 it's stable.</p>
+        <p>The model lives entirely on the device. No data leaves unless you explicitly export it.</p>
+      </section>
+
+      <section class="block">
+        <h2>What it isn't</h2>
+        <p class="muted">Migraine Forecast is not a medical device. It does not diagnose, treat, or replace clinical care. If your headaches are severe, frequent, or changing in character, see a doctor — the app's job is to help you spot patterns, not to substitute for evaluation.</p>
+      </section>
+
+      <section class="block">
+        <h2>Ready to try it?</h2>
+        <div class="ctas">
+          <a class="cta cta-primary" href="/app/">Try in browser →</a>
+          <span class="cta cta-disabled" aria-disabled="true">iOS · coming soon</span>
+          <span class="cta cta-disabled" aria-disabled="true">Android · coming soon</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer surface">
+      <div class="cols">
+        <div>
+          <strong>Migraine Forecast</strong>
+          <p class="dim">Daily risk forecasts from evidence-backed triggers. Local-first. Open source.</p>
+        </div>
+        <div>
+          <strong>Product</strong>
+          <a href="/how-it-works/">How it works</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/app/">Try in browser</a>
+        </div>
+        <div>
+          <strong>Legal</strong>
+          <a href="/privacy/">Privacy</a>
+          <a href="https://github.com/" rel="noopener">GitHub</a>
+          <a href="mailto:hello@example.com">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="/theme.js" defer></script>
+</body>
+</html>
