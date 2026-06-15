@@ -7,6 +7,13 @@ import 'health_source.dart';
 import 'oura_api_client.dart';
 import 'oura_auth_manager.dart';
 
+/// How far back to retain cached Oura rows. Rows older than this are deleted
+/// after each successful fetch to prevent unbounded cache growth.
+///
+/// Set to 90 days — 3× the typical [recentMetrics] window of 30 days —
+/// to keep a comfortable historical buffer while bounding storage.
+const Duration _kCacheEvictionHorizon = Duration(days: 90);
+
 class OuraHealthSource implements HealthSource {
   final OuraAuthManager authManager;
   final OuraApiClient apiClient;
@@ -89,6 +96,9 @@ class OuraHealthSource implements HealthSource {
               fetchedAt: Value(now),
             )).toList());
       }
+
+      // Evict rows older than the retention horizon to bound cache size.
+      await database.evictStaleOuraCache(horizon: _kCacheEvictionHorizon);
 
       return _buildFromApi(sleep, dailySleep, activity, readiness, now);
     } on OuraAuthException {

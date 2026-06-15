@@ -368,6 +368,23 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  // ---------------------------------------------------------------------------
+  // Oura cache eviction
+  // ---------------------------------------------------------------------------
+
+  /// Deletes rows from all four Oura tables whose [day] is older than
+  /// [horizon] ago. Call this after every successful API fetch to keep the
+  /// cache bounded.
+  Future<void> evictStaleOuraCache({required Duration horizon}) async {
+    final cutoff = DateTime.now().subtract(horizon);
+    await transaction(() async {
+      await (delete(ouraSleep)..where((t) => t.day.isSmallerThanValue(cutoff))).go();
+      await (delete(ouraDailySleep)..where((t) => t.day.isSmallerThanValue(cutoff))).go();
+      await (delete(ouraActivity)..where((t) => t.day.isSmallerThanValue(cutoff))).go();
+      await (delete(ouraReadiness)..where((t) => t.day.isSmallerThanValue(cutoff))).go();
+    });
+  }
+
   Future<void> clearAllData() async {
     await transaction(() async {
       for (final table in allTables) {
