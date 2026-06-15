@@ -2,12 +2,11 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/data/database.dart'
-    hide JournalEntry, WeatherSnapshot, RiskAssessment, Attack, PeriodDaySeverity;
-import 'package:migraine_forecast/data/repos/location_overrides_repo.dart';
 import 'package:migraine_forecast/data/sources/journal_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
+
+import '_fake_location_overrides_repo.dart';
 
 
 class _FakeJournal implements JournalSource {
@@ -172,21 +171,7 @@ class _PumpSheet extends StatefulWidget {
 }
 
 class _PumpSheetState extends State<_PumpSheet> {
-  late final AppDatabase _db;
-  late final LocationOverridesRepo _repo;
-
-  @override
-  void initState() {
-    super.initState();
-    _db = AppDatabase.memory();
-    _repo = LocationOverridesRepo(_db);
-  }
-
-  @override
-  void dispose() {
-    _db.close();
-    super.dispose();
-  }
+  final FakeLocationOverridesRepo _repo = FakeLocationOverridesRepo();
 
   @override
   Widget build(BuildContext context) {

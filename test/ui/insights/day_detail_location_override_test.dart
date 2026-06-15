@@ -3,13 +3,12 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/data/database.dart'
-    hide JournalEntry, WeatherSnapshot, RiskAssessment, Attack, PeriodDaySeverity;
-import 'package:migraine_forecast/data/repos/location_overrides_repo.dart';
 import 'package:migraine_forecast/data/sources/journal_source.dart';
 import 'package:migraine_forecast/data/sources/location_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
+
+import '_fake_location_overrides_repo.dart';
 
 class _FakeJournal implements JournalSource {
   @override Future<int> addAttack(Attack attack, {int? riskAssessmentId}) async => 1;
@@ -32,58 +31,10 @@ class _FakeJournal implements JournalSource {
   @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration w, {required DateTime now}) => Stream.value([]);
 }
 
-/// Fake repo backed by an in-memory map. Avoids drift's streaming polling
-/// so the widget test doesn't leak pending timers.
-class _FakeLocationOverridesRepo implements LocationOverridesRepo {
-  final Map<DateTime, ({UserLocation loc, String displayName})> _byDay = {};
-
-  _FakeLocationOverridesRepo();
-
-  void seed(DateTime day, UserLocation loc, String displayName) {
-    _byDay[_key(day)] = (loc: loc, displayName: displayName);
-  }
-
-  @override
-  Future<UserLocation?> forDay(DateTime day) async => _byDay[_key(day)]?.loc;
-
-  @override
-  Future<void> set(DateTime day, UserLocation loc, String displayName) async {
-    _byDay[_key(day)] = (loc: loc, displayName: displayName);
-  }
-
-  @override
-  Future<void> clear(DateTime day) async {
-    _byDay.remove(_key(day));
-  }
-
-  @override
-  Stream<Map<DateTime, UserLocation>> watchAll() => Stream.value(
-        {for (final e in _byDay.entries) e.key: e.value.loc},
-      );
-
-  @override
-  Stream<DayLocationOverride?> watchForDay(DateTime day) {
-    final entry = _byDay[_key(day)];
-    if (entry == null) return Stream.value(null);
-    return Stream.value(DayLocationOverride(
-      day: _key(day),
-      lat: entry.loc.lat,
-      lon: entry.loc.lon,
-      displayName: entry.displayName,
-      setAt: DateTime.utc(2026, 1, 1),
-    ));
-  }
-
-  static DateTime _key(DateTime d) {
-    final u = d.toUtc();
-    return DateTime.utc(u.year, u.month, u.day);
-  }
-}
-
 void main() {
   final day = DateTime.utc(2026, 6, 1);
 
-  Widget pumpTree(_FakeLocationOverridesRepo repo) => ProviderScope(
+  Widget pumpTree(FakeLocationOverridesRepo repo) => ProviderScope(
         overrides: [
           journalSourceProvider.overrideWithValue(_FakeJournal()),
           dayAssessmentProvider.overrideWith((ref, _) async => null),
@@ -94,14 +45,14 @@ void main() {
       );
 
   testWidgets('shows Auto (GPS) when no override is set', (tester) async {
-    await tester.pumpWidget(pumpTree(_FakeLocationOverridesRepo()));
+    await tester.pumpWidget(pumpTree(FakeLocationOverridesRepo()));
     await tester.pumpAndSettle();
     expect(find.text('Auto (GPS)'), findsOneWidget);
     expect(find.text('Use auto'), findsNothing);
   });
 
   testWidgets('shows override display name when override is active', (tester) async {
-    final repo = _FakeLocationOverridesRepo()
+    final repo = FakeLocationOverridesRepo()
       ..seed(day, const UserLocation(lat: 51.5074, lon: -0.1278), 'London, UK');
     await tester.pumpWidget(pumpTree(repo));
     await tester.pumpAndSettle();
