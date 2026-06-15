@@ -10,6 +10,9 @@ import 'package:migraine_forecast/data/sources/open_meteo/open_meteo_parser.dart
 import 'package:migraine_forecast/data/sources/weather_source.dart';
 
 class _StubWeatherSource implements WeatherSource {
+  @override
+  Future<void> primeArchive({required double lat, required double lon, required DateTime startDate, required DateTime endDate}) async {}
+
   final WeatherSnapshot snap;
   _StubWeatherSource(this.snap);
   @override

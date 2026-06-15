@@ -13,6 +13,9 @@ import 'package:migraine_forecast/state/risk_assessment_provider.dart';
 
 class _StubWeather implements WeatherSource {
   @override
+  Future<void> primeArchive({required double lat, required double lon, required DateTime startDate, required DateTime endDate}) async {}
+
+  @override
   Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now, bool forceRefresh = false, int? pastDays}) async =>
       WeatherSnapshot(
         weather: const WeatherSeries(samples: []),

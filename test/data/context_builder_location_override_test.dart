@@ -18,6 +18,9 @@ import 'package:migraine_forecast/data/sources/weather_source.dart';
 // ---------------------------------------------------------------------------
 
 class _StubWeatherSource implements WeatherSource {
+  @override
+  Future<void> primeArchive({required double lat, required double lon, required DateTime startDate, required DateTime endDate}) async {}
+
   final List<_FetchCall> calls = [];
   @override
   Future<WeatherSnapshot> fetch({

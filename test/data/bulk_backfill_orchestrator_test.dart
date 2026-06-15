@@ -17,6 +17,9 @@ import 'package:migraine_forecast/data/sources/weather_source.dart';
 // ---------------------------------------------------------------------------
 
 class _FakeWeatherSource implements WeatherSource {
+  @override
+  Future<void> primeArchive({required double lat, required double lon, required DateTime startDate, required DateTime endDate}) async {}
+
   final bool shouldThrow;
   final Set<DateTime> failOnDay;
   int fetchCount = 0;
