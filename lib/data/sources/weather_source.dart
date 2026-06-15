@@ -20,11 +20,16 @@ abstract class WeatherSource {
   ///
   /// Pass [forceRefresh] = true to bypass the cache and issue a new network
   /// request immediately (used by BulkBackfillOrchestrator to prime the cache
-  /// with a single 90-day fetch before the per-day loop).
+  /// with a single wide fetch before the per-day loop).
+  ///
+  /// Pass [pastDays] to override the number of past days requested from the
+  /// API. When null, the source derives pastDays from the difference between
+  /// today and [now] (existing behaviour, unchanged for today/tomorrow flows).
   Future<WeatherSnapshot> fetch({
     required double lat,
     required double lon,
     required DateTime now,
     bool forceRefresh = false,
+    int? pastDays,
   });
 }

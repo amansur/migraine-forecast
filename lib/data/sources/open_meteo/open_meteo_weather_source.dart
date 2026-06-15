@@ -24,18 +24,24 @@ class OpenMeteoWeatherSource implements WeatherSource {
     required double lon,
     required DateTime now,
     bool forceRefresh = false,
+    int? pastDays,
   }) async {
     final nowUtc = now.toUtc();
     final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
 
     final today = DateTime.now().toUtc();
     final todayStart = DateTime.utc(today.year, today.month, today.day);
-    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
-    // Bypass cache for backfills (older than yesterday) to avoid returning historically bad caches.
-    final isBackfill = requestedDay.isBefore(yesterdayStart);
 
     final cached = await _cachedForDay(lat, lon, requestedDay);
-    if (cached != null && !isBackfill && !forceRefresh) {
+    if (cached != null && !forceRefresh) {
+      // For past days the data is immutable historical, so a coverage match is
+      // always good enough — skip the freshness check (the cache row was fetched
+      // "after" the requested day, so the diff would be negative and the old
+      // freshness gate would reject it). For today/tomorrow we still require
+      // the cached row to be within [0, freshness] of `now`.
+      if (requestedDay.isBefore(todayStart)) {
+        return _toSnapshot(cached, stale: false);
+      }
       final diff = nowUtc.difference(cached.fetchedAt as DateTime);
       if (!diff.isNegative && diff <= freshness) {
         return _toSnapshot(cached, stale: false);
@@ -59,19 +65,31 @@ class OpenMeteoWeatherSource implements WeatherSource {
         sourceTag = 'archive';
       } else {
         // Add 2 days of padding because triggers need historical data (leadTime up to 48h)
-        // prior to the requested day to calculate trends/drops.
-        final pastDays = (diffDays + 2).clamp(1, 90);
+        // prior to the requested day to calculate trends/drops. Caller may
+        // supply pastDays explicitly (e.g. the prime fetch in BulkBackfillOrchestrator).
+        final effectivePastDays = pastDays != null
+            ? pastDays.clamp(1, 90)
+            : (diffDays + 2).clamp(1, 90);
         forecastRes = await client.get(
-          OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: pastDays),
+          OpenMeteoUrlBuilder.forecast(lat: lat, lon: lon, pastDays: effectivePastDays),
         );
         sourceTag = 'forecast';
       }
-      final aqPastDays = (diffDays + 2).clamp(1, 92);
+      final aqPastDays = pastDays != null
+          ? pastDays.clamp(1, 92)
+          : (diffDays + 2).clamp(1, 92);
       final aqRes = await client.get(OpenMeteoUrlBuilder.airQuality(lat: lat, lon: lon, pastDays: aqPastDays));
       if (forecastRes.statusCode >= 400 || aqRes.statusCode >= 400) {
         if (cached != null) return _toSnapshot(cached, stale: true);
         throw StateError('Open-Meteo fetch failed (no cache)');
       }
+
+      // Derive coverage window from the returned forecast series so future
+      // coverage-aware cache lookups can find this row without parsing JSON.
+      final times = AppDatabase.extractForecastTimes(forecastRes.body);
+      final coverageStart = times.isNotEmpty ? times.first : null;
+      final coverageEnd = times.isNotEmpty ? times.last : null;
+
       await db.into(db.weatherSnapshots).insert(
             WeatherSnapshotsCompanion.insert(
               fetchedAt: nowUtc,
@@ -80,6 +98,8 @@ class OpenMeteoWeatherSource implements WeatherSource {
               forecastJson: forecastRes.body,
               airQualityJson: Value(aqRes.body),
               source: Value(sourceTag),
+              coverageStart: Value(coverageStart),
+              coverageEnd: Value(coverageEnd),
             ),
           );
       return WeatherSnapshot(
@@ -94,19 +114,46 @@ class OpenMeteoWeatherSource implements WeatherSource {
     }
   }
 
+  /// Returns the most recently fetched snapshot for [lat]/[lon] whose forecast
+  /// series *covers* [day] (i.e. coverageStart <= day <= coverageEnd).
+  ///
+  /// Falls back to the fetchedAt-keyed lookup (same-day bucket) for rows where
+  /// coverage doesn't match — this keeps the today/tomorrow flows working with
+  /// the existing fixtures and with pre-v7 rows migrated without coverage data.
   Future<dynamic> _cachedForDay(double lat, double lon, DateTime day) async {
-    final start = day;
-    final end = day.add(const Duration(days: 1));
-    final q = db.select(db.weatherSnapshots)
+    final dayEnd = day.add(const Duration(days: 1));
+
+    // Coverage-aware query: the series must span at least [day, day].
+    final coverageQuery = db.select(db.weatherSnapshots)
       ..where((t) =>
           t.lat.equals(lat) &
           t.lon.equals(lon) &
-          t.fetchedAt.isBiggerOrEqualValue(start) &
-          t.fetchedAt.isSmallerThanValue(end))
+          t.coverageStart.isSmallerOrEqualValue(day) &
+          t.coverageEnd.isBiggerOrEqualValue(day))
       ..orderBy([(t) => OrderingTerm.desc(t.fetchedAt)])
       ..limit(1);
-    final rows = await q.get();
-    return rows.isEmpty ? null : rows.first;
+    final coverageRows = await coverageQuery.get();
+    if (coverageRows.isNotEmpty) return coverageRows.first;
+
+    // Fallback: fetchedAt-keyed lookup for rows fetched on the same calendar
+    // day. Covers two cases:
+    //   1. Pre-v7 rows whose coverage columns are null (migration left them null
+    //      if forecastJson was unparseable).
+    //   2. Rows fetched today whose coverage window doesn't literally include
+    //      today (e.g. fixture JSON with hardcoded past dates in unit tests).
+    // This fallback is only safe for "today" requests where `day` equals the
+    // fetch date — it preserves the original freshness-based caching semantics
+    // without breaking the coverage invariant for genuine past-day lookups.
+    final legacyQuery = db.select(db.weatherSnapshots)
+      ..where((t) =>
+          t.lat.equals(lat) &
+          t.lon.equals(lon) &
+          t.fetchedAt.isBiggerOrEqualValue(day) &
+          t.fetchedAt.isSmallerThanValue(dayEnd))
+      ..orderBy([(t) => OrderingTerm.desc(t.fetchedAt)])
+      ..limit(1);
+    final legacyRows = await legacyQuery.get();
+    return legacyRows.isEmpty ? null : legacyRows.first;
   }
 
   WeatherSnapshot _toSnapshot(dynamic row, {required bool stale}) => WeatherSnapshot(

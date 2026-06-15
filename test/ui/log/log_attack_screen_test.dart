@@ -68,7 +68,7 @@ class _MockRiskAssessmentNotifier extends RiskAssessmentNotifier {
 
 class _StubWeather implements WeatherSource {
   @override
-  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now, bool forceRefresh = false}) async =>
+  Future<WeatherSnapshot> fetch({required double lat, required double lon, required DateTime now, bool forceRefresh = false, int? pastDays}) async =>
       WeatherSnapshot(
         weather: const WeatherSeries(samples: []),
         airQuality: const AirQualitySeries(samples: []),

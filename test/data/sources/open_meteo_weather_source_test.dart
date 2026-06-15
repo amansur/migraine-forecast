@@ -96,7 +96,12 @@ void main() {
     expect(snapshot.stale, isFalse);
   });
 
-  test('past-day fetch ALWAYS hits network to ensure self-healing', () async {
+  test('past-day fetch returns from coverage-aware cache on second call within freshness', () async {
+    // After the coverage-aware cache was introduced (v7), the `!isBackfill`
+    // bypass was removed. A past-day snapshot is stored with coverageStart /
+    // coverageEnd and is found on subsequent lookups within the freshness window,
+    // just like today's snapshots. This eliminates the per-day network calls
+    // during backfill while keeping the cache correct.
     final pastDay = DateTime.utc(2026, 6, 6, 12);
     var calls = 0;
     final client = MockClient((req) async {
@@ -112,14 +117,13 @@ void main() {
     await source.fetch(lat: 40.7, lon: -74.0, now: pastDay);
     expect(calls, 2);
 
-    // Re-fetch the same past day 10 minutes later — it WILL hit network again because
-    // backfills bypass cache to guarantee historical healing.
+    // Re-fetch the same past day 10 minutes later — returns from cache (no new calls).
     final second = await source.fetch(
       lat: 40.7,
       lon: -74.0,
       now: pastDay.add(const Duration(minutes: 10)),
     );
-    expect(calls, 4, reason: 'backfills always bypass cache');
+    expect(calls, 2, reason: 'coverage-aware cache serves past-day within freshness');
     expect(second.stale, isFalse);
   });
 
