@@ -83,6 +83,7 @@ final contextBuilderProvider = Provider<ContextBuilder>((ref) => ContextBuilder(
       flagsRepo: ref.watch(flagsRepoProvider),
       baselineBuilder: ref.watch(baselineBuilderProvider),
       db: ref.watch(databaseProvider),
+      locationOverrides: ref.watch(locationOverridesRepoProvider),
     ));
 
 final rulesConfigProvider = FutureProvider<RulesConfig>((_) async {

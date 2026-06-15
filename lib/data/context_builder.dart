@@ -2,6 +2,7 @@ import 'package:domain/domain.dart';
 
 import 'database.dart' hide WeatherSnapshot;
 import 'repos/baseline_snapshot_builder.dart';
+import 'repos/location_overrides_repo.dart';
 import 'sources/health_source.dart';
 import 'sources/journal_source.dart';
 import 'sources/location_source.dart';
@@ -20,6 +21,9 @@ class ContextBuilder {
   final UserTriggerFlagsRepo flagsRepo;
   final BaselineSnapshotBuilder baselineBuilder;
   final AppDatabase db;
+  /// Optional. When provided, [build] resolves the effective location for
+  /// [target] from this repo first (falls back to [location] if no override).
+  final LocationOverridesRepo? locationOverrides;
 
   const ContextBuilder({
     required this.weather,
@@ -29,14 +33,19 @@ class ContextBuilder {
     required this.flagsRepo,
     required this.baselineBuilder,
     required this.db,
+    this.locationOverrides,
   });
 
   Future<EvaluationContext> build({required DateTime now, required DateTime target}) async {
-    final loc = await location.current();
+    // Resolve effective location: per-day override takes priority over live GPS.
+    final overrideLoc = await locationOverrides?.forDay(target);
+    final loc = overrideLoc ?? await location.current();
     WeatherSnapshot? weatherSnap;
     if (loc != null) {
       try {
-        weatherSnap = await weather.fetch(lat: loc.lat, lon: loc.lon, now: now);
+        // Pass `target` as `now` so OpenMeteoWeatherSource computes the correct
+        // pastDays / uses the archive API for days > 30 days ago.
+        weatherSnap = await weather.fetch(lat: loc.lat, lon: loc.lon, now: target);
       } catch (_) {
         // Foreground risk should degrade gracefully when weather is unavailable
         // (we can still score from sleep/HRV/journal). Backfill callers that
