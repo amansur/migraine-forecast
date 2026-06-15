@@ -232,21 +232,26 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(ouraReadiness);
           }
           if (from < 11) {
-            // Daily sleep summaries previously shared the oura_sleep table
-            // (rows prefixed with "daily_"). Promote them to their own table
-            // and drop the now-unused sleep_score column from oura_sleep.
             await m.createTable(ouraDailySleep);
-            await customStatement(
-              'INSERT INTO oura_daily_sleep (id, day, score, fetched_at) '
-              'SELECT id, day, sleep_score, fetched_at FROM oura_sleep '
-              "WHERE id LIKE 'daily_%'",
-            );
-            await customStatement(
-              "DELETE FROM oura_sleep WHERE id LIKE 'daily_%'",
-            );
-            await customStatement(
-              'ALTER TABLE oura_sleep DROP COLUMN sleep_score',
-            );
+            // Only databases that lived at exactly v10 contain the
+            // prefix-hack rows + sleep_score column on oura_sleep. Anything
+            // jumping from pre-10 straight to 11 had oura_sleep created by
+            // the `from < 10` block above using the current Dart definition,
+            // which already omits sleep_score — so the SELECT/DELETE/ALTER
+            // below would fail with "no such column: sleep_score".
+            if (from == 10) {
+              await customStatement(
+                'INSERT INTO oura_daily_sleep (id, day, score, fetched_at) '
+                'SELECT id, day, sleep_score, fetched_at FROM oura_sleep '
+                "WHERE id LIKE 'daily_%'",
+              );
+              await customStatement(
+                "DELETE FROM oura_sleep WHERE id LIKE 'daily_%'",
+              );
+              await customStatement(
+                'ALTER TABLE oura_sleep DROP COLUMN sleep_score',
+              );
+            }
           }
         },
       );
@@ -345,16 +350,19 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  // Drift DB filename kept as 'migraine_weatherr' even after the
-  // migraine-weatherr → migraine-forecast rename: changing it would orphan
-  // existing users' on-device data (attacks, baselines, settings).
-  return driftDatabase(
-    name: 'migraine_weatherr',
-    web: DriftWebOptions(
-      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-      driftWorker: Uri.parse('drift_worker.js'),
-    ),
-  );
+  // Wrap in LazyDatabase so the legacy-filename rename can run before the
+  // first SQLite open. Pre-rename DBs were called 'migraine_weatherr.sqlite';
+  // we now use 'migraine_forecast.sqlite' to match the project name.
+  return LazyDatabase(() async {
+    await renameLegacyDbFile();
+    return driftDatabase(
+      name: 'migraine_forecast',
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+    );
+  });
 }
 
 AppDatabase openAppDatabase() => AppDatabase(_openConnection());
