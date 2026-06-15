@@ -4,10 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
 
 void main() {
-  test('schemaVersion is 8 and manual_sleep_records exists on fresh DB', () async {
+  test('schemaVersion is 9 and day_location_overrides exists on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 8);
+    expect(db.schemaVersion, 9);
+    // Insert a row to prove the table exists.
+    await db.into(db.dayLocationOverrides).insert(
+          DayLocationOverridesCompanion.insert(
+            day: DateTime.utc(2026, 6, 1),
+            lat: 40.7128,
+            lon: -74.0060,
+            displayName: 'New York, US',
+            setAt: DateTime.utc(2026, 6, 1, 10),
+          ),
+        );
+    final rows = await db.select(db.dayLocationOverrides).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.displayName, 'New York, US');
+  });
+
+  test('schemaVersion is 9 and manual_sleep_records still exists', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect(db.schemaVersion, 9);
     // Insert a row to prove the table exists.
     await db.into(db.manualSleepRecords).insert(
           ManualSleepRecordsCompanion.insert(
@@ -25,7 +44,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 8);
+    expect(db.schemaVersion, 9);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(

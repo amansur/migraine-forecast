@@ -2,6 +2,9 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:migraine_forecast/data/database.dart'
+    hide JournalEntry, WeatherSnapshot, RiskAssessment, Attack;
+import 'package:migraine_forecast/data/repos/location_overrides_repo.dart';
 import 'package:migraine_forecast/data/sources/journal_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
@@ -156,18 +159,43 @@ void main() {
 
 /// Helper widget that immediately pushes the day-detail sheet so the test
 /// doesn't need to find and tap a heatmap cell.
-class _PumpSheet extends StatelessWidget {
+///
+/// Provides an in-memory [LocationOverridesRepo] override so the
+/// _LocationOverrideRow doesn't try to open a real on-disk database.
+class _PumpSheet extends StatefulWidget {
   final _FakeJournal fake;
   final DateTime day;
   const _PumpSheet({required this.fake, required this.day});
 
   @override
+  State<_PumpSheet> createState() => _PumpSheetState();
+}
+
+class _PumpSheetState extends State<_PumpSheet> {
+  late final AppDatabase _db;
+  late final LocationOverridesRepo _repo;
+
+  @override
+  void initState() {
+    super.initState();
+    _db = AppDatabase.memory();
+    _repo = LocationOverridesRepo(_db);
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
-        journalSourceProvider.overrideWithValue(fake),
+        journalSourceProvider.overrideWithValue(widget.fake),
         dayAssessmentProvider.overrideWith((ref, _) async => null),
         dayAttacksProvider.overrideWith((ref, _) => Stream.value(const <Attack>[])),
+        locationOverridesRepoProvider.overrideWithValue(_repo),
       ],
       child: MaterialApp(
         home: Builder(builder: (ctx) {
@@ -175,7 +203,7 @@ class _PumpSheet extends StatelessWidget {
             showModalBottomSheet<void>(
               context: ctx,
               isScrollControlled: true,
-              builder: (_) => DayDetailSheet(day: day),
+              builder: (_) => DayDetailSheet(day: widget.day),
             );
           });
           return const Scaffold(body: SizedBox.expand());
