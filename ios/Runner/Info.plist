@@ -80,5 +80,20 @@
 	<string>Migraine Forecast uses your location to fetch local weather and air quality data for your risk score.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Migraine Forecast uses your location to fetch local weather and air quality data for your risk score.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.migraine-forecast</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.ouraring.oura</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
