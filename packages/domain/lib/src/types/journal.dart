@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 enum JournalKind { alcohol, caffeine, stress, hydration }
 
 class JournalEntry extends Equatable {
+  final int? id;
   final DateTime at;
   final JournalKind kind;
   /// Free-form payload. By convention:
@@ -11,9 +12,14 @@ class JournalEntry extends Equatable {
   /// - stress: {"rating": int 1..5}
   /// - hydration: {"liters": double}
   final Map<String, Object?> payload;
-  const JournalEntry({required this.at, required this.kind, required this.payload});
+  const JournalEntry({
+    this.id,
+    required this.at,
+    required this.kind,
+    required this.payload,
+  });
   @override
-  List<Object?> get props => [at, kind, payload];
+  List<Object?> get props => [id, at, kind, payload];
 }
 
 class Attack extends Equatable {
