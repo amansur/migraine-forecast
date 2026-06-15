@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:drift/drift.dart';
 
 import '../data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import '../data/repos/assessment_repository.dart';
@@ -13,9 +14,13 @@ import '../data/repos/user_trigger_flags_repo_drift.dart';
 import '../data/sources/drift_journal_source.dart';
 import '../data/sources/health_package_source.dart';
 import '../data/sources/health_source.dart';
+import '../data/sources/health_source_factory.dart';
 import '../data/sources/journal_source.dart';
 import '../data/sources/manual_sleep_source.dart';
 import '../data/sources/merged_health_source.dart';
+import '../data/sources/oura_api_client.dart';
+import '../data/sources/oura_auth_manager.dart';
+import '../data/sources/oura_health_source.dart';
 import '../data/sources/location_source.dart';
 import '../data/sources/geolocator_location_source.dart';
 import '../data/sources/persisted_manual_location_source.dart';
@@ -27,6 +32,7 @@ import '../services/high_risk_notifier.dart';
 import '../services/notification_service.dart';
 import '../services/permission_service.dart';
 import 'package:domain/domain.dart';
+import 'settings_provider.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = openAppDatabase();
@@ -48,10 +54,34 @@ final geocoderProvider = Provider<OpenMeteoGeocoder>(
 final weatherSourceProvider = Provider<WeatherSource>((ref) =>
     OpenMeteoWeatherSource(client: ref.watch(httpClientProvider), db: ref.watch(databaseProvider)));
 
-final healthSourceProvider = Provider<HealthSource>((ref) => MergedHealthSource(
+final ouraAuthManagerProvider = Provider<OuraAuthManager>(
+    (ref) => OuraAuthManager());
+
+final ouraApiClientProvider = Provider<OuraApiClient>((ref) {
+  // Stub implementation: use empty token for now.
+  // Actual token flow with OAuth will be implemented in a separate task.
+  return OuraApiClient(accessToken: '');
+});
+
+final ouraHealthSourceProvider = Provider<HealthSource>((ref) => OuraHealthSource(
+      authManager: ref.watch(ouraAuthManagerProvider),
+      apiClient: ref.watch(ouraApiClientProvider),
+      database: ref.watch(databaseProvider) as QueryExecutor,
+    ));
+
+final appleHealthSourceProvider = Provider<HealthSource>((ref) => MergedHealthSource(
       HealthPackageSource(),
       DriftManualSleepSource(ref.watch(databaseProvider)),
     ));
+
+final healthSourceProvider = Provider<HealthSource>((ref) {
+  final preferOura = ref.watch(healthSourcePreferenceProvider) == HealthSourcePreference.oura;
+  return HealthSourceFactory(
+    ouraHealthSource: ref.watch(ouraHealthSourceProvider),
+    appleHealthSource: ref.watch(appleHealthSourceProvider),
+    preferOura: preferOura,
+  );
+});
 
 final journalSourceProvider = Provider<JournalSource>((ref) => DriftJournalSource(ref.watch(databaseProvider)));
 

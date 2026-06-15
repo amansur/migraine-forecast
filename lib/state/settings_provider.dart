@@ -5,6 +5,8 @@ import '../ui/shared/unit_formatter.dart';
 import 'providers.dart';
 import 'risk_assessment_provider.dart';
 
+enum HealthSourcePreference { oura, appleHealth }
+
 enum RiskDisplayMode { gauge, numeric, weatherIcon }
 
 final riskDisplayModeProvider = FutureProvider<RiskDisplayMode>((ref) async {
@@ -122,3 +124,17 @@ final clearManualLocationProvider = Provider<Future<void> Function()>((ref) {
     ref.invalidate(tomorrowRiskAssessmentProvider);
   };
 });
+
+final healthSourcePreferenceProvider = StateNotifierProvider<
+    HealthSourcePreferenceNotifier,
+    HealthSourcePreference>((ref) {
+  return HealthSourcePreferenceNotifier();
+});
+
+class HealthSourcePreferenceNotifier extends StateNotifier<HealthSourcePreference> {
+  HealthSourcePreferenceNotifier() : super(HealthSourcePreference.appleHealth);
+
+  void setPreference(HealthSourcePreference preference) {
+    state = preference;
+  }
+}
