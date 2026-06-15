@@ -120,6 +120,9 @@ class _Body extends ConsumerWidget {
     final recentAttacks = ref.watch(recentAttacksProvider);
     final correlations = ref.watch(correlationResultsProvider);
     final suggestions = ref.watch(suggestionsProvider);
+    // Stream all location overrides so heatmap badges update reactively.
+    final overriddenDays =
+        ref.watch(_overriddenDaysProvider).asData?.value ?? const {};
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -167,6 +170,7 @@ class _Body extends ConsumerWidget {
                   windowStart: windowStart,
                   windowEnd: now,
                   onTap: (day) => _showDayDetail(context, day),
+                  overriddenDays: overriddenDays,
                 ),
               ],
             );
@@ -384,6 +388,14 @@ class DayDetailSheet extends ConsumerWidget {
 final _locationOverrideForDayProvider =
     StreamProvider.autoDispose.family<DayLocationOverride?, DateTime>((ref, day) {
   return ref.watch(locationOverridesRepoProvider).watchForDay(day);
+});
+
+/// Streams the set of UTC-midnight days that have a location override active.
+final _overriddenDaysProvider = StreamProvider.autoDispose<Set<DateTime>>((ref) {
+  return ref
+      .watch(locationOverridesRepoProvider)
+      .watchAll()
+      .map((map) => map.keys.toSet());
 });
 
 /// Shows the effective location for [day] (override or "Auto (GPS)") with

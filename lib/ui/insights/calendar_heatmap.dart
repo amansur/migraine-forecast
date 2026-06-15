@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
+import '../../data/sources/location_source.dart';
 
 /// Maps a severity value (1–10) to a brand band color.
 Color colorForSeverity(int severity) {
@@ -28,6 +29,11 @@ class CalendarHeatmap extends StatelessWidget {
   /// Called when a day cell is tapped.
   final ValueChanged<DateTime>? onTap;
 
+  /// Optional. Set of UTC-midnight days that have a location override active.
+  /// Cells for these days show a small pin badge to indicate the assessment
+  /// used a different location than the live GPS/manual default.
+  final Set<DateTime> overriddenDays;
+
   static const _dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   static const cols = 7;
   static const _gap = 4.0;
@@ -38,6 +44,7 @@ class CalendarHeatmap extends StatelessWidget {
     required this.windowStart,
     required this.windowEnd,
     this.onTap,
+    this.overriddenDays = const {},
   });
 
   /// Round [d] back to the nearest Sunday (weekday == 7 in Dart is Sunday).
@@ -107,6 +114,7 @@ class CalendarHeatmap extends StatelessWidget {
             todayUtc: todayUtc,
             firstOfMonthDays: firstOfMonthDays,
             onTap: onTap,
+            overriddenDays: overriddenDays,
           ));
         }
 
@@ -136,6 +144,7 @@ class _WeekRow extends StatelessWidget {
   final DateTime todayUtc;
   final Set<DateTime> firstOfMonthDays;
   final ValueChanged<DateTime>? onTap;
+  final Set<DateTime> overriddenDays;
 
   const _WeekRow({
     required this.days,
@@ -145,6 +154,7 @@ class _WeekRow extends StatelessWidget {
     required this.todayUtc,
     required this.firstOfMonthDays,
     required this.onTap,
+    this.overriddenDays = const {},
   });
 
   @override
@@ -155,6 +165,7 @@ class _WeekRow extends StatelessWidget {
       final severity = severityByDay[day];
       final isToday = day.isAtSameMomentAs(todayUtc);
       final isFirstOfMonth = firstOfMonthDays.contains(day);
+      final hasOverride = overriddenDays.contains(day);
 
       final cell = SizedBox(
         width: cellSize,
@@ -192,6 +203,17 @@ class _WeekRow extends StatelessWidget {
                         : BrandColors.ink.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+            // Location-override badge: small pin in the bottom-right corner.
+            if (hasOverride)
+              const Positioned(
+                right: 1,
+                bottom: 1,
+                child: Icon(
+                  Icons.location_on,
+                  size: 8,
+                  color: Colors.white,
                 ),
               ),
           ],
