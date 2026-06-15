@@ -29,13 +29,44 @@ class DriftJournalSource implements JournalSource {
           ..where((t) => t.at.isBiggerOrEqualValue(cutoff) & t.at.isSmallerThanValue(utcNow))
           ..orderBy([(t) => OrderingTerm.desc(t.at)]))
         .get();
-    return rows
-        .map((r) => domain.JournalEntry(
-              at: r.at.toUtc(),
-              kind: domain.JournalKind.values.firstWhere((k) => k.name == r.kind),
-              payload: Map<String, Object?>.from(jsonDecode(r.payloadJson) as Map),
-            ))
-        .toList();
+    return rows.map(_toDomain).toList();
+  }
+
+  domain.JournalEntry _toDomain(JournalEntry r) => domain.JournalEntry(
+        id: r.id,
+        at: r.at.toUtc(),
+        kind: domain.JournalKind.values.firstWhere((k) => k.name == r.kind),
+        payload: Map<String, Object?>.from(jsonDecode(r.payloadJson) as Map),
+      );
+
+  @override
+  Future<void> updateEntry(domain.JournalEntry entry) async {
+    final id = entry.id;
+    if (id == null) {
+      throw ArgumentError('updateEntry requires JournalEntry.id to be non-null');
+    }
+    await (_db.update(_db.journalEntries)..where((t) => t.id.equals(id))).write(
+      JournalEntriesCompanion(
+        at: Value(entry.at.toUtc()),
+        kind: Value(entry.kind.name),
+        payloadJson: Value(jsonEncode(entry.payload)),
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteEntry(int id) async {
+    await (_db.delete(_db.journalEntries)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Stream<List<domain.JournalEntry>> watchRecentEntries(Duration window, {required DateTime now}) {
+    final utcNow = now.toUtc();
+    final cutoff = utcNow.subtract(window);
+    final q = _db.select(_db.journalEntries)
+      ..where((t) => t.at.isBiggerOrEqualValue(cutoff) & t.at.isSmallerThanValue(utcNow))
+      ..orderBy([(t) => OrderingTerm.desc(t.at)]);
+    return q.watch().map((rows) => rows.map(_toDomain).toList());
   }
 
   @override
