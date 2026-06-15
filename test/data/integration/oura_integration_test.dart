@@ -12,11 +12,9 @@ library;
 import 'dart:convert';
 
 import 'package:domain/domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:migraine_forecast/data/models/oura_models.dart';
 import 'package:migraine_forecast/data/sources/health_source.dart';
 import 'package:migraine_forecast/data/sources/health_source_factory.dart';
 import 'package:migraine_forecast/data/sources/oura_api_client.dart';
@@ -158,24 +156,24 @@ void main() {
       // 1. Create OuraAuthManager with mock storage
       final authManager = OuraAuthManager(storage: mockStorage);
 
-      // 2. Simulate OAuth callback: set credentials
-      await authManager.setAccessToken('mock-access-token');
-      await authManager.setUserEmail('user@example.com');
-
-      // 3. Create OuraApiClient with mock HTTP and the token
-      final apiClient = OuraApiClient(
+      // 2. Simulate OAuth callback: set credentials with a far-future expiry
+      await authManager.saveTokens(
         accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        expiresAt: DateTime.now().add(const Duration(hours: 1)),
+        userEmail: 'user@example.com',
+      );
+
+      // 3. Create OuraApiClient with mock HTTP and the token callback
+      final apiClient = OuraApiClient(
+        tokenProvider: authManager.getValidAccessToken,
         httpClient: mockHttpClient,
       );
 
-      // 4. Create in-memory database for OuraHealthSource
-      final database = NativeDatabase.memory();
-
-      // 5. Create OuraHealthSource combining auth + API + DB
+      // 4. Create OuraHealthSource combining auth + API
       final ouraSource = OuraHealthSource(
         authManager: authManager,
         apiClient: apiClient,
-        database: database,
       );
 
       // 6. Create fallback Apple Health source (returns fresh data)
