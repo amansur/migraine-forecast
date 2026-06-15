@@ -15,6 +15,7 @@ class FakeHealthSource implements HealthSource {
       recentHrv: granted.contains(HealthCategory.hrv) ? hrv : const [],
       menstrualHistory:
           granted.contains(HealthCategory.menstrual) ? menstrual : const [],
+      source: DataSource.manual,
     );
   }
 

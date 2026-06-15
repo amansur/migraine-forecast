@@ -42,7 +42,7 @@ SleepRecord night(int day, {int hours = 7}) {
 
 void main() {
   test('manual fills gaps where OS source has no record for that night', () async {
-    final os = _FakeHealth(HealthMetrics(recentSleep: [night(12, hours: 7)]), {HealthCategory.sleep});
+    final os = _FakeHealth(HealthMetrics(recentSleep: [night(12, hours: 7)], source: DataSource.manual), {HealthCategory.sleep});
     final manual = _FakeManual([night(11, hours: 6)]);
     final merged = MergedHealthSource(os, manual, clock: () => DateTime.utc(2026, 6, 13));
     final m = await merged.recentMetrics(window: const Duration(days: 7));
@@ -54,7 +54,7 @@ void main() {
   });
 
   test('OS-supplied night wins when both have the same night', () async {
-    final os = _FakeHealth(HealthMetrics(recentSleep: [night(12, hours: 8)]), {HealthCategory.sleep});
+    final os = _FakeHealth(HealthMetrics(recentSleep: [night(12, hours: 8)], source: DataSource.manual), {HealthCategory.sleep});
     final manual = _FakeManual([night(12, hours: 4)]);
     final merged = MergedHealthSource(os, manual, clock: () => DateTime.utc(2026, 6, 13));
     final m = await merged.recentMetrics(window: const Duration(days: 7));
@@ -63,7 +63,7 @@ void main() {
   });
 
   test('grantedCategories delegates to OS source', () {
-    final os = _FakeHealth(const HealthMetrics(), {HealthCategory.hrv});
+    final os = _FakeHealth(const HealthMetrics(source: DataSource.manual), {HealthCategory.hrv});
     final merged = MergedHealthSource(os, _FakeManual(const []), clock: DateTime.now);
     expect(merged.grantedCategories, {HealthCategory.hrv});
   });
@@ -74,6 +74,7 @@ void main() {
         recentSleep: const [],
         recentHrv: [HrvSample(at: DateTime.utc(2026, 6, 12), rmssdMs: 40)],
         menstrualHistory: [MenstrualEvent(onsetDate: DateTime.utc(2026, 6, 1))],
+        source: DataSource.manual,
       ),
       {HealthCategory.sleep, HealthCategory.hrv, HealthCategory.menstrual},
     );

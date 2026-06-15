@@ -30,6 +30,8 @@ class MergedHealthSource implements HealthSource {
       recentSleep: merged,
       recentHrv: os.recentHrv,
       menstrualHistory: os.menstrualHistory,
+      source: os.source,
+      lastFetched: os.lastFetched,
     );
   }
 }

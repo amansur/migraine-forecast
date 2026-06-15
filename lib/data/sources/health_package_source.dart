@@ -39,7 +39,13 @@ class HealthPackageSource implements HealthSource {
     final sleep = _granted.contains(HealthCategory.sleep) ? await _fetchSleep(start, end) : <SleepRecord>[];
     final hrv = _granted.contains(HealthCategory.hrv) ? await _fetchHrv(start, end) : <HrvSample>[];
     final menstrual = _granted.contains(HealthCategory.menstrual) ? await _fetchMenstrual(start, end) : <MenstrualEvent>[];
-    return HealthMetrics(recentSleep: sleep, recentHrv: hrv, menstrualHistory: menstrual);
+    return HealthMetrics(
+      recentSleep: sleep,
+      recentHrv: hrv,
+      menstrualHistory: menstrual,
+      source: DataSource.appleHealth,
+      lastFetched: DateTime.now(),
+    );
   }
 
   Future<List<SleepRecord>> _fetchSleep(DateTime start, DateTime end) async {
