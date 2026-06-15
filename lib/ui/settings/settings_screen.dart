@@ -12,6 +12,7 @@ import '../../data/sources/location_source.dart';
 import '../common/location_search_dialog.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/onboarding_provider.dart';
+import '../../state/backfill_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
@@ -253,6 +254,26 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.download_outlined),
             onTap: () => _showExportDialog(context, ref),
           ),
+          Consumer(builder: (context, ref, _) {
+            final running = ref.watch(backfillProgressProvider) != null;
+            return ListTile(
+              title: const Text('Rebuild risk history'),
+              subtitle: Text(running
+                  ? 'In progress — open Insights to see progress.'
+                  : 'Refetch weather and recompute risk for the last 90 days.'),
+              trailing: const Icon(Icons.refresh),
+              enabled: !running,
+              onTap: running
+                  ? null
+                  : () {
+                      final container = ProviderScope.containerOf(context, listen: false);
+                      launchBackfill(container);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Rebuilding risk history — see Insights for progress.'),
+                      ));
+                    },
+            );
+          }),
           const Divider(),
           Text('Danger Zone', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.error)),
           ListTile(

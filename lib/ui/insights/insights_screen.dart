@@ -660,16 +660,18 @@ class _BackfillProgressStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = total == 0 ? 0.0 : done / total;
+    final indeterminate = total == 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Building history... $done / $total days',
+          indeterminate
+              ? 'Fetching weather history...'
+              : 'Building history... $done / $total days',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 4),
-        LinearProgressIndicator(value: pct),
+        LinearProgressIndicator(value: indeterminate ? null : done / total),
       ],
     );
   }

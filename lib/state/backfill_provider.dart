@@ -34,6 +34,9 @@ bool _backfillRunning = false;
 Future<void> launchBackfill(ProviderContainer container) async {
   if (_backfillRunning) return;
   _backfillRunning = true;
+  // Show the ribbon immediately so the user sees feedback during the prime
+  // weather fetch (which runs before the first per-day onProgress callback).
+  container.read(backfillProgressProvider.notifier).state = (done: 0, total: 0);
   try {
     final config = await container.read(rulesConfigProvider.future);
 
