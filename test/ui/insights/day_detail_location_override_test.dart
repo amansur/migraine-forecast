@@ -16,10 +16,6 @@ import 'package:migraine_forecast/data/sources/location_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
-// ---------------------------------------------------------------------------
-// Minimal fake journal
-// ---------------------------------------------------------------------------
-
 class _FakeJournal implements JournalSource {
   @override Future<int> addAttack(Attack attack, {int? riskAssessmentId}) async => 1;
   @override Future<void> addEntry(JournalEntry entry) async {}
@@ -41,62 +37,76 @@ class _FakeJournal implements JournalSource {
   @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration w, {required DateTime now}) => Stream.value([]);
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-Widget _pumpSheet(DateTime day, LocationOverridesRepo overridesRepo) {
-  return ProviderScope(
-    overrides: [
-      journalSourceProvider.overrideWithValue(_FakeJournal()),
-      dayAssessmentProvider.overrideWith((ref, _) async => null),
-      dayAttacksProvider.overrideWith((ref, _) => Stream.value(const <Attack>[])),
-      locationOverridesRepoProvider.overrideWithValue(overridesRepo),
-    ],
-    child: MaterialApp(
-      home: Builder(builder: (ctx) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          showModalBottomSheet<void>(
-            context: ctx,
-            isScrollControlled: true,
-            builder: (_) => DayDetailSheet(day: day),
-          );
-        });
-        return const Scaffold(body: SizedBox.expand());
-      }),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 void main() {
-  late AppDatabase db;
-  late LocationOverridesRepo repo;
   final day = DateTime.utc(2026, 6, 1);
 
-  setUp(() {
-    db = AppDatabase.memory();
-    repo = LocationOverridesRepo(db);
-  });
-
-  tearDown(() => db.close());
-
   testWidgets('shows Auto (GPS) when no override is set', (tester) async {
-    await tester.pumpWidget(_pumpSheet(day, repo));
+    await tester.pumpWidget(const _PumpSheet());
     await tester.pumpAndSettle();
     expect(find.text('Auto (GPS)'), findsOneWidget);
     expect(find.text('Use auto'), findsNothing);
   });
 
   testWidgets('shows override display name when override is active', (tester) async {
-    await repo.set(day, const UserLocation(lat: 51.5074, lon: -0.1278), 'London, UK');
-
-    await tester.pumpWidget(_pumpSheet(day, repo));
+    await tester.pumpWidget(_PumpSheet(
+      seed: (repo) => repo.set(day, const UserLocation(lat: 51.5074, lon: -0.1278), 'London, UK'),
+    ));
     await tester.pumpAndSettle();
     expect(find.text('London, UK'), findsOneWidget);
     expect(find.text('Use auto'), findsOneWidget);
   });
+}
+
+class _PumpSheet extends StatefulWidget {
+  final Future<void> Function(LocationOverridesRepo repo)? seed;
+  const _PumpSheet({this.seed});
+
+  @override
+  State<_PumpSheet> createState() => _PumpSheetState();
+}
+
+class _PumpSheetState extends State<_PumpSheet> {
+  late final AppDatabase _db;
+  late final LocationOverridesRepo _repo;
+  late final Future<void> _ready;
+
+  @override
+  void initState() {
+    super.initState();
+    _db = AppDatabase.memory();
+    _repo = LocationOverridesRepo(_db);
+    _ready = widget.seed?.call(_repo) ?? Future.value();
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      overrides: [
+        journalSourceProvider.overrideWithValue(_FakeJournal()),
+        dayAssessmentProvider.overrideWith((ref, _) async => null),
+        dayAttacksProvider.overrideWith((ref, _) => Stream.value(const <Attack>[])),
+        locationOverridesRepoProvider.overrideWithValue(_repo),
+      ],
+      child: MaterialApp(
+        home: Builder(builder: (ctx) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await _ready;
+            if (!ctx.mounted) return;
+            showModalBottomSheet<void>(
+              context: ctx,
+              isScrollControlled: true,
+              builder: (_) => DayDetailSheet(day: DateTime.utc(2026, 6, 1)),
+            );
+          });
+          return const Scaffold(body: SizedBox.expand());
+        }),
+      ),
+    );
+  }
 }
