@@ -108,10 +108,18 @@ class OuraHealthSource implements HealthSource {
     OuraReadinessData readiness,
     DateTime fetchedAt,
   ) {
-    final mostRecentSleep = sleep.records.isNotEmpty ? sleep.records.last : null;
-    final mostRecentDailySleep = dailySleep.records.isNotEmpty ? dailySleep.records.last : null;
-    final mostRecentActivity = activity.records.isNotEmpty ? activity.records.last : null;
-    final mostRecentReadiness = readiness.records.isNotEmpty ? readiness.records.last : null;
+    final mostRecentSleep = sleep.records.isNotEmpty
+        ? (sleep.records.toList()..sort((a, b) => b.day.compareTo(a.day))).first
+        : null;
+    final mostRecentDailySleep = dailySleep.records.isNotEmpty
+        ? (dailySleep.records.toList()..sort((a, b) => b.day.compareTo(a.day))).first
+        : null;
+    final mostRecentActivity = activity.records.isNotEmpty
+        ? (activity.records.toList()..sort((a, b) => b.day.compareTo(a.day))).first
+        : null;
+    final mostRecentReadiness = readiness.records.isNotEmpty
+        ? (readiness.records.toList()..sort((a, b) => b.day.compareTo(a.day))).first
+        : null;
 
     return HealthMetrics(
       sleepScore: mostRecentDailySleep?.score,
