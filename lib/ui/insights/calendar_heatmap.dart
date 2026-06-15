@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
-import '../../data/sources/location_source.dart';
 
 /// Maps a severity value (1–10) to a brand band color.
 Color colorForSeverity(int severity) {

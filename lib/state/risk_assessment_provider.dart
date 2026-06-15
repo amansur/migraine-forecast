@@ -1,7 +1,6 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/sources/location_source.dart';
 import 'correlation_provider.dart';
 import 'insights_eligibility_provider.dart';
 import 'providers.dart';
