@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'native_database.dart'
@@ -30,6 +32,12 @@ class WeatherSnapshots extends Table {
   TextColumn get forecastJson => text()();
   TextColumn get airQualityJson => text().nullable()();
   TextColumn get source => text().withDefault(const Constant('forecast'))();
+  // Coverage window: the earliest and latest timestamps present in forecastJson.
+  // Null on rows written before v7 (backfilled in the v7 migration from forecastJson).
+  // The cache lookup uses these to find rows whose series *covers* the requested day,
+  // enabling a single prime fetch to satisfy the entire per-day backfill loop.
+  DateTimeColumn get coverageStart => dateTime().nullable()();
+  DateTimeColumn get coverageEnd => dateTime().nullable()();
 }
 
 class BaselinesKv extends Table {
@@ -113,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -130,9 +138,6 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 5) {
             // Adds unique index on (targetDate, horizon) for idempotent upsert.
-            // The historical-location-override plan will require its own v6
-            // migration — do not pre-add those columns here.
-            //
             // Pre-v5 the existing RiskAssessmentNotifier.backfill could append
             // duplicate (target_date, horizon) rows when an attack was logged
             // twice for the same day. Dedupe (keeping the most recent id, which
@@ -151,8 +156,54 @@ class AppDatabase extends _$AppDatabase {
           if (from < 6) {
             await m.addColumn(weatherSnapshots, weatherSnapshots.source);
           }
+          if (from < 7) {
+            // NOTE: The historical-location-override plan also targets a v7
+            // migration. If that plan lands first, this block must be merged
+            // into that migration or shipped as v8 instead.
+            //
+            // Add coverage window columns so the cache lookup can match on
+            // which days a snapshot's series *covers* rather than when it was
+            // fetched. Nullable to handle rows written before this migration;
+            // the backfill below populates them from forecastJson where possible.
+            await m.addColumn(weatherSnapshots, weatherSnapshots.coverageStart);
+            await m.addColumn(weatherSnapshots, weatherSnapshots.coverageEnd);
+
+            // Backfill coverage columns for existing rows by parsing forecastJson.
+            // If parsing fails (corrupt JSON), leave both columns null — the
+            // coverage-aware cache lookup treats null as "doesn't cover", so
+            // such rows are simply re-fetched on the next backfill.
+            final rows = await select(weatherSnapshots).get();
+            for (final row in rows) {
+              try {
+                final times = extractForecastTimes(row.forecastJson);
+                if (times.isEmpty) continue;
+                await (update(weatherSnapshots)..where((t) => t.id.equals(row.id)))
+                    .write(WeatherSnapshotsCompanion(
+                  coverageStart: Value(times.first),
+                  coverageEnd: Value(times.last),
+                ));
+              } catch (_) {
+                // Leave nulls on corrupt rows — see note above.
+              }
+            }
+          }
         },
       );
+
+  /// Parses [forecastJson] and returns the hourly timestamps as UTC [DateTime]
+  /// objects. Returns an empty list if the JSON is missing a "time" array.
+  /// Throws on malformed JSON so callers can catch and leave coverage null.
+  static List<DateTime> extractForecastTimes(String forecastJson) {
+    final root = jsonDecode(forecastJson) as Map<String, Object?>;
+    final hourly = root['hourly'] as Map<String, Object?>?;
+    if (hourly == null) return const [];
+    final times = hourly['time'] as List?;
+    if (times == null) return const [];
+    return times
+        .cast<String>()
+        .map((s) => DateTime.parse(s.endsWith('Z') || s.contains('+') ? s : '${s}Z'))
+        .toList();
+  }
 
   Future<void> clearAllData() async {
     await transaction(() async {

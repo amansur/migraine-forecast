@@ -8,7 +8,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 6);
+    expect(db.schemaVersion, 7);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
