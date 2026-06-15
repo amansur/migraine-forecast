@@ -118,6 +118,10 @@ class OuraAuthManager {
       final newAccessToken = data['access_token'] as String;
       final newRefreshToken = data['refresh_token'] as String;
       final expiresIn = data['expires_in'] as int;
+      if (expiresIn <= 0) {
+        throw FormatException(
+            'Refresh response contains invalid expires_in value: $expiresIn');
+      }
       final newExpiresAt = DateTime.now().add(Duration(seconds: expiresIn));
 
       await saveTokens(

@@ -121,8 +121,14 @@ class OuraOAuthFlow {
       throw OuraOAuthException('Token response missing required fields');
     }
 
+    final expiresInSeconds = (expiresIn as num).toInt();
+    if (expiresInSeconds <= 0) {
+      throw OuraOAuthException(
+          'Token response contains invalid expires_in value: $expiresInSeconds');
+    }
+
     final expiresAt = DateTime.now().add(
-      Duration(seconds: (expiresIn as num).toInt()),
+      Duration(seconds: expiresInSeconds),
     );
 
     // Optionally fetch user email — failure is non-fatal.
