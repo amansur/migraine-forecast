@@ -10,16 +10,23 @@ class OpenMeteoParser {
       throw const FormatException('Open-Meteo response missing "hourly"');
     }
     final times = (hourly['time'] as List).cast<String>();
-    final pressures = (hourly['pressure_msl'] as List).cast<num>();
-    final temps = (hourly['temperature_2m'] as List).cast<num>();
-    final humidities = (hourly['relative_humidity_2m'] as List).cast<num>();
+    final pressures = (hourly['pressure_msl'] as List);
+    final temps = (hourly['temperature_2m'] as List);
+    final humidities = (hourly['relative_humidity_2m'] as List);
     final samples = <WeatherSample>[];
     for (var i = 0; i < times.length; i++) {
+      // Open-Meteo returns nulls for hours where a series is unavailable
+      // (partial current hour, sparse archive coverage). Skip those samples
+      // rather than failing the whole parse.
+      final p = pressures[i];
+      final t = temps[i];
+      final h = humidities[i];
+      if (p is! num || t is! num || h is! num) continue;
       samples.add(WeatherSample(
         at: _parseUtc(times[i]),
-        pressureMsl: pressures[i].toDouble(),
-        temperatureC: temps[i].toDouble(),
-        humidityPct: humidities[i].toDouble(),
+        pressureMsl: p.toDouble(),
+        temperatureC: t.toDouble(),
+        humidityPct: h.toDouble(),
       ));
     }
     return WeatherSeries(samples: samples);
@@ -32,10 +39,12 @@ class OpenMeteoParser {
       throw const FormatException('Open-Meteo AQ response missing "hourly"');
     }
     final times = (hourly['time'] as List).cast<String>();
-    final pm25 = (hourly['pm2_5'] as List).cast<num>();
+    final pm25 = (hourly['pm2_5'] as List);
     final samples = <AirQualitySample>[];
     for (var i = 0; i < times.length; i++) {
-      samples.add(AirQualitySample(at: _parseUtc(times[i]), pm25: pm25[i].toDouble()));
+      final v = pm25[i];
+      if (v is! num) continue;
+      samples.add(AirQualitySample(at: _parseUtc(times[i]), pm25: v.toDouble()));
     }
     return AirQualitySeries(samples: samples);
   }
