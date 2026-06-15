@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/bulk_backfill_orchestrator.dart';
@@ -36,16 +35,13 @@ Future<void> launchBackfill(
   ProviderContainer container, {
   bool forceRebuild = false,
 }) async {
-  debugPrint('launchBackfill: invoked (running=$_backfillRunning, force=$forceRebuild)');
   if (_backfillRunning) return;
   _backfillRunning = true;
   // Show the ribbon immediately so the user sees feedback during the prime
   // weather fetch (which runs before the first per-day onProgress callback).
   container.read(backfillProgressProvider.notifier).state = (done: 0, total: 0);
-  debugPrint('launchBackfill: progress state set to (0,0)');
   try {
     final config = await container.read(rulesConfigProvider.future);
-    debugPrint('launchBackfill: rulesConfig loaded');
 
     final orchestrator = BulkBackfillOrchestrator(
       contextBuilder: container.read(contextBuilderProvider),
@@ -56,20 +52,13 @@ Future<void> launchBackfill(
       weatherSource: container.read(weatherSourceProvider),
     );
 
-    debugPrint('launchBackfill: orchestrator.run() starting');
     final report = await orchestrator.run(
       forceRebuild: forceRebuild,
       onProgress: (done, total) {
-        if (done == 1 || done == total || done % 10 == 0) {
-          debugPrint('launchBackfill: onProgress $done / $total');
-        }
         container.read(backfillProgressProvider.notifier).state =
             (done: done, total: total);
       },
     );
-    debugPrint('launchBackfill: orchestrator.run() returned '
-        'processed=${report.daysProcessed} skipped=${report.daysSkipped} '
-        'failed=${report.daysFailed} weatherOk=${report.weatherFetchSucceeded}');
 
     container.read(backfillProgressProvider.notifier).state = null;
     container.read(lastBackfillReportProvider.notifier).state = report;
@@ -79,12 +68,10 @@ Future<void> launchBackfill(
       container.invalidate(recentAttacksProvider);
       container.invalidate(dayAssessmentProvider);
     }
-  } catch (e, st) {
-    debugPrint('launchBackfill: threw $e\n$st');
+  } catch (_) {
     container.read(backfillProgressProvider.notifier).state = null;
     rethrow;
   } finally {
     _backfillRunning = false;
-    debugPrint('launchBackfill: done');
   }
 }
