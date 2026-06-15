@@ -4263,11 +4263,11 @@ class $OuraSleepTable extends OuraSleep
     'averageHeartRate',
   );
   @override
-  late final GeneratedColumn<int> averageHeartRate = GeneratedColumn<int>(
+  late final GeneratedColumn<double> averageHeartRate = GeneratedColumn<double>(
     'average_heart_rate',
     aliasedName,
     true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
   static const VerificationMeta _averageHrvMeta = const VerificationMeta(
@@ -4394,7 +4394,7 @@ class $OuraSleepTable extends OuraSleep
         data['${effectivePrefix}restless_periods'],
       ),
       averageHeartRate: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.double,
         data['${effectivePrefix}average_heart_rate'],
       ),
       averageHrv: attachedDatabase.typeMapping.read(
@@ -4419,7 +4419,7 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   final DateTime day;
   final int? lowestHeartRate;
   final int? restlessPeriods;
-  final int? averageHeartRate;
+  final double? averageHeartRate;
   final int? averageHrv;
   final DateTime fetchedAt;
   const OuraSleepData({
@@ -4443,7 +4443,7 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
       map['restless_periods'] = Variable<int>(restlessPeriods);
     }
     if (!nullToAbsent || averageHeartRate != null) {
-      map['average_heart_rate'] = Variable<int>(averageHeartRate);
+      map['average_heart_rate'] = Variable<double>(averageHeartRate);
     }
     if (!nullToAbsent || averageHrv != null) {
       map['average_hrv'] = Variable<int>(averageHrv);
@@ -4482,7 +4482,7 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
       day: serializer.fromJson<DateTime>(json['day']),
       lowestHeartRate: serializer.fromJson<int?>(json['lowestHeartRate']),
       restlessPeriods: serializer.fromJson<int?>(json['restlessPeriods']),
-      averageHeartRate: serializer.fromJson<int?>(json['averageHeartRate']),
+      averageHeartRate: serializer.fromJson<double?>(json['averageHeartRate']),
       averageHrv: serializer.fromJson<int?>(json['averageHrv']),
       fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
     );
@@ -4495,7 +4495,7 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
       'day': serializer.toJson<DateTime>(day),
       'lowestHeartRate': serializer.toJson<int?>(lowestHeartRate),
       'restlessPeriods': serializer.toJson<int?>(restlessPeriods),
-      'averageHeartRate': serializer.toJson<int?>(averageHeartRate),
+      'averageHeartRate': serializer.toJson<double?>(averageHeartRate),
       'averageHrv': serializer.toJson<int?>(averageHrv),
       'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
     };
@@ -4506,7 +4506,7 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     DateTime? day,
     Value<int?> lowestHeartRate = const Value.absent(),
     Value<int?> restlessPeriods = const Value.absent(),
-    Value<int?> averageHeartRate = const Value.absent(),
+    Value<double?> averageHeartRate = const Value.absent(),
     Value<int?> averageHrv = const Value.absent(),
     DateTime? fetchedAt,
   }) => OuraSleepData(
@@ -4586,7 +4586,7 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   final Value<DateTime> day;
   final Value<int?> lowestHeartRate;
   final Value<int?> restlessPeriods;
-  final Value<int?> averageHeartRate;
+  final Value<double?> averageHeartRate;
   final Value<int?> averageHrv;
   final Value<DateTime> fetchedAt;
   final Value<int> rowid;
@@ -4617,7 +4617,7 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     Expression<DateTime>? day,
     Expression<int>? lowestHeartRate,
     Expression<int>? restlessPeriods,
-    Expression<int>? averageHeartRate,
+    Expression<double>? averageHeartRate,
     Expression<int>? averageHrv,
     Expression<DateTime>? fetchedAt,
     Expression<int>? rowid,
@@ -4639,7 +4639,7 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     Value<DateTime>? day,
     Value<int?>? lowestHeartRate,
     Value<int?>? restlessPeriods,
-    Value<int?>? averageHeartRate,
+    Value<double?>? averageHeartRate,
     Value<int?>? averageHrv,
     Value<DateTime>? fetchedAt,
     Value<int>? rowid,
@@ -4672,7 +4672,7 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
       map['restless_periods'] = Variable<int>(restlessPeriods.value);
     }
     if (averageHeartRate.present) {
-      map['average_heart_rate'] = Variable<int>(averageHeartRate.value);
+      map['average_heart_rate'] = Variable<double>(averageHeartRate.value);
     }
     if (averageHrv.present) {
       map['average_hrv'] = Variable<int>(averageHrv.value);
@@ -8182,7 +8182,7 @@ typedef $$OuraSleepTableCreateCompanionBuilder =
       required DateTime day,
       Value<int?> lowestHeartRate,
       Value<int?> restlessPeriods,
-      Value<int?> averageHeartRate,
+      Value<double?> averageHeartRate,
       Value<int?> averageHrv,
       required DateTime fetchedAt,
       Value<int> rowid,
@@ -8193,7 +8193,7 @@ typedef $$OuraSleepTableUpdateCompanionBuilder =
       Value<DateTime> day,
       Value<int?> lowestHeartRate,
       Value<int?> restlessPeriods,
-      Value<int?> averageHeartRate,
+      Value<double?> averageHeartRate,
       Value<int?> averageHrv,
       Value<DateTime> fetchedAt,
       Value<int> rowid,
@@ -8228,7 +8228,7 @@ class $$OuraSleepTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get averageHeartRate => $composableBuilder(
+  ColumnFilters<double> get averageHeartRate => $composableBuilder(
     column: $table.averageHeartRate,
     builder: (column) => ColumnFilters(column),
   );
@@ -8273,7 +8273,7 @@ class $$OuraSleepTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get averageHeartRate => $composableBuilder(
+  ColumnOrderings<double> get averageHeartRate => $composableBuilder(
     column: $table.averageHeartRate,
     builder: (column) => ColumnOrderings(column),
   );
@@ -8314,7 +8314,7 @@ class $$OuraSleepTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get averageHeartRate => $composableBuilder(
+  GeneratedColumn<double> get averageHeartRate => $composableBuilder(
     column: $table.averageHeartRate,
     builder: (column) => column,
   );
@@ -8363,7 +8363,7 @@ class $$OuraSleepTableTableManager
                 Value<DateTime> day = const Value.absent(),
                 Value<int?> lowestHeartRate = const Value.absent(),
                 Value<int?> restlessPeriods = const Value.absent(),
-                Value<int?> averageHeartRate = const Value.absent(),
+                Value<double?> averageHeartRate = const Value.absent(),
                 Value<int?> averageHrv = const Value.absent(),
                 Value<DateTime> fetchedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -8383,7 +8383,7 @@ class $$OuraSleepTableTableManager
                 required DateTime day,
                 Value<int?> lowestHeartRate = const Value.absent(),
                 Value<int?> restlessPeriods = const Value.absent(),
-                Value<int?> averageHeartRate = const Value.absent(),
+                Value<double?> averageHeartRate = const Value.absent(),
                 Value<int?> averageHrv = const Value.absent(),
                 required DateTime fetchedAt,
                 Value<int> rowid = const Value.absent(),
