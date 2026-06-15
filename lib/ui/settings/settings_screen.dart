@@ -19,6 +19,7 @@ import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../shared/unit_formatter.dart';
+import 'oura_settings_card.dart';
 
 const _moduleLabels = <String, String>{
   'pressure_drop': 'Pressure changes',
@@ -138,6 +139,8 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          const Divider(),
+          const OuraSettingsCard(),
           const Divider(),
           Text('Notifications', style: Theme.of(context).textTheme.titleSmall),
           notifAsync.when(

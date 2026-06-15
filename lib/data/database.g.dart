@@ -4213,6 +4213,1246 @@ class DayLocationOverridesCompanion
   }
 }
 
+class $OuraSleepTable extends OuraSleep
+    with TableInfo<$OuraSleepTable, OuraSleepData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OuraSleepTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sleepScoreMeta = const VerificationMeta(
+    'sleepScore',
+  );
+  @override
+  late final GeneratedColumn<int> sleepScore = GeneratedColumn<int>(
+    'sleep_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lowestHeartRateMeta = const VerificationMeta(
+    'lowestHeartRate',
+  );
+  @override
+  late final GeneratedColumn<int> lowestHeartRate = GeneratedColumn<int>(
+    'lowest_heart_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _restlessPeriodsMeta = const VerificationMeta(
+    'restlessPeriods',
+  );
+  @override
+  late final GeneratedColumn<int> restlessPeriods = GeneratedColumn<int>(
+    'restless_periods',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _averageHeartRateMeta = const VerificationMeta(
+    'averageHeartRate',
+  );
+  @override
+  late final GeneratedColumn<int> averageHeartRate = GeneratedColumn<int>(
+    'average_heart_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _averageHrvMeta = const VerificationMeta(
+    'averageHrv',
+  );
+  @override
+  late final GeneratedColumn<int> averageHrv = GeneratedColumn<int>(
+    'average_hrv',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    day,
+    sleepScore,
+    lowestHeartRate,
+    restlessPeriods,
+    averageHeartRate,
+    averageHrv,
+    fetchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'oura_sleep';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OuraSleepData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('sleep_score')) {
+      context.handle(
+        _sleepScoreMeta,
+        sleepScore.isAcceptableOrUnknown(data['sleep_score']!, _sleepScoreMeta),
+      );
+    }
+    if (data.containsKey('lowest_heart_rate')) {
+      context.handle(
+        _lowestHeartRateMeta,
+        lowestHeartRate.isAcceptableOrUnknown(
+          data['lowest_heart_rate']!,
+          _lowestHeartRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('restless_periods')) {
+      context.handle(
+        _restlessPeriodsMeta,
+        restlessPeriods.isAcceptableOrUnknown(
+          data['restless_periods']!,
+          _restlessPeriodsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('average_heart_rate')) {
+      context.handle(
+        _averageHeartRateMeta,
+        averageHeartRate.isAcceptableOrUnknown(
+          data['average_heart_rate']!,
+          _averageHeartRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('average_hrv')) {
+      context.handle(
+        _averageHrvMeta,
+        averageHrv.isAcceptableOrUnknown(data['average_hrv']!, _averageHrvMeta),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OuraSleepData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OuraSleepData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      sleepScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sleep_score'],
+      ),
+      lowestHeartRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}lowest_heart_rate'],
+      ),
+      restlessPeriods: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}restless_periods'],
+      ),
+      averageHeartRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}average_heart_rate'],
+      ),
+      averageHrv: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}average_hrv'],
+      ),
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OuraSleepTable createAlias(String alias) {
+    return $OuraSleepTable(attachedDatabase, alias);
+  }
+}
+
+class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
+  final String id;
+  final DateTime day;
+  final int? sleepScore;
+  final int? lowestHeartRate;
+  final int? restlessPeriods;
+  final int? averageHeartRate;
+  final int? averageHrv;
+  final DateTime fetchedAt;
+  const OuraSleepData({
+    required this.id,
+    required this.day,
+    this.sleepScore,
+    this.lowestHeartRate,
+    this.restlessPeriods,
+    this.averageHeartRate,
+    this.averageHrv,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['day'] = Variable<DateTime>(day);
+    if (!nullToAbsent || sleepScore != null) {
+      map['sleep_score'] = Variable<int>(sleepScore);
+    }
+    if (!nullToAbsent || lowestHeartRate != null) {
+      map['lowest_heart_rate'] = Variable<int>(lowestHeartRate);
+    }
+    if (!nullToAbsent || restlessPeriods != null) {
+      map['restless_periods'] = Variable<int>(restlessPeriods);
+    }
+    if (!nullToAbsent || averageHeartRate != null) {
+      map['average_heart_rate'] = Variable<int>(averageHeartRate);
+    }
+    if (!nullToAbsent || averageHrv != null) {
+      map['average_hrv'] = Variable<int>(averageHrv);
+    }
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  OuraSleepCompanion toCompanion(bool nullToAbsent) {
+    return OuraSleepCompanion(
+      id: Value(id),
+      day: Value(day),
+      sleepScore: sleepScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sleepScore),
+      lowestHeartRate: lowestHeartRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lowestHeartRate),
+      restlessPeriods: restlessPeriods == null && nullToAbsent
+          ? const Value.absent()
+          : Value(restlessPeriods),
+      averageHeartRate: averageHeartRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(averageHeartRate),
+      averageHrv: averageHrv == null && nullToAbsent
+          ? const Value.absent()
+          : Value(averageHrv),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory OuraSleepData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OuraSleepData(
+      id: serializer.fromJson<String>(json['id']),
+      day: serializer.fromJson<DateTime>(json['day']),
+      sleepScore: serializer.fromJson<int?>(json['sleepScore']),
+      lowestHeartRate: serializer.fromJson<int?>(json['lowestHeartRate']),
+      restlessPeriods: serializer.fromJson<int?>(json['restlessPeriods']),
+      averageHeartRate: serializer.fromJson<int?>(json['averageHeartRate']),
+      averageHrv: serializer.fromJson<int?>(json['averageHrv']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'day': serializer.toJson<DateTime>(day),
+      'sleepScore': serializer.toJson<int?>(sleepScore),
+      'lowestHeartRate': serializer.toJson<int?>(lowestHeartRate),
+      'restlessPeriods': serializer.toJson<int?>(restlessPeriods),
+      'averageHeartRate': serializer.toJson<int?>(averageHeartRate),
+      'averageHrv': serializer.toJson<int?>(averageHrv),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  OuraSleepData copyWith({
+    String? id,
+    DateTime? day,
+    Value<int?> sleepScore = const Value.absent(),
+    Value<int?> lowestHeartRate = const Value.absent(),
+    Value<int?> restlessPeriods = const Value.absent(),
+    Value<int?> averageHeartRate = const Value.absent(),
+    Value<int?> averageHrv = const Value.absent(),
+    DateTime? fetchedAt,
+  }) => OuraSleepData(
+    id: id ?? this.id,
+    day: day ?? this.day,
+    sleepScore: sleepScore.present ? sleepScore.value : this.sleepScore,
+    lowestHeartRate: lowestHeartRate.present
+        ? lowestHeartRate.value
+        : this.lowestHeartRate,
+    restlessPeriods: restlessPeriods.present
+        ? restlessPeriods.value
+        : this.restlessPeriods,
+    averageHeartRate: averageHeartRate.present
+        ? averageHeartRate.value
+        : this.averageHeartRate,
+    averageHrv: averageHrv.present ? averageHrv.value : this.averageHrv,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  OuraSleepData copyWithCompanion(OuraSleepCompanion data) {
+    return OuraSleepData(
+      id: data.id.present ? data.id.value : this.id,
+      day: data.day.present ? data.day.value : this.day,
+      sleepScore: data.sleepScore.present
+          ? data.sleepScore.value
+          : this.sleepScore,
+      lowestHeartRate: data.lowestHeartRate.present
+          ? data.lowestHeartRate.value
+          : this.lowestHeartRate,
+      restlessPeriods: data.restlessPeriods.present
+          ? data.restlessPeriods.value
+          : this.restlessPeriods,
+      averageHeartRate: data.averageHeartRate.present
+          ? data.averageHeartRate.value
+          : this.averageHeartRate,
+      averageHrv: data.averageHrv.present
+          ? data.averageHrv.value
+          : this.averageHrv,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraSleepData(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('sleepScore: $sleepScore, ')
+          ..write('lowestHeartRate: $lowestHeartRate, ')
+          ..write('restlessPeriods: $restlessPeriods, ')
+          ..write('averageHeartRate: $averageHeartRate, ')
+          ..write('averageHrv: $averageHrv, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    day,
+    sleepScore,
+    lowestHeartRate,
+    restlessPeriods,
+    averageHeartRate,
+    averageHrv,
+    fetchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OuraSleepData &&
+          other.id == this.id &&
+          other.day == this.day &&
+          other.sleepScore == this.sleepScore &&
+          other.lowestHeartRate == this.lowestHeartRate &&
+          other.restlessPeriods == this.restlessPeriods &&
+          other.averageHeartRate == this.averageHeartRate &&
+          other.averageHrv == this.averageHrv &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
+  final Value<String> id;
+  final Value<DateTime> day;
+  final Value<int?> sleepScore;
+  final Value<int?> lowestHeartRate;
+  final Value<int?> restlessPeriods;
+  final Value<int?> averageHeartRate;
+  final Value<int?> averageHrv;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const OuraSleepCompanion({
+    this.id = const Value.absent(),
+    this.day = const Value.absent(),
+    this.sleepScore = const Value.absent(),
+    this.lowestHeartRate = const Value.absent(),
+    this.restlessPeriods = const Value.absent(),
+    this.averageHeartRate = const Value.absent(),
+    this.averageHrv = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OuraSleepCompanion.insert({
+    required String id,
+    required DateTime day,
+    this.sleepScore = const Value.absent(),
+    this.lowestHeartRate = const Value.absent(),
+    this.restlessPeriods = const Value.absent(),
+    this.averageHeartRate = const Value.absent(),
+    this.averageHrv = const Value.absent(),
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       day = Value(day),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<OuraSleepData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? day,
+    Expression<int>? sleepScore,
+    Expression<int>? lowestHeartRate,
+    Expression<int>? restlessPeriods,
+    Expression<int>? averageHeartRate,
+    Expression<int>? averageHrv,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (day != null) 'day': day,
+      if (sleepScore != null) 'sleep_score': sleepScore,
+      if (lowestHeartRate != null) 'lowest_heart_rate': lowestHeartRate,
+      if (restlessPeriods != null) 'restless_periods': restlessPeriods,
+      if (averageHeartRate != null) 'average_heart_rate': averageHeartRate,
+      if (averageHrv != null) 'average_hrv': averageHrv,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OuraSleepCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? day,
+    Value<int?>? sleepScore,
+    Value<int?>? lowestHeartRate,
+    Value<int?>? restlessPeriods,
+    Value<int?>? averageHeartRate,
+    Value<int?>? averageHrv,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return OuraSleepCompanion(
+      id: id ?? this.id,
+      day: day ?? this.day,
+      sleepScore: sleepScore ?? this.sleepScore,
+      lowestHeartRate: lowestHeartRate ?? this.lowestHeartRate,
+      restlessPeriods: restlessPeriods ?? this.restlessPeriods,
+      averageHeartRate: averageHeartRate ?? this.averageHeartRate,
+      averageHrv: averageHrv ?? this.averageHrv,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (sleepScore.present) {
+      map['sleep_score'] = Variable<int>(sleepScore.value);
+    }
+    if (lowestHeartRate.present) {
+      map['lowest_heart_rate'] = Variable<int>(lowestHeartRate.value);
+    }
+    if (restlessPeriods.present) {
+      map['restless_periods'] = Variable<int>(restlessPeriods.value);
+    }
+    if (averageHeartRate.present) {
+      map['average_heart_rate'] = Variable<int>(averageHeartRate.value);
+    }
+    if (averageHrv.present) {
+      map['average_hrv'] = Variable<int>(averageHrv.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraSleepCompanion(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('sleepScore: $sleepScore, ')
+          ..write('lowestHeartRate: $lowestHeartRate, ')
+          ..write('restlessPeriods: $restlessPeriods, ')
+          ..write('averageHeartRate: $averageHeartRate, ')
+          ..write('averageHrv: $averageHrv, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OuraActivityTable extends OuraActivity
+    with TableInfo<$OuraActivityTable, OuraActivityData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OuraActivityTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _activityScoreMeta = const VerificationMeta(
+    'activityScore',
+  );
+  @override
+  late final GeneratedColumn<int> activityScore = GeneratedColumn<int>(
+    'activity_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, day, activityScore, fetchedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'oura_activity';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OuraActivityData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('activity_score')) {
+      context.handle(
+        _activityScoreMeta,
+        activityScore.isAcceptableOrUnknown(
+          data['activity_score']!,
+          _activityScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OuraActivityData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OuraActivityData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      activityScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}activity_score'],
+      ),
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OuraActivityTable createAlias(String alias) {
+    return $OuraActivityTable(attachedDatabase, alias);
+  }
+}
+
+class OuraActivityData extends DataClass
+    implements Insertable<OuraActivityData> {
+  final String id;
+  final DateTime day;
+  final int? activityScore;
+  final DateTime fetchedAt;
+  const OuraActivityData({
+    required this.id,
+    required this.day,
+    this.activityScore,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['day'] = Variable<DateTime>(day);
+    if (!nullToAbsent || activityScore != null) {
+      map['activity_score'] = Variable<int>(activityScore);
+    }
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  OuraActivityCompanion toCompanion(bool nullToAbsent) {
+    return OuraActivityCompanion(
+      id: Value(id),
+      day: Value(day),
+      activityScore: activityScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activityScore),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory OuraActivityData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OuraActivityData(
+      id: serializer.fromJson<String>(json['id']),
+      day: serializer.fromJson<DateTime>(json['day']),
+      activityScore: serializer.fromJson<int?>(json['activityScore']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'day': serializer.toJson<DateTime>(day),
+      'activityScore': serializer.toJson<int?>(activityScore),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  OuraActivityData copyWith({
+    String? id,
+    DateTime? day,
+    Value<int?> activityScore = const Value.absent(),
+    DateTime? fetchedAt,
+  }) => OuraActivityData(
+    id: id ?? this.id,
+    day: day ?? this.day,
+    activityScore: activityScore.present
+        ? activityScore.value
+        : this.activityScore,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  OuraActivityData copyWithCompanion(OuraActivityCompanion data) {
+    return OuraActivityData(
+      id: data.id.present ? data.id.value : this.id,
+      day: data.day.present ? data.day.value : this.day,
+      activityScore: data.activityScore.present
+          ? data.activityScore.value
+          : this.activityScore,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraActivityData(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('activityScore: $activityScore, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, day, activityScore, fetchedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OuraActivityData &&
+          other.id == this.id &&
+          other.day == this.day &&
+          other.activityScore == this.activityScore &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class OuraActivityCompanion extends UpdateCompanion<OuraActivityData> {
+  final Value<String> id;
+  final Value<DateTime> day;
+  final Value<int?> activityScore;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const OuraActivityCompanion({
+    this.id = const Value.absent(),
+    this.day = const Value.absent(),
+    this.activityScore = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OuraActivityCompanion.insert({
+    required String id,
+    required DateTime day,
+    this.activityScore = const Value.absent(),
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       day = Value(day),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<OuraActivityData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? day,
+    Expression<int>? activityScore,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (day != null) 'day': day,
+      if (activityScore != null) 'activity_score': activityScore,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OuraActivityCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? day,
+    Value<int?>? activityScore,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return OuraActivityCompanion(
+      id: id ?? this.id,
+      day: day ?? this.day,
+      activityScore: activityScore ?? this.activityScore,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (activityScore.present) {
+      map['activity_score'] = Variable<int>(activityScore.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraActivityCompanion(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('activityScore: $activityScore, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OuraReadinessTable extends OuraReadiness
+    with TableInfo<$OuraReadinessTable, OuraReadinessData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OuraReadinessTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _readinessScoreMeta = const VerificationMeta(
+    'readinessScore',
+  );
+  @override
+  late final GeneratedColumn<int> readinessScore = GeneratedColumn<int>(
+    'readiness_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _temperatureDeviationMeta =
+      const VerificationMeta('temperatureDeviation');
+  @override
+  late final GeneratedColumn<double> temperatureDeviation =
+      GeneratedColumn<double>(
+        'temperature_deviation',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    day,
+    readinessScore,
+    temperatureDeviation,
+    fetchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'oura_readiness';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OuraReadinessData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('readiness_score')) {
+      context.handle(
+        _readinessScoreMeta,
+        readinessScore.isAcceptableOrUnknown(
+          data['readiness_score']!,
+          _readinessScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('temperature_deviation')) {
+      context.handle(
+        _temperatureDeviationMeta,
+        temperatureDeviation.isAcceptableOrUnknown(
+          data['temperature_deviation']!,
+          _temperatureDeviationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OuraReadinessData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OuraReadinessData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      readinessScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}readiness_score'],
+      ),
+      temperatureDeviation: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}temperature_deviation'],
+      ),
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OuraReadinessTable createAlias(String alias) {
+    return $OuraReadinessTable(attachedDatabase, alias);
+  }
+}
+
+class OuraReadinessData extends DataClass
+    implements Insertable<OuraReadinessData> {
+  final String id;
+  final DateTime day;
+  final int? readinessScore;
+  final double? temperatureDeviation;
+  final DateTime fetchedAt;
+  const OuraReadinessData({
+    required this.id,
+    required this.day,
+    this.readinessScore,
+    this.temperatureDeviation,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['day'] = Variable<DateTime>(day);
+    if (!nullToAbsent || readinessScore != null) {
+      map['readiness_score'] = Variable<int>(readinessScore);
+    }
+    if (!nullToAbsent || temperatureDeviation != null) {
+      map['temperature_deviation'] = Variable<double>(temperatureDeviation);
+    }
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  OuraReadinessCompanion toCompanion(bool nullToAbsent) {
+    return OuraReadinessCompanion(
+      id: Value(id),
+      day: Value(day),
+      readinessScore: readinessScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(readinessScore),
+      temperatureDeviation: temperatureDeviation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(temperatureDeviation),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory OuraReadinessData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OuraReadinessData(
+      id: serializer.fromJson<String>(json['id']),
+      day: serializer.fromJson<DateTime>(json['day']),
+      readinessScore: serializer.fromJson<int?>(json['readinessScore']),
+      temperatureDeviation: serializer.fromJson<double?>(
+        json['temperatureDeviation'],
+      ),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'day': serializer.toJson<DateTime>(day),
+      'readinessScore': serializer.toJson<int?>(readinessScore),
+      'temperatureDeviation': serializer.toJson<double?>(temperatureDeviation),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  OuraReadinessData copyWith({
+    String? id,
+    DateTime? day,
+    Value<int?> readinessScore = const Value.absent(),
+    Value<double?> temperatureDeviation = const Value.absent(),
+    DateTime? fetchedAt,
+  }) => OuraReadinessData(
+    id: id ?? this.id,
+    day: day ?? this.day,
+    readinessScore: readinessScore.present
+        ? readinessScore.value
+        : this.readinessScore,
+    temperatureDeviation: temperatureDeviation.present
+        ? temperatureDeviation.value
+        : this.temperatureDeviation,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  OuraReadinessData copyWithCompanion(OuraReadinessCompanion data) {
+    return OuraReadinessData(
+      id: data.id.present ? data.id.value : this.id,
+      day: data.day.present ? data.day.value : this.day,
+      readinessScore: data.readinessScore.present
+          ? data.readinessScore.value
+          : this.readinessScore,
+      temperatureDeviation: data.temperatureDeviation.present
+          ? data.temperatureDeviation.value
+          : this.temperatureDeviation,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraReadinessData(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('readinessScore: $readinessScore, ')
+          ..write('temperatureDeviation: $temperatureDeviation, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, day, readinessScore, temperatureDeviation, fetchedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OuraReadinessData &&
+          other.id == this.id &&
+          other.day == this.day &&
+          other.readinessScore == this.readinessScore &&
+          other.temperatureDeviation == this.temperatureDeviation &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class OuraReadinessCompanion extends UpdateCompanion<OuraReadinessData> {
+  final Value<String> id;
+  final Value<DateTime> day;
+  final Value<int?> readinessScore;
+  final Value<double?> temperatureDeviation;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const OuraReadinessCompanion({
+    this.id = const Value.absent(),
+    this.day = const Value.absent(),
+    this.readinessScore = const Value.absent(),
+    this.temperatureDeviation = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OuraReadinessCompanion.insert({
+    required String id,
+    required DateTime day,
+    this.readinessScore = const Value.absent(),
+    this.temperatureDeviation = const Value.absent(),
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       day = Value(day),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<OuraReadinessData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? day,
+    Expression<int>? readinessScore,
+    Expression<double>? temperatureDeviation,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (day != null) 'day': day,
+      if (readinessScore != null) 'readiness_score': readinessScore,
+      if (temperatureDeviation != null)
+        'temperature_deviation': temperatureDeviation,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OuraReadinessCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? day,
+    Value<int?>? readinessScore,
+    Value<double?>? temperatureDeviation,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return OuraReadinessCompanion(
+      id: id ?? this.id,
+      day: day ?? this.day,
+      readinessScore: readinessScore ?? this.readinessScore,
+      temperatureDeviation: temperatureDeviation ?? this.temperatureDeviation,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (readinessScore.present) {
+      map['readiness_score'] = Variable<int>(readinessScore.value);
+    }
+    if (temperatureDeviation.present) {
+      map['temperature_deviation'] = Variable<double>(
+        temperatureDeviation.value,
+      );
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraReadinessCompanion(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('readinessScore: $readinessScore, ')
+          ..write('temperatureDeviation: $temperatureDeviation, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4237,6 +5477,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ManualSleepRecordsTable(this);
   late final $DayLocationOverridesTable dayLocationOverrides =
       $DayLocationOverridesTable(this);
+  late final $OuraSleepTable ouraSleep = $OuraSleepTable(this);
+  late final $OuraActivityTable ouraActivity = $OuraActivityTable(this);
+  late final $OuraReadinessTable ouraReadiness = $OuraReadinessTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4254,6 +5497,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     periodDaySeverities,
     manualSleepRecords,
     dayLocationOverrides,
+    ouraSleep,
+    ouraActivity,
+    ouraReadiness,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6671,6 +7917,664 @@ typedef $$DayLocationOverridesTableProcessedTableManager =
       DayLocationOverride,
       PrefetchHooks Function()
     >;
+typedef $$OuraSleepTableCreateCompanionBuilder =
+    OuraSleepCompanion Function({
+      required String id,
+      required DateTime day,
+      Value<int?> sleepScore,
+      Value<int?> lowestHeartRate,
+      Value<int?> restlessPeriods,
+      Value<int?> averageHeartRate,
+      Value<int?> averageHrv,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$OuraSleepTableUpdateCompanionBuilder =
+    OuraSleepCompanion Function({
+      Value<String> id,
+      Value<DateTime> day,
+      Value<int?> sleepScore,
+      Value<int?> lowestHeartRate,
+      Value<int?> restlessPeriods,
+      Value<int?> averageHeartRate,
+      Value<int?> averageHrv,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$OuraSleepTableFilterComposer
+    extends Composer<_$AppDatabase, $OuraSleepTable> {
+  $$OuraSleepTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sleepScore => $composableBuilder(
+    column: $table.sleepScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lowestHeartRate => $composableBuilder(
+    column: $table.lowestHeartRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get restlessPeriods => $composableBuilder(
+    column: $table.restlessPeriods,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get averageHeartRate => $composableBuilder(
+    column: $table.averageHeartRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get averageHrv => $composableBuilder(
+    column: $table.averageHrv,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OuraSleepTableOrderingComposer
+    extends Composer<_$AppDatabase, $OuraSleepTable> {
+  $$OuraSleepTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sleepScore => $composableBuilder(
+    column: $table.sleepScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lowestHeartRate => $composableBuilder(
+    column: $table.lowestHeartRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get restlessPeriods => $composableBuilder(
+    column: $table.restlessPeriods,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get averageHeartRate => $composableBuilder(
+    column: $table.averageHeartRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get averageHrv => $composableBuilder(
+    column: $table.averageHrv,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OuraSleepTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OuraSleepTable> {
+  $$OuraSleepTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get sleepScore => $composableBuilder(
+    column: $table.sleepScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lowestHeartRate => $composableBuilder(
+    column: $table.lowestHeartRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get restlessPeriods => $composableBuilder(
+    column: $table.restlessPeriods,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get averageHeartRate => $composableBuilder(
+    column: $table.averageHeartRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get averageHrv => $composableBuilder(
+    column: $table.averageHrv,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$OuraSleepTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OuraSleepTable,
+          OuraSleepData,
+          $$OuraSleepTableFilterComposer,
+          $$OuraSleepTableOrderingComposer,
+          $$OuraSleepTableAnnotationComposer,
+          $$OuraSleepTableCreateCompanionBuilder,
+          $$OuraSleepTableUpdateCompanionBuilder,
+          (
+            OuraSleepData,
+            BaseReferences<_$AppDatabase, $OuraSleepTable, OuraSleepData>,
+          ),
+          OuraSleepData,
+          PrefetchHooks Function()
+        > {
+  $$OuraSleepTableTableManager(_$AppDatabase db, $OuraSleepTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OuraSleepTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OuraSleepTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OuraSleepTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> day = const Value.absent(),
+                Value<int?> sleepScore = const Value.absent(),
+                Value<int?> lowestHeartRate = const Value.absent(),
+                Value<int?> restlessPeriods = const Value.absent(),
+                Value<int?> averageHeartRate = const Value.absent(),
+                Value<int?> averageHrv = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OuraSleepCompanion(
+                id: id,
+                day: day,
+                sleepScore: sleepScore,
+                lowestHeartRate: lowestHeartRate,
+                restlessPeriods: restlessPeriods,
+                averageHeartRate: averageHeartRate,
+                averageHrv: averageHrv,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime day,
+                Value<int?> sleepScore = const Value.absent(),
+                Value<int?> lowestHeartRate = const Value.absent(),
+                Value<int?> restlessPeriods = const Value.absent(),
+                Value<int?> averageHeartRate = const Value.absent(),
+                Value<int?> averageHrv = const Value.absent(),
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => OuraSleepCompanion.insert(
+                id: id,
+                day: day,
+                sleepScore: sleepScore,
+                lowestHeartRate: lowestHeartRate,
+                restlessPeriods: restlessPeriods,
+                averageHeartRate: averageHeartRate,
+                averageHrv: averageHrv,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OuraSleepTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OuraSleepTable,
+      OuraSleepData,
+      $$OuraSleepTableFilterComposer,
+      $$OuraSleepTableOrderingComposer,
+      $$OuraSleepTableAnnotationComposer,
+      $$OuraSleepTableCreateCompanionBuilder,
+      $$OuraSleepTableUpdateCompanionBuilder,
+      (
+        OuraSleepData,
+        BaseReferences<_$AppDatabase, $OuraSleepTable, OuraSleepData>,
+      ),
+      OuraSleepData,
+      PrefetchHooks Function()
+    >;
+typedef $$OuraActivityTableCreateCompanionBuilder =
+    OuraActivityCompanion Function({
+      required String id,
+      required DateTime day,
+      Value<int?> activityScore,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$OuraActivityTableUpdateCompanionBuilder =
+    OuraActivityCompanion Function({
+      Value<String> id,
+      Value<DateTime> day,
+      Value<int?> activityScore,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$OuraActivityTableFilterComposer
+    extends Composer<_$AppDatabase, $OuraActivityTable> {
+  $$OuraActivityTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get activityScore => $composableBuilder(
+    column: $table.activityScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OuraActivityTableOrderingComposer
+    extends Composer<_$AppDatabase, $OuraActivityTable> {
+  $$OuraActivityTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get activityScore => $composableBuilder(
+    column: $table.activityScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OuraActivityTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OuraActivityTable> {
+  $$OuraActivityTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get activityScore => $composableBuilder(
+    column: $table.activityScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$OuraActivityTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OuraActivityTable,
+          OuraActivityData,
+          $$OuraActivityTableFilterComposer,
+          $$OuraActivityTableOrderingComposer,
+          $$OuraActivityTableAnnotationComposer,
+          $$OuraActivityTableCreateCompanionBuilder,
+          $$OuraActivityTableUpdateCompanionBuilder,
+          (
+            OuraActivityData,
+            BaseReferences<_$AppDatabase, $OuraActivityTable, OuraActivityData>,
+          ),
+          OuraActivityData,
+          PrefetchHooks Function()
+        > {
+  $$OuraActivityTableTableManager(_$AppDatabase db, $OuraActivityTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OuraActivityTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OuraActivityTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OuraActivityTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> day = const Value.absent(),
+                Value<int?> activityScore = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OuraActivityCompanion(
+                id: id,
+                day: day,
+                activityScore: activityScore,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime day,
+                Value<int?> activityScore = const Value.absent(),
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => OuraActivityCompanion.insert(
+                id: id,
+                day: day,
+                activityScore: activityScore,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OuraActivityTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OuraActivityTable,
+      OuraActivityData,
+      $$OuraActivityTableFilterComposer,
+      $$OuraActivityTableOrderingComposer,
+      $$OuraActivityTableAnnotationComposer,
+      $$OuraActivityTableCreateCompanionBuilder,
+      $$OuraActivityTableUpdateCompanionBuilder,
+      (
+        OuraActivityData,
+        BaseReferences<_$AppDatabase, $OuraActivityTable, OuraActivityData>,
+      ),
+      OuraActivityData,
+      PrefetchHooks Function()
+    >;
+typedef $$OuraReadinessTableCreateCompanionBuilder =
+    OuraReadinessCompanion Function({
+      required String id,
+      required DateTime day,
+      Value<int?> readinessScore,
+      Value<double?> temperatureDeviation,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$OuraReadinessTableUpdateCompanionBuilder =
+    OuraReadinessCompanion Function({
+      Value<String> id,
+      Value<DateTime> day,
+      Value<int?> readinessScore,
+      Value<double?> temperatureDeviation,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$OuraReadinessTableFilterComposer
+    extends Composer<_$AppDatabase, $OuraReadinessTable> {
+  $$OuraReadinessTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get readinessScore => $composableBuilder(
+    column: $table.readinessScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get temperatureDeviation => $composableBuilder(
+    column: $table.temperatureDeviation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OuraReadinessTableOrderingComposer
+    extends Composer<_$AppDatabase, $OuraReadinessTable> {
+  $$OuraReadinessTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get readinessScore => $composableBuilder(
+    column: $table.readinessScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get temperatureDeviation => $composableBuilder(
+    column: $table.temperatureDeviation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OuraReadinessTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OuraReadinessTable> {
+  $$OuraReadinessTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get readinessScore => $composableBuilder(
+    column: $table.readinessScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get temperatureDeviation => $composableBuilder(
+    column: $table.temperatureDeviation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$OuraReadinessTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OuraReadinessTable,
+          OuraReadinessData,
+          $$OuraReadinessTableFilterComposer,
+          $$OuraReadinessTableOrderingComposer,
+          $$OuraReadinessTableAnnotationComposer,
+          $$OuraReadinessTableCreateCompanionBuilder,
+          $$OuraReadinessTableUpdateCompanionBuilder,
+          (
+            OuraReadinessData,
+            BaseReferences<
+              _$AppDatabase,
+              $OuraReadinessTable,
+              OuraReadinessData
+            >,
+          ),
+          OuraReadinessData,
+          PrefetchHooks Function()
+        > {
+  $$OuraReadinessTableTableManager(_$AppDatabase db, $OuraReadinessTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OuraReadinessTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OuraReadinessTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OuraReadinessTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> day = const Value.absent(),
+                Value<int?> readinessScore = const Value.absent(),
+                Value<double?> temperatureDeviation = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OuraReadinessCompanion(
+                id: id,
+                day: day,
+                readinessScore: readinessScore,
+                temperatureDeviation: temperatureDeviation,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime day,
+                Value<int?> readinessScore = const Value.absent(),
+                Value<double?> temperatureDeviation = const Value.absent(),
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => OuraReadinessCompanion.insert(
+                id: id,
+                day: day,
+                readinessScore: readinessScore,
+                temperatureDeviation: temperatureDeviation,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OuraReadinessTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OuraReadinessTable,
+      OuraReadinessData,
+      $$OuraReadinessTableFilterComposer,
+      $$OuraReadinessTableOrderingComposer,
+      $$OuraReadinessTableAnnotationComposer,
+      $$OuraReadinessTableCreateCompanionBuilder,
+      $$OuraReadinessTableUpdateCompanionBuilder,
+      (
+        OuraReadinessData,
+        BaseReferences<_$AppDatabase, $OuraReadinessTable, OuraReadinessData>,
+      ),
+      OuraReadinessData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6699,4 +8603,10 @@ class $AppDatabaseManager {
       $$ManualSleepRecordsTableTableManager(_db, _db.manualSleepRecords);
   $$DayLocationOverridesTableTableManager get dayLocationOverrides =>
       $$DayLocationOverridesTableTableManager(_db, _db.dayLocationOverrides);
+  $$OuraSleepTableTableManager get ouraSleep =>
+      $$OuraSleepTableTableManager(_db, _db.ouraSleep);
+  $$OuraActivityTableTableManager get ouraActivity =>
+      $$OuraActivityTableTableManager(_db, _db.ouraActivity);
+  $$OuraReadinessTableTableManager get ouraReadiness =>
+      $$OuraReadinessTableTableManager(_db, _db.ouraReadiness);
 }
