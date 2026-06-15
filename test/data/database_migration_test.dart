@@ -4,11 +4,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
 
 void main() {
+  test('schemaVersion is 8 and manual_sleep_records exists on fresh DB', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect(db.schemaVersion, 8);
+    // Insert a row to prove the table exists.
+    await db.into(db.manualSleepRecords).insert(
+          ManualSleepRecordsCompanion.insert(
+            night: DateTime.utc(2026, 6, 12),
+            sleepStart: DateTime.utc(2026, 6, 12, 22, 30),
+            totalSleepMinutes: 7 * 60 + 15,
+          ),
+        );
+    final rows = await db.select(db.manualSleepRecords).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.efficiency, isNull);
+  });
+
   test('schema v5 adds Attacks.inProgress and RiskAssessments.backfilled with false defaults', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 7);
+    expect(db.schemaVersion, 8);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(

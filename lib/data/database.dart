@@ -104,6 +104,16 @@ class PeriodDaySeverities extends Table {
   Set<Column> get primaryKey => {day};
 }
 
+class ManualSleepRecords extends Table {
+  // UTC midnight of the night the sleep belongs to.
+  DateTimeColumn get night => dateTime()();
+  DateTimeColumn get sleepStart => dateTime()();
+  IntColumn get totalSleepMinutes => integer()();
+  RealColumn get efficiency => real().nullable()();
+  @override
+  Set<Column> get primaryKey => {night};
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -115,13 +125,14 @@ class PeriodDaySeverities extends Table {
   NotificationsSent,
   Periods,
   PeriodDaySeverities,
+  ManualSleepRecords,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -186,6 +197,9 @@ class AppDatabase extends _$AppDatabase {
                 // Leave nulls on corrupt rows — see note above.
               }
             }
+          }
+          if (from < 8) {
+            await m.createTable(manualSleepRecords);
           }
         },
       );

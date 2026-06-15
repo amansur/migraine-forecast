@@ -3520,6 +3520,336 @@ class PeriodDaySeveritiesCompanion extends UpdateCompanion<PeriodDaySeverity> {
   }
 }
 
+class $ManualSleepRecordsTable extends ManualSleepRecords
+    with TableInfo<$ManualSleepRecordsTable, ManualSleepRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ManualSleepRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nightMeta = const VerificationMeta('night');
+  @override
+  late final GeneratedColumn<DateTime> night = GeneratedColumn<DateTime>(
+    'night',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sleepStartMeta = const VerificationMeta(
+    'sleepStart',
+  );
+  @override
+  late final GeneratedColumn<DateTime> sleepStart = GeneratedColumn<DateTime>(
+    'sleep_start',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalSleepMinutesMeta = const VerificationMeta(
+    'totalSleepMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> totalSleepMinutes = GeneratedColumn<int>(
+    'total_sleep_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _efficiencyMeta = const VerificationMeta(
+    'efficiency',
+  );
+  @override
+  late final GeneratedColumn<double> efficiency = GeneratedColumn<double>(
+    'efficiency',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    night,
+    sleepStart,
+    totalSleepMinutes,
+    efficiency,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'manual_sleep_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ManualSleepRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('night')) {
+      context.handle(
+        _nightMeta,
+        night.isAcceptableOrUnknown(data['night']!, _nightMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nightMeta);
+    }
+    if (data.containsKey('sleep_start')) {
+      context.handle(
+        _sleepStartMeta,
+        sleepStart.isAcceptableOrUnknown(data['sleep_start']!, _sleepStartMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sleepStartMeta);
+    }
+    if (data.containsKey('total_sleep_minutes')) {
+      context.handle(
+        _totalSleepMinutesMeta,
+        totalSleepMinutes.isAcceptableOrUnknown(
+          data['total_sleep_minutes']!,
+          _totalSleepMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalSleepMinutesMeta);
+    }
+    if (data.containsKey('efficiency')) {
+      context.handle(
+        _efficiencyMeta,
+        efficiency.isAcceptableOrUnknown(data['efficiency']!, _efficiencyMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {night};
+  @override
+  ManualSleepRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ManualSleepRecord(
+      night: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}night'],
+      )!,
+      sleepStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}sleep_start'],
+      )!,
+      totalSleepMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_sleep_minutes'],
+      )!,
+      efficiency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}efficiency'],
+      ),
+    );
+  }
+
+  @override
+  $ManualSleepRecordsTable createAlias(String alias) {
+    return $ManualSleepRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class ManualSleepRecord extends DataClass
+    implements Insertable<ManualSleepRecord> {
+  final DateTime night;
+  final DateTime sleepStart;
+  final int totalSleepMinutes;
+  final double? efficiency;
+  const ManualSleepRecord({
+    required this.night,
+    required this.sleepStart,
+    required this.totalSleepMinutes,
+    this.efficiency,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['night'] = Variable<DateTime>(night);
+    map['sleep_start'] = Variable<DateTime>(sleepStart);
+    map['total_sleep_minutes'] = Variable<int>(totalSleepMinutes);
+    if (!nullToAbsent || efficiency != null) {
+      map['efficiency'] = Variable<double>(efficiency);
+    }
+    return map;
+  }
+
+  ManualSleepRecordsCompanion toCompanion(bool nullToAbsent) {
+    return ManualSleepRecordsCompanion(
+      night: Value(night),
+      sleepStart: Value(sleepStart),
+      totalSleepMinutes: Value(totalSleepMinutes),
+      efficiency: efficiency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(efficiency),
+    );
+  }
+
+  factory ManualSleepRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ManualSleepRecord(
+      night: serializer.fromJson<DateTime>(json['night']),
+      sleepStart: serializer.fromJson<DateTime>(json['sleepStart']),
+      totalSleepMinutes: serializer.fromJson<int>(json['totalSleepMinutes']),
+      efficiency: serializer.fromJson<double?>(json['efficiency']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'night': serializer.toJson<DateTime>(night),
+      'sleepStart': serializer.toJson<DateTime>(sleepStart),
+      'totalSleepMinutes': serializer.toJson<int>(totalSleepMinutes),
+      'efficiency': serializer.toJson<double?>(efficiency),
+    };
+  }
+
+  ManualSleepRecord copyWith({
+    DateTime? night,
+    DateTime? sleepStart,
+    int? totalSleepMinutes,
+    Value<double?> efficiency = const Value.absent(),
+  }) => ManualSleepRecord(
+    night: night ?? this.night,
+    sleepStart: sleepStart ?? this.sleepStart,
+    totalSleepMinutes: totalSleepMinutes ?? this.totalSleepMinutes,
+    efficiency: efficiency.present ? efficiency.value : this.efficiency,
+  );
+  ManualSleepRecord copyWithCompanion(ManualSleepRecordsCompanion data) {
+    return ManualSleepRecord(
+      night: data.night.present ? data.night.value : this.night,
+      sleepStart: data.sleepStart.present
+          ? data.sleepStart.value
+          : this.sleepStart,
+      totalSleepMinutes: data.totalSleepMinutes.present
+          ? data.totalSleepMinutes.value
+          : this.totalSleepMinutes,
+      efficiency: data.efficiency.present
+          ? data.efficiency.value
+          : this.efficiency,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ManualSleepRecord(')
+          ..write('night: $night, ')
+          ..write('sleepStart: $sleepStart, ')
+          ..write('totalSleepMinutes: $totalSleepMinutes, ')
+          ..write('efficiency: $efficiency')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(night, sleepStart, totalSleepMinutes, efficiency);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ManualSleepRecord &&
+          other.night == this.night &&
+          other.sleepStart == this.sleepStart &&
+          other.totalSleepMinutes == this.totalSleepMinutes &&
+          other.efficiency == this.efficiency);
+}
+
+class ManualSleepRecordsCompanion extends UpdateCompanion<ManualSleepRecord> {
+  final Value<DateTime> night;
+  final Value<DateTime> sleepStart;
+  final Value<int> totalSleepMinutes;
+  final Value<double?> efficiency;
+  final Value<int> rowid;
+  const ManualSleepRecordsCompanion({
+    this.night = const Value.absent(),
+    this.sleepStart = const Value.absent(),
+    this.totalSleepMinutes = const Value.absent(),
+    this.efficiency = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ManualSleepRecordsCompanion.insert({
+    required DateTime night,
+    required DateTime sleepStart,
+    required int totalSleepMinutes,
+    this.efficiency = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : night = Value(night),
+       sleepStart = Value(sleepStart),
+       totalSleepMinutes = Value(totalSleepMinutes);
+  static Insertable<ManualSleepRecord> custom({
+    Expression<DateTime>? night,
+    Expression<DateTime>? sleepStart,
+    Expression<int>? totalSleepMinutes,
+    Expression<double>? efficiency,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (night != null) 'night': night,
+      if (sleepStart != null) 'sleep_start': sleepStart,
+      if (totalSleepMinutes != null) 'total_sleep_minutes': totalSleepMinutes,
+      if (efficiency != null) 'efficiency': efficiency,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ManualSleepRecordsCompanion copyWith({
+    Value<DateTime>? night,
+    Value<DateTime>? sleepStart,
+    Value<int>? totalSleepMinutes,
+    Value<double?>? efficiency,
+    Value<int>? rowid,
+  }) {
+    return ManualSleepRecordsCompanion(
+      night: night ?? this.night,
+      sleepStart: sleepStart ?? this.sleepStart,
+      totalSleepMinutes: totalSleepMinutes ?? this.totalSleepMinutes,
+      efficiency: efficiency ?? this.efficiency,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (night.present) {
+      map['night'] = Variable<DateTime>(night.value);
+    }
+    if (sleepStart.present) {
+      map['sleep_start'] = Variable<DateTime>(sleepStart.value);
+    }
+    if (totalSleepMinutes.present) {
+      map['total_sleep_minutes'] = Variable<int>(totalSleepMinutes.value);
+    }
+    if (efficiency.present) {
+      map['efficiency'] = Variable<double>(efficiency.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ManualSleepRecordsCompanion(')
+          ..write('night: $night, ')
+          ..write('sleepStart: $sleepStart, ')
+          ..write('totalSleepMinutes: $totalSleepMinutes, ')
+          ..write('efficiency: $efficiency, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3540,6 +3870,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PeriodsTable periods = $PeriodsTable(this);
   late final $PeriodDaySeveritiesTable periodDaySeverities =
       $PeriodDaySeveritiesTable(this);
+  late final $ManualSleepRecordsTable manualSleepRecords =
+      $ManualSleepRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3555,6 +3887,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     notificationsSent,
     periods,
     periodDaySeverities,
+    manualSleepRecords,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -5554,6 +5887,206 @@ typedef $$PeriodDaySeveritiesTableProcessedTableManager =
       PeriodDaySeverity,
       PrefetchHooks Function()
     >;
+typedef $$ManualSleepRecordsTableCreateCompanionBuilder =
+    ManualSleepRecordsCompanion Function({
+      required DateTime night,
+      required DateTime sleepStart,
+      required int totalSleepMinutes,
+      Value<double?> efficiency,
+      Value<int> rowid,
+    });
+typedef $$ManualSleepRecordsTableUpdateCompanionBuilder =
+    ManualSleepRecordsCompanion Function({
+      Value<DateTime> night,
+      Value<DateTime> sleepStart,
+      Value<int> totalSleepMinutes,
+      Value<double?> efficiency,
+      Value<int> rowid,
+    });
+
+class $$ManualSleepRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $ManualSleepRecordsTable> {
+  $$ManualSleepRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get night => $composableBuilder(
+    column: $table.night,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get sleepStart => $composableBuilder(
+    column: $table.sleepStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalSleepMinutes => $composableBuilder(
+    column: $table.totalSleepMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get efficiency => $composableBuilder(
+    column: $table.efficiency,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ManualSleepRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ManualSleepRecordsTable> {
+  $$ManualSleepRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get night => $composableBuilder(
+    column: $table.night,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get sleepStart => $composableBuilder(
+    column: $table.sleepStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalSleepMinutes => $composableBuilder(
+    column: $table.totalSleepMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get efficiency => $composableBuilder(
+    column: $table.efficiency,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ManualSleepRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ManualSleepRecordsTable> {
+  $$ManualSleepRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get night =>
+      $composableBuilder(column: $table.night, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get sleepStart => $composableBuilder(
+    column: $table.sleepStart,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalSleepMinutes => $composableBuilder(
+    column: $table.totalSleepMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get efficiency => $composableBuilder(
+    column: $table.efficiency,
+    builder: (column) => column,
+  );
+}
+
+class $$ManualSleepRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ManualSleepRecordsTable,
+          ManualSleepRecord,
+          $$ManualSleepRecordsTableFilterComposer,
+          $$ManualSleepRecordsTableOrderingComposer,
+          $$ManualSleepRecordsTableAnnotationComposer,
+          $$ManualSleepRecordsTableCreateCompanionBuilder,
+          $$ManualSleepRecordsTableUpdateCompanionBuilder,
+          (
+            ManualSleepRecord,
+            BaseReferences<
+              _$AppDatabase,
+              $ManualSleepRecordsTable,
+              ManualSleepRecord
+            >,
+          ),
+          ManualSleepRecord,
+          PrefetchHooks Function()
+        > {
+  $$ManualSleepRecordsTableTableManager(
+    _$AppDatabase db,
+    $ManualSleepRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ManualSleepRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ManualSleepRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ManualSleepRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> night = const Value.absent(),
+                Value<DateTime> sleepStart = const Value.absent(),
+                Value<int> totalSleepMinutes = const Value.absent(),
+                Value<double?> efficiency = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ManualSleepRecordsCompanion(
+                night: night,
+                sleepStart: sleepStart,
+                totalSleepMinutes: totalSleepMinutes,
+                efficiency: efficiency,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required DateTime night,
+                required DateTime sleepStart,
+                required int totalSleepMinutes,
+                Value<double?> efficiency = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ManualSleepRecordsCompanion.insert(
+                night: night,
+                sleepStart: sleepStart,
+                totalSleepMinutes: totalSleepMinutes,
+                efficiency: efficiency,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ManualSleepRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ManualSleepRecordsTable,
+      ManualSleepRecord,
+      $$ManualSleepRecordsTableFilterComposer,
+      $$ManualSleepRecordsTableOrderingComposer,
+      $$ManualSleepRecordsTableAnnotationComposer,
+      $$ManualSleepRecordsTableCreateCompanionBuilder,
+      $$ManualSleepRecordsTableUpdateCompanionBuilder,
+      (
+        ManualSleepRecord,
+        BaseReferences<
+          _$AppDatabase,
+          $ManualSleepRecordsTable,
+          ManualSleepRecord
+        >,
+      ),
+      ManualSleepRecord,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5578,4 +6111,6 @@ class $AppDatabaseManager {
       $$PeriodsTableTableManager(_db, _db.periods);
   $$PeriodDaySeveritiesTableTableManager get periodDaySeverities =>
       $$PeriodDaySeveritiesTableTableManager(_db, _db.periodDaySeverities);
+  $$ManualSleepRecordsTableTableManager get manualSleepRecords =>
+      $$ManualSleepRecordsTableTableManager(_db, _db.manualSleepRecords);
 }
