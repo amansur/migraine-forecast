@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:domain/domain.dart' as domain;
 import 'package:drift/drift.dart';
 
-import '../database.dart' hide Attack, JournalEntry;
+import '../database.dart' hide Attack;
 import 'journal_source.dart';
 
 class DriftJournalSource implements JournalSource {
