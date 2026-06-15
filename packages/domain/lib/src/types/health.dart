@@ -73,10 +73,12 @@ class HealthMetrics extends Equatable {
            (recentHrv.isNotEmpty || averageHrv != null);
   }
 
-  /// Returns true if data is older than 24 hours
-  bool isStale() {
+  /// Returns true if data is older than 24 hours.
+  ///
+  /// Pass [clock] to inject a custom time source (useful in tests).
+  bool isStale({DateTime Function()? clock}) {
     if (lastFetched == null) return true;
-    final now = DateTime.now();
+    final now = (clock ?? DateTime.now)();
     return now.difference(lastFetched!).inHours > 24;
   }
 

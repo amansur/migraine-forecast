@@ -43,7 +43,7 @@ class HealthSourceFactory implements HealthSource {
     if (preferOura) {
       try {
         final ouraMetrics = await ouraHealthSource.recentMetrics(window: window);
-        if (_isStale(ouraMetrics)) {
+        if (ouraMetrics.isStale(clock: _clock)) {
           return appleHealthSource.recentMetrics(window: window);
         }
         return ouraMetrics;
@@ -55,10 +55,4 @@ class HealthSourceFactory implements HealthSource {
     }
   }
 
-  /// Check if metrics are stale (older than 24 hours), using injected clock.
-  bool _isStale(HealthMetrics metrics) {
-    if (metrics.lastFetched == null) return true;
-    final now = _clock();
-    return now.difference(metrics.lastFetched!).inHours > 24;
-  }
 }
