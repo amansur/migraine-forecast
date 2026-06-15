@@ -114,6 +114,22 @@ class ManualSleepRecords extends Table {
   Set<Column> get primaryKey => {night};
 }
 
+/// Stores a user-chosen location for a specific calendar day (UTC midnight).
+/// When a day has an override, ContextBuilder uses its (lat, lon) instead of
+/// the live GPS/manual location, so that historical risk assessments reflect
+/// where the user actually was (e.g. while travelling).
+class DayLocationOverrides extends Table {
+  /// UTC midnight of the calendar day this override applies to.
+  DateTimeColumn get day => dateTime()();
+  RealColumn get lat => real()();
+  RealColumn get lon => real()();
+  TextColumn get displayName => text()();
+  /// When the override was set — for audit and future "revert" capability.
+  DateTimeColumn get setAt => dateTime()();
+  @override
+  Set<Column> get primaryKey => {day};
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -126,13 +142,14 @@ class ManualSleepRecords extends Table {
   Periods,
   PeriodDaySeverities,
   ManualSleepRecords,
+  DayLocationOverrides,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -200,6 +217,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 8) {
             await m.createTable(manualSleepRecords);
+          }
+          if (from < 9) {
+            await m.createTable(dayLocationOverrides);
           }
         },
       );

@@ -3850,6 +3850,369 @@ class ManualSleepRecordsCompanion extends UpdateCompanion<ManualSleepRecord> {
   }
 }
 
+class $DayLocationOverridesTable extends DayLocationOverrides
+    with TableInfo<$DayLocationOverridesTable, DayLocationOverride> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DayLocationOverridesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lonMeta = const VerificationMeta('lon');
+  @override
+  late final GeneratedColumn<double> lon = GeneratedColumn<double>(
+    'lon',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _setAtMeta = const VerificationMeta('setAt');
+  @override
+  late final GeneratedColumn<DateTime> setAt = GeneratedColumn<DateTime>(
+    'set_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [day, lat, lon, displayName, setAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'day_location_overrides';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DayLocationOverride> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lon')) {
+      context.handle(
+        _lonMeta,
+        lon.isAcceptableOrUnknown(data['lon']!, _lonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lonMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('set_at')) {
+      context.handle(
+        _setAtMeta,
+        setAt.isAcceptableOrUnknown(data['set_at']!, _setAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {day};
+  @override
+  DayLocationOverride map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DayLocationOverride(
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lon'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      setAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}set_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DayLocationOverridesTable createAlias(String alias) {
+    return $DayLocationOverridesTable(attachedDatabase, alias);
+  }
+}
+
+class DayLocationOverride extends DataClass
+    implements Insertable<DayLocationOverride> {
+  /// UTC midnight of the calendar day this override applies to.
+  final DateTime day;
+  final double lat;
+  final double lon;
+  final String displayName;
+
+  /// When the override was set — for audit and future "revert" capability.
+  final DateTime setAt;
+  const DayLocationOverride({
+    required this.day,
+    required this.lat,
+    required this.lon,
+    required this.displayName,
+    required this.setAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['day'] = Variable<DateTime>(day);
+    map['lat'] = Variable<double>(lat);
+    map['lon'] = Variable<double>(lon);
+    map['display_name'] = Variable<String>(displayName);
+    map['set_at'] = Variable<DateTime>(setAt);
+    return map;
+  }
+
+  DayLocationOverridesCompanion toCompanion(bool nullToAbsent) {
+    return DayLocationOverridesCompanion(
+      day: Value(day),
+      lat: Value(lat),
+      lon: Value(lon),
+      displayName: Value(displayName),
+      setAt: Value(setAt),
+    );
+  }
+
+  factory DayLocationOverride.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DayLocationOverride(
+      day: serializer.fromJson<DateTime>(json['day']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lon: serializer.fromJson<double>(json['lon']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      setAt: serializer.fromJson<DateTime>(json['setAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'day': serializer.toJson<DateTime>(day),
+      'lat': serializer.toJson<double>(lat),
+      'lon': serializer.toJson<double>(lon),
+      'displayName': serializer.toJson<String>(displayName),
+      'setAt': serializer.toJson<DateTime>(setAt),
+    };
+  }
+
+  DayLocationOverride copyWith({
+    DateTime? day,
+    double? lat,
+    double? lon,
+    String? displayName,
+    DateTime? setAt,
+  }) => DayLocationOverride(
+    day: day ?? this.day,
+    lat: lat ?? this.lat,
+    lon: lon ?? this.lon,
+    displayName: displayName ?? this.displayName,
+    setAt: setAt ?? this.setAt,
+  );
+  DayLocationOverride copyWithCompanion(DayLocationOverridesCompanion data) {
+    return DayLocationOverride(
+      day: data.day.present ? data.day.value : this.day,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lon: data.lon.present ? data.lon.value : this.lon,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      setAt: data.setAt.present ? data.setAt.value : this.setAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DayLocationOverride(')
+          ..write('day: $day, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('displayName: $displayName, ')
+          ..write('setAt: $setAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(day, lat, lon, displayName, setAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DayLocationOverride &&
+          other.day == this.day &&
+          other.lat == this.lat &&
+          other.lon == this.lon &&
+          other.displayName == this.displayName &&
+          other.setAt == this.setAt);
+}
+
+class DayLocationOverridesCompanion
+    extends UpdateCompanion<DayLocationOverride> {
+  final Value<DateTime> day;
+  final Value<double> lat;
+  final Value<double> lon;
+  final Value<String> displayName;
+  final Value<DateTime> setAt;
+  final Value<int> rowid;
+  const DayLocationOverridesCompanion({
+    this.day = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.setAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DayLocationOverridesCompanion.insert({
+    required DateTime day,
+    required double lat,
+    required double lon,
+    required String displayName,
+    required DateTime setAt,
+    this.rowid = const Value.absent(),
+  }) : day = Value(day),
+       lat = Value(lat),
+       lon = Value(lon),
+       displayName = Value(displayName),
+       setAt = Value(setAt);
+  static Insertable<DayLocationOverride> custom({
+    Expression<DateTime>? day,
+    Expression<double>? lat,
+    Expression<double>? lon,
+    Expression<String>? displayName,
+    Expression<DateTime>? setAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (day != null) 'day': day,
+      if (lat != null) 'lat': lat,
+      if (lon != null) 'lon': lon,
+      if (displayName != null) 'display_name': displayName,
+      if (setAt != null) 'set_at': setAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DayLocationOverridesCompanion copyWith({
+    Value<DateTime>? day,
+    Value<double>? lat,
+    Value<double>? lon,
+    Value<String>? displayName,
+    Value<DateTime>? setAt,
+    Value<int>? rowid,
+  }) {
+    return DayLocationOverridesCompanion(
+      day: day ?? this.day,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      displayName: displayName ?? this.displayName,
+      setAt: setAt ?? this.setAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lon.present) {
+      map['lon'] = Variable<double>(lon.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (setAt.present) {
+      map['set_at'] = Variable<DateTime>(setAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DayLocationOverridesCompanion(')
+          ..write('day: $day, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('displayName: $displayName, ')
+          ..write('setAt: $setAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3872,6 +4235,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PeriodDaySeveritiesTable(this);
   late final $ManualSleepRecordsTable manualSleepRecords =
       $ManualSleepRecordsTable(this);
+  late final $DayLocationOverridesTable dayLocationOverrides =
+      $DayLocationOverridesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3888,6 +4253,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     periods,
     periodDaySeverities,
     manualSleepRecords,
+    dayLocationOverrides,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6087,6 +6453,224 @@ typedef $$ManualSleepRecordsTableProcessedTableManager =
       ManualSleepRecord,
       PrefetchHooks Function()
     >;
+typedef $$DayLocationOverridesTableCreateCompanionBuilder =
+    DayLocationOverridesCompanion Function({
+      required DateTime day,
+      required double lat,
+      required double lon,
+      required String displayName,
+      required DateTime setAt,
+      Value<int> rowid,
+    });
+typedef $$DayLocationOverridesTableUpdateCompanionBuilder =
+    DayLocationOverridesCompanion Function({
+      Value<DateTime> day,
+      Value<double> lat,
+      Value<double> lon,
+      Value<String> displayName,
+      Value<DateTime> setAt,
+      Value<int> rowid,
+    });
+
+class $$DayLocationOverridesTableFilterComposer
+    extends Composer<_$AppDatabase, $DayLocationOverridesTable> {
+  $$DayLocationOverridesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get setAt => $composableBuilder(
+    column: $table.setAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DayLocationOverridesTableOrderingComposer
+    extends Composer<_$AppDatabase, $DayLocationOverridesTable> {
+  $$DayLocationOverridesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get setAt => $composableBuilder(
+    column: $table.setAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DayLocationOverridesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DayLocationOverridesTable> {
+  $$DayLocationOverridesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get setAt =>
+      $composableBuilder(column: $table.setAt, builder: (column) => column);
+}
+
+class $$DayLocationOverridesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DayLocationOverridesTable,
+          DayLocationOverride,
+          $$DayLocationOverridesTableFilterComposer,
+          $$DayLocationOverridesTableOrderingComposer,
+          $$DayLocationOverridesTableAnnotationComposer,
+          $$DayLocationOverridesTableCreateCompanionBuilder,
+          $$DayLocationOverridesTableUpdateCompanionBuilder,
+          (
+            DayLocationOverride,
+            BaseReferences<
+              _$AppDatabase,
+              $DayLocationOverridesTable,
+              DayLocationOverride
+            >,
+          ),
+          DayLocationOverride,
+          PrefetchHooks Function()
+        > {
+  $$DayLocationOverridesTableTableManager(
+    _$AppDatabase db,
+    $DayLocationOverridesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DayLocationOverridesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DayLocationOverridesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DayLocationOverridesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> day = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lon = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<DateTime> setAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DayLocationOverridesCompanion(
+                day: day,
+                lat: lat,
+                lon: lon,
+                displayName: displayName,
+                setAt: setAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required DateTime day,
+                required double lat,
+                required double lon,
+                required String displayName,
+                required DateTime setAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DayLocationOverridesCompanion.insert(
+                day: day,
+                lat: lat,
+                lon: lon,
+                displayName: displayName,
+                setAt: setAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DayLocationOverridesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DayLocationOverridesTable,
+      DayLocationOverride,
+      $$DayLocationOverridesTableFilterComposer,
+      $$DayLocationOverridesTableOrderingComposer,
+      $$DayLocationOverridesTableAnnotationComposer,
+      $$DayLocationOverridesTableCreateCompanionBuilder,
+      $$DayLocationOverridesTableUpdateCompanionBuilder,
+      (
+        DayLocationOverride,
+        BaseReferences<
+          _$AppDatabase,
+          $DayLocationOverridesTable,
+          DayLocationOverride
+        >,
+      ),
+      DayLocationOverride,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6113,4 +6697,6 @@ class $AppDatabaseManager {
       $$PeriodDaySeveritiesTableTableManager(_db, _db.periodDaySeverities);
   $$ManualSleepRecordsTableTableManager get manualSleepRecords =>
       $$ManualSleepRecordsTableTableManager(_db, _db.manualSleepRecords);
+  $$DayLocationOverridesTableTableManager get dayLocationOverrides =>
+      $$DayLocationOverridesTableTableManager(_db, _db.dayLocationOverrides);
 }
