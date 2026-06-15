@@ -58,15 +58,14 @@ final ouraAuthManagerProvider = Provider<OuraAuthManager>(
     (ref) => OuraAuthManager());
 
 final ouraApiClientProvider = Provider<OuraApiClient>((ref) {
-  // Stub implementation: use empty token for now.
-  // Actual token flow with OAuth will be implemented in a separate task.
-  return OuraApiClient(accessToken: '');
+  return OuraApiClient(
+    tokenProvider: ref.watch(ouraAuthManagerProvider).getValidAccessToken,
+  );
 });
 
 final ouraHealthSourceProvider = Provider<HealthSource>((ref) => OuraHealthSource(
       authManager: ref.watch(ouraAuthManagerProvider),
       apiClient: ref.watch(ouraApiClientProvider),
-      database: ref.watch(databaseProvider) as QueryExecutor,
     ));
 
 final appleHealthSourceProvider = Provider<HealthSource>((ref) => MergedHealthSource(
