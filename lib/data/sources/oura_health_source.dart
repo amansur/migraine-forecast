@@ -56,7 +56,7 @@ class OuraHealthSource implements HealthSource {
               day: Value(DateTime.parse('${r.day}T00:00:00Z')),
               lowestHeartRate: Value(r.lowestHeartRate),
               restlessPeriods: Value(r.restlessPeriods),
-              averageHeartRate: Value(r.averageHeartRate?.round()),
+              averageHeartRate: Value(r.averageHeartRate),
               averageHrv: Value(r.averageHrv),
               fetchedAt: Value(now),
             )).toList());
@@ -169,7 +169,7 @@ class OuraHealthSource implements HealthSource {
       activityScore: mostRecentActivity?.activityScore,
       readinessScore: mostRecentReadiness?.readinessScore,
       temperatureDeviation: mostRecentReadiness?.temperatureDeviation,
-      averageHeartRate: mostRecentSleep?.averageHeartRate?.toDouble(),
+      averageHeartRate: mostRecentSleep?.averageHeartRate,
       averageHrv: mostRecentSleep?.averageHrv,
       source: DataSource.oura,
       lastFetched: lastFetched,

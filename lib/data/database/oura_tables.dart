@@ -5,7 +5,7 @@ class OuraSleep extends Table {
   DateTimeColumn get day => dateTime()();
   IntColumn get lowestHeartRate => integer().nullable()();
   IntColumn get restlessPeriods => integer().nullable()();
-  IntColumn get averageHeartRate => integer().nullable()();
+  RealColumn get averageHeartRate => real().nullable()();
   IntColumn get averageHrv => integer().nullable()();
   DateTimeColumn get fetchedAt => dateTime()();
 

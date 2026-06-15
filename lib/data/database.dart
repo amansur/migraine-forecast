@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -252,6 +252,34 @@ class AppDatabase extends _$AppDatabase {
                 'ALTER TABLE oura_sleep DROP COLUMN sleep_score',
               );
             }
+          }
+          if (from < 12) {
+            // averageHeartRate column changed from INTEGER to REAL so that
+            // fractional BPM values from the live API are preserved in cache.
+            // SQLite does not support ALTER COLUMN, so we use the
+            // rename-create-copy-drop dance.
+            await customStatement(
+              'ALTER TABLE oura_sleep RENAME TO oura_sleep_old',
+            );
+            await customStatement(
+              'CREATE TABLE oura_sleep ('
+              '  id TEXT NOT NULL PRIMARY KEY,'
+              '  day INTEGER NOT NULL,'
+              '  lowest_heart_rate INTEGER,'
+              '  restless_periods INTEGER,'
+              '  average_heart_rate REAL,'
+              '  average_hrv INTEGER,'
+              '  fetched_at INTEGER NOT NULL'
+              ')',
+            );
+            await customStatement(
+              'INSERT INTO oura_sleep '
+              '  (id, day, lowest_heart_rate, restless_periods, average_heart_rate, average_hrv, fetched_at) '
+              'SELECT '
+              '  id, day, lowest_heart_rate, restless_periods, CAST(average_heart_rate AS REAL), average_hrv, fetched_at '
+              'FROM oura_sleep_old',
+            );
+            await customStatement('DROP TABLE oura_sleep_old');
           }
         },
       );
