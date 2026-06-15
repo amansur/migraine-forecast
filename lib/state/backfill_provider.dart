@@ -32,10 +32,17 @@ bool _backfillRunning = false;
 ///
 /// On completion, invalidates the providers that the heatmap and correlation
 /// cards depend on.
-Future<void> launchBackfill(ProviderContainer container) async {
-  debugPrint('launchBackfill: invoked (running=$_backfillRunning)');
+Future<void> launchBackfill(
+  ProviderContainer container, {
+  bool wipeExisting = false,
+}) async {
+  debugPrint('launchBackfill: invoked (running=$_backfillRunning, wipe=$wipeExisting)');
   if (_backfillRunning) return;
   _backfillRunning = true;
+  if (wipeExisting) {
+    final n = await container.read(assessmentRepoProvider).deleteAllBackfilled();
+    debugPrint('launchBackfill: cleared $n backfilled assessments');
+  }
   // Show the ribbon immediately so the user sees feedback during the prime
   // weather fetch (which runs before the first per-day onProgress callback).
   container.read(backfillProgressProvider.notifier).state = (done: 0, total: 0);
