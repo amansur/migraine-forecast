@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../state/onboarding_provider.dart';
 import '../ui/insights/insights_screen.dart';
 import '../ui/log/log_attack_screen.dart';
+import '../ui/log/log_history_screen.dart';
 import '../ui/onboarding/onboarding_screen.dart';
 import '../ui/settings/settings_screen.dart';
 import '../ui/today/today_screen.dart';
@@ -34,6 +35,7 @@ GoRouter buildRouter(WidgetRef ref) {
         }
         return const LogAttackScreen();
       }),
+      GoRoute(path: '/log-history', builder: (_, __) => const LogHistoryScreen()),
       GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
     ],

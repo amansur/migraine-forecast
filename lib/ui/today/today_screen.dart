@@ -10,6 +10,7 @@ import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
+import '../log/log_picker_sheet.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
@@ -53,6 +54,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('today-log-fab'),
+        icon: const Icon(Icons.add),
+        label: const Text('Log'),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          showDragHandle: false,
+          builder: (_) => const LogPickerSheet(),
+        ),
+      ),
       appBar: AppBar(
         title: Column(
           children: [
