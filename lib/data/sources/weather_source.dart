@@ -32,4 +32,19 @@ abstract class WeatherSource {
     bool forceRefresh = false,
     int? pastDays,
   });
+
+  /// Fetches the archive (truly historical) weather series covering
+  /// [startDate]..[endDate] inclusive and writes it to the cache so subsequent
+  /// per-day cache lookups for dates in that range succeed.
+  ///
+  /// Used by [BulkBackfillOrchestrator] to fill the >30-day-back portion of
+  /// the backfill window, which Open-Meteo's forecast endpoint returns as
+  /// nulls. Default implementation is a no-op so test fakes don't have to
+  /// implement archive support.
+  Future<void> primeArchive({
+    required double lat,
+    required double lon,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {}
 }

@@ -34,15 +34,11 @@ bool _backfillRunning = false;
 /// cards depend on.
 Future<void> launchBackfill(
   ProviderContainer container, {
-  bool wipeExisting = false,
+  bool forceRebuild = false,
 }) async {
-  debugPrint('launchBackfill: invoked (running=$_backfillRunning, wipe=$wipeExisting)');
+  debugPrint('launchBackfill: invoked (running=$_backfillRunning, force=$forceRebuild)');
   if (_backfillRunning) return;
   _backfillRunning = true;
-  if (wipeExisting) {
-    final n = await container.read(assessmentRepoProvider).deleteAllBackfilled();
-    debugPrint('launchBackfill: cleared $n backfilled assessments');
-  }
   // Show the ribbon immediately so the user sees feedback during the prime
   // weather fetch (which runs before the first per-day onProgress callback).
   container.read(backfillProgressProvider.notifier).state = (done: 0, total: 0);
@@ -62,6 +58,7 @@ Future<void> launchBackfill(
 
     debugPrint('launchBackfill: orchestrator.run() starting');
     final report = await orchestrator.run(
+      forceRebuild: forceRebuild,
       onProgress: (done, total) {
         if (done == 1 || done == total || done % 10 == 0) {
           debugPrint('launchBackfill: onProgress $done / $total');

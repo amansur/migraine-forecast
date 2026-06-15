@@ -60,6 +60,7 @@ class BulkBackfillOrchestrator {
   Future<BackfillReport> run({
     Duration window = const Duration(days: 90),
     void Function(int done, int total)? onProgress,
+    bool forceRebuild = false,
   }) async {
     final now = DateTime.now().toUtc();
     final today = DateTime.utc(now.year, now.month, now.day);
@@ -73,11 +74,15 @@ class BulkBackfillOrchestrator {
       d = d.add(const Duration(days: 1));
     }
 
-    // Determine which days already have an assessment.
-    final existing = await assessmentRepo.existingDatesInWindow(
-      cutoff: cutoff,
-      horizon: RiskHorizon.today,
-    );
+    // Determine which days need processing. In forceRebuild mode we recompute
+    // every day; save() does insertOnConflictUpdate so a successful recompute
+    // replaces the old row, while a failure (caught below) leaves it intact.
+    final Set<DateTime> existing = forceRebuild
+        ? const <DateTime>{}
+        : await assessmentRepo.existingDatesInWindow(
+            cutoff: cutoff,
+            horizon: RiskHorizon.today,
+          );
     final missingDays = allDays.where((day) => !existing.contains(day)).toList();
 
     if (missingDays.isEmpty) {
@@ -122,6 +127,25 @@ class BulkBackfillOrchestrator {
       weatherFetchSucceeded = false;
       debugPrint('BulkBackfillOrchestrator: prime fetch failed: $e\n$st');
       // Continue — per-day loop falls back to stale cache or individual fetches.
+    }
+
+    // Forecast API only reliably populates the last ~30 days; older days come
+    // back as nulls. Fill the 31..N day-back range via a single archive call so
+    // per-day cache lookups for older dates have real data.
+    if (window.inDays > 30) {
+      final archiveEnd = today.subtract(const Duration(days: 30));
+      final archiveStart = today.subtract(Duration(days: window.inDays));
+      try {
+        await weatherSource.primeArchive(
+          lat: loc.lat,
+          lon: loc.lon,
+          startDate: archiveStart,
+          endDate: archiveEnd,
+        );
+      } catch (e, st) {
+        debugPrint('BulkBackfillOrchestrator: archive prime failed: $e\n$st');
+        // Continue — older days will degrade to no-weather contributors.
+      }
     }
 
     int processed = 0;

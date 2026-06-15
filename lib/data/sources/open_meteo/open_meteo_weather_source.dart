@@ -114,6 +114,46 @@ class OpenMeteoWeatherSource implements WeatherSource {
     }
   }
 
+  @override
+  Future<void> primeArchive({
+    required double lat,
+    required double lon,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final startUtc = DateTime.utc(startDate.year, startDate.month, startDate.day);
+    final endUtc = DateTime.utc(endDate.year, endDate.month, endDate.day);
+    if (!endUtc.isAfter(startUtc)) return;
+
+    final forecastRes =
+        await client.get(OpenMeteoUrlBuilder.archive(lat: lat, lon: lon, startDate: startUtc, endDate: endUtc));
+    if (forecastRes.statusCode >= 400) {
+      throw StateError('Open-Meteo archive prime failed (${forecastRes.statusCode})');
+    }
+
+    // Air quality archive isn't supported by Open-Meteo's archive endpoint;
+    // store an empty AQ JSON so the parser yields an empty series for these
+    // older days. AQ contributors degrade naturally.
+    const emptyAq = '{"hourly":{"time":[],"pm2_5":[]}}';
+
+    final times = AppDatabase.extractForecastTimes(forecastRes.body);
+    final coverageStart = times.isNotEmpty ? times.first : null;
+    final coverageEnd = times.isNotEmpty ? times.last : null;
+
+    await db.into(db.weatherSnapshots).insert(
+          WeatherSnapshotsCompanion.insert(
+            fetchedAt: DateTime.now().toUtc(),
+            lat: lat,
+            lon: lon,
+            forecastJson: forecastRes.body,
+            airQualityJson: const Value(emptyAq),
+            source: const Value('archive'),
+            coverageStart: Value(coverageStart),
+            coverageEnd: Value(coverageEnd),
+          ),
+        );
+  }
+
   /// Returns the most recently fetched snapshot for [lat]/[lon] whose forecast
   /// series *covers* [day] (i.e. coverageStart <= day <= coverageEnd).
   ///

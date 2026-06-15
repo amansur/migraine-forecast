@@ -267,7 +267,7 @@ class SettingsScreen extends ConsumerWidget {
                   ? null
                   : () {
                       final container = ProviderScope.containerOf(context, listen: false);
-                      launchBackfill(container, wipeExisting: true);
+                      launchBackfill(container, forceRebuild: true);
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Rebuilding risk history — see Insights for progress.'),
                       ));

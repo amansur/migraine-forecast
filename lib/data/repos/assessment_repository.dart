@@ -119,16 +119,6 @@ class AssessmentRepository {
     };
   }
 
-  /// Deletes all backfilled assessments. Used when the user explicitly
-  /// requests a rebuild from settings so the orchestrator's idempotency check
-  /// doesn't skip rows that were written during a previous (possibly
-  /// degraded) run.
-  Future<int> deleteAllBackfilled() async {
-    return (_db.delete(_db.riskAssessments)
-          ..where((t) => t.backfilled.equals(true)))
-        .go();
-  }
-
   Future<DateTime?> latestComputedAt() async {
     final rows = await (_db.select(_db.riskAssessments)
           ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
