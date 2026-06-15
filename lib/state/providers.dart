@@ -83,6 +83,11 @@ final healthSourceProvider = Provider<HealthSource>((ref) {
   );
 });
 
+final healthMetricsProvider = FutureProvider<HealthMetrics>((ref) async {
+  final healthSource = ref.watch(healthSourceProvider);
+  return healthSource.recentMetrics(window: const Duration(days: 30));
+});
+
 final journalSourceProvider = Provider<JournalSource>((ref) => DriftJournalSource(ref.watch(databaseProvider)));
 
 final manualLocationSourceProvider = Provider<PersistedManualLocationSource>(

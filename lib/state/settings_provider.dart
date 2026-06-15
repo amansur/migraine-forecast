@@ -138,3 +138,5 @@ class HealthSourcePreferenceNotifier extends StateNotifier<HealthSourcePreferenc
     state = preference;
   }
 }
+
+final healthMetricsRefreshingProvider = StateProvider<bool>((ref) => false);
