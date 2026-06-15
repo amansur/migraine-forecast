@@ -35,7 +35,7 @@ void main() {
             headers: any(named: 'headers'),
           )).thenAnswer((_) async => http.Response(responseBody, 200));
 
-      final client = OuraApiClient(accessToken: 'test-token', httpClient: mockClient);
+      final client = OuraApiClient(tokenProvider: () async => 'test-token', httpClient: mockClient);
       final result = await client.getSleep(
         startDate: DateTime(2024, 1, 1),
         endDate: DateTime(2024, 1, 2),
@@ -57,7 +57,7 @@ void main() {
             headers: any(named: 'headers'),
           )).thenAnswer((_) async => http.Response(responseBody, 200));
 
-      final client = OuraApiClient(accessToken: 'my-secret-token', httpClient: mockClient);
+      final client = OuraApiClient(tokenProvider: () async => 'my-secret-token', httpClient: mockClient);
       await client.getDailySleep(
         startDate: DateTime(2024, 1, 1),
         endDate: DateTime(2024, 1, 2),
