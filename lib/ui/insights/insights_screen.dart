@@ -5,13 +5,18 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/bulk_backfill_orchestrator.dart';
+import '../../data/database.dart' show DayLocationOverride;
+import '../../data/sources/location_source.dart';
+import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
 import '../../state/backfill_provider.dart';
 import '../../state/correlation_provider.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/providers.dart';
+import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../state/suggestions_provider.dart';
+import '../common/location_search_dialog.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../shared/contributor_order.dart';
 import 'calendar_heatmap.dart';
@@ -243,7 +248,9 @@ class DayDetailSheet extends ConsumerWidget {
               dateTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            _LocationOverrideRow(day: day),
+            const SizedBox(height: 8),
             _CycleRow(day: day),
             const SizedBox(height: 12),
             Text('Risk Assessment', style: Theme.of(context).textTheme.titleMedium),
@@ -370,6 +377,102 @@ class DayDetailSheet extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+/// Streams the current override row for [day] from the database.
+final _locationOverrideForDayProvider =
+    StreamProvider.autoDispose.family<DayLocationOverride?, DateTime>((ref, day) {
+  return ref.watch(locationOverridesRepoProvider).watchForDay(day);
+});
+
+/// Shows the effective location for [day] (override or "Auto (GPS)") with
+/// affordances to search and set a new location or clear the current override.
+class _LocationOverrideRow extends ConsumerWidget {
+  final DateTime day;
+  const _LocationOverrideRow({required this.day});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final overrideAsync = ref.watch(_locationOverrideForDayProvider(day));
+    final override = overrideAsync.asData?.value;
+    final hasOverride = override != null;
+    final label = hasOverride ? override.displayName : 'Auto (GPS)';
+
+    return Row(
+      children: [
+        Icon(
+          hasOverride ? Icons.location_on : Icons.location_on_outlined,
+          size: 16,
+          color: hasOverride
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => _showSearchDialog(context, ref),
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: hasOverride
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    decoration: TextDecoration.underline,
+                    decorationColor: hasOverride
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+            ),
+          ),
+        ),
+        if (hasOverride)
+          TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            onPressed: () => _clearOverride(ref),
+            child: Text(
+              'Use auto',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _showSearchDialog(BuildContext context, WidgetRef ref) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => LocationSearchDialog(
+        geocoder: ref.read(geocoderProvider),
+        onPick: (result) => _setOverride(ref, result),
+      ),
+    );
+  }
+
+  Future<void> _setOverride(WidgetRef ref, GeocodingResult result) async {
+    final repo = ref.read(locationOverridesRepoProvider);
+    await repo.set(
+      day,
+      UserLocation(lat: result.lat, lon: result.lon),
+      result.displayName,
+    );
+    await ref
+        .read(riskAssessmentProvider.notifier)
+        .recalculateForDay(day);
+  }
+
+  Future<void> _clearOverride(WidgetRef ref) async {
+    final repo = ref.read(locationOverridesRepoProvider);
+    await repo.clear(day);
+    await ref
+        .read(riskAssessmentProvider.notifier)
+        .recalculateForDay(day);
   }
 }
 
