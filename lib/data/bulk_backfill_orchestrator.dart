@@ -27,13 +27,14 @@ class BackfillReport {
 /// so the correlation engine has denominator data from day one.
 ///
 /// Design notes:
-/// - One network fetch primes the weather cache with past_days = 92 (today + 2
-///   padding). All per-day [ContextBuilder.build] calls reuse that cached row.
+/// - One network fetch primes the weather cache with past_days = window.inDays
+///   (clamped to 90). All per-day [ContextBuilder.build] calls reuse that
+///   cached row via the coverage-aware cache lookup — zero additional requests.
 /// - Days that already have a 'today' assessment are skipped (idempotent).
 /// - A single-day error is logged but does not abort the run; partial backfill
 ///   is still useful.
-/// - TODO(v2): for windows > 90 days, fall back to Open-Meteo Archive API
-///   (archive-api.open-meteo.com/v1/archive).
+/// - Windows > 90 days: days beyond the forecast API limit fall back to
+///   individual archive fetches inside [OpenMeteoWeatherSource].
 class BulkBackfillOrchestrator {
   final ContextBuilder contextBuilder;
   final RiskEngine riskEngine;
@@ -41,8 +42,6 @@ class BulkBackfillOrchestrator {
   final AssessmentRepository assessmentRepo;
   final LocationSource locationSource;
   final WeatherSource weatherSource;
-
-  bool _running = false;
 
   BulkBackfillOrchestrator({
     required this.contextBuilder,
@@ -53,30 +52,13 @@ class BulkBackfillOrchestrator {
     required this.weatherSource,
   });
 
+  // The inner `_running` guard that previously lived here was dead code:
+  // `launchBackfill` constructs a fresh orchestrator on every call, so the
+  // per-instance flag never observed re-entry. The real concurrency guard is
+  // the module-level `_backfillRunning` flag in backfill_provider.dart.
+
   Future<BackfillReport> run({
     Duration window = const Duration(days: 90),
-    void Function(int done, int total)? onProgress,
-  }) async {
-    if (_running) {
-      return const BackfillReport(
-        daysProcessed: 0,
-        daysSkipped: 0,
-        daysFailed: 0,
-        weatherFetchSucceeded: false,
-        firstError: 'backfill already running',
-      );
-    }
-    _running = true;
-
-    try {
-      return await _run(window: window, onProgress: onProgress);
-    } finally {
-      _running = false;
-    }
-  }
-
-  Future<BackfillReport> _run({
-    required Duration window,
     void Function(int done, int total)? onProgress,
   }) async {
     final now = DateTime.now().toUtc();
@@ -121,6 +103,27 @@ class BulkBackfillOrchestrator {
       );
     }
 
+    // Prime the weather cache with a single wide fetch covering the full window.
+    // The per-day loop's ContextBuilder.build calls then find this row via the
+    // coverage-aware cache lookup and make zero additional network requests.
+    //
+    // The window is clamped to 90 (forecast API max). Days > 90 ago will fall
+    // back to individual archive fetches inside OpenMeteoWeatherSource.
+    bool weatherFetchSucceeded = true;
+    try {
+      await weatherSource.fetch(
+        lat: loc.lat,
+        lon: loc.lon,
+        now: now,
+        forceRefresh: true,
+        pastDays: window.inDays.clamp(1, 90),
+      );
+    } catch (e, st) {
+      weatherFetchSucceeded = false;
+      debugPrint('BulkBackfillOrchestrator: prime fetch failed: $e\n$st');
+      // Continue — per-day loop falls back to stale cache or individual fetches.
+    }
+
     int processed = 0;
     Object? firstError;
 
@@ -156,7 +159,7 @@ class BulkBackfillOrchestrator {
       daysProcessed: processed,
       daysSkipped: allDays.length - missingDays.length,
       daysFailed: missingDays.length - processed,
-      weatherFetchSucceeded: true,
+      weatherFetchSucceeded: weatherFetchSucceeded,
       firstError: firstError,
     );
   }

@@ -30,6 +30,7 @@ class _FakeWeatherSource implements WeatherSource {
     required double lon,
     required DateTime now,
     bool forceRefresh = false,
+    int? pastDays,
   }) async {
     fetchCount++;
     if (forceRefresh) forceRefreshCount++;
@@ -148,8 +149,8 @@ void main() {
     expect(report.daysProcessed, 7);
     expect(report.daysSkipped, 0);
     expect(report.firstError, isNull);
-    // No prime fetch — per-day ContextBuilder.build pulls weather itself.
-    expect(weather.forceRefreshCount, 0);
+    // One prime fetch primes the cache; per-day calls hit the cache (no new force-refreshes).
+    expect(weather.forceRefreshCount, 1);
 
     final rows = await db.select(db.riskAssessments).get();
     expect(rows, hasLength(7));
@@ -183,7 +184,8 @@ void main() {
     expect(report.daysProcessed, 3); // days 0, 1, 2 ago
     expect(report.daysSkipped, 4); // days 3-6 ago already filled
     expect(report.firstError, isNull);
-    expect(weather.forceRefreshCount, 0);
+    // One prime fetch fires because there are missing days to fill.
+    expect(weather.forceRefreshCount, 1);
 
     final rows = await db.select(db.riskAssessments).get();
     expect(rows, hasLength(7));
@@ -207,15 +209,15 @@ void main() {
   });
 
   test('weather fetch fails: per-day evaluation still proceeds with empty weather', () async {
-    // After the prime fetch was removed, ContextBuilder swallows weather
-    // errors and evaluation proceeds with null weather. Days are written
-    // (with degraded confidence in production); the run no longer aborts.
+    // Prime fetch throws, so weatherFetchSucceeded is false. But ContextBuilder
+    // swallows weather errors at per-day evaluation time, so days are still
+    // written (with degraded confidence in production) and the run continues.
     final (orchestrator, _, db, _) = await _buildStack(weatherFails: true);
     addTearDown(db.close);
 
     final report = await orchestrator.run(window: testWindow);
 
-    expect(report.weatherFetchSucceeded, isTrue);
+    expect(report.weatherFetchSucceeded, isFalse);
     expect(report.daysProcessed, 7);
 
     final rows = await db.select(db.riskAssessments).get();
@@ -283,17 +285,18 @@ void main() {
     final (orchestrator, _, db, weather) = await _buildStack();
     addTearDown(db.close);
 
-    // First run fills all days.
+    // First run fills all days, fires exactly one prime fetch.
     final report1 = await orchestrator.run(window: testWindow);
     expect(report1.daysProcessed, 7);
-    expect(weather.forceRefreshCount, 0);
+    expect(weather.forceRefreshCount, 1);
 
     final rowsAfterFirst = await db.select(db.riskAssessments).get();
     expect(rowsAfterFirst, hasLength(7));
 
-    // Second run sees all days already filled — no prime fetch needed.
+    // Second run sees all days already filled — returns early before the prime
+    // fetch, so forceRefreshCount stays at 1 (no new force refresh).
     final report2 = await orchestrator.run(window: testWindow);
-    expect(weather.forceRefreshCount, 0);
+    expect(weather.forceRefreshCount, 1);
     expect(report2.daysProcessed, 0);
     expect(report2.daysSkipped, 7);
 
