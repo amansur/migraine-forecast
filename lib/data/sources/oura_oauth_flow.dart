@@ -66,7 +66,7 @@ class OuraOAuthFlow {
       'client_id': clientId,
       'redirect_uri': redirectUri,
       'response_type': 'code',
-      'scope': 'email personal daily heartrate session sleep tag workout',
+      'scope': 'email personal daily heartrate session tag workout',
       'state': state,
     }).toString();
 
