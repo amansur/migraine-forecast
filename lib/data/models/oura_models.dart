@@ -21,10 +21,10 @@ class OuraSleepRecord {
     return OuraSleepRecord(
       id: json['id'] as String,
       day: json['day'] as String,
-      lowestHeartRate: json['lowest_heart_rate'] as int?,
-      restlessPeriods: json['restless_periods'] as int?,
+      lowestHeartRate: (json['lowest_heart_rate'] as num?)?.toInt(),
+      restlessPeriods: (json['restless_periods'] as num?)?.toInt(),
       averageHeartRate: (json['average_heart_rate'] as num?)?.toDouble(),
-      averageHrv: json['average_hrv'] as int?,
+      averageHrv: (json['average_hrv'] as num?)?.toInt(),
       timestamp: json['timestamp'] as String,
     );
   }
@@ -36,6 +36,9 @@ class OuraSleepData {
   OuraSleepData({required this.records});
 
   factory OuraSleepData.fromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('data')) {
+      throw FormatException('Oura response missing "data" array');
+    }
     final data = json['data'] as List<dynamic>? ?? [];
     return OuraSleepData(
       records: data.map((e) => OuraSleepRecord.fromJson(e as Map<String, dynamic>)).toList(),
@@ -60,7 +63,7 @@ class OuraDailySleepRecord {
     return OuraDailySleepRecord(
       id: json['id'] as String,
       day: json['day'] as String,
-      score: json['score'] as int?,
+      score: (json['score'] as num?)?.toInt(),
       timestamp: json['timestamp'] as String,
     );
   }
@@ -72,6 +75,9 @@ class OuraDailySleepData {
   OuraDailySleepData({required this.records});
 
   factory OuraDailySleepData.fromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('data')) {
+      throw FormatException('Oura response missing "data" array');
+    }
     final data = json['data'] as List<dynamic>? ?? [];
     return OuraDailySleepData(
       records: data.map((e) => OuraDailySleepRecord.fromJson(e as Map<String, dynamic>)).toList(),
@@ -96,7 +102,7 @@ class OuraActivityRecord {
     return OuraActivityRecord(
       id: json['id'] as String,
       day: json['day'] as String,
-      score: json['score'] as int?,
+      score: (json['score'] as num?)?.toInt(),
       timestamp: json['timestamp'] as String,
     );
   }
@@ -108,6 +114,9 @@ class OuraActivityData {
   OuraActivityData({required this.records});
 
   factory OuraActivityData.fromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('data')) {
+      throw FormatException('Oura response missing "data" array');
+    }
     final data = json['data'] as List<dynamic>? ?? [];
     return OuraActivityData(
       records: data.map((e) => OuraActivityRecord.fromJson(e as Map<String, dynamic>)).toList(),
@@ -134,7 +143,7 @@ class OuraReadinessRecord {
     return OuraReadinessRecord(
       id: json['id'] as String,
       day: json['day'] as String,
-      score: json['score'] as int?,
+      score: (json['score'] as num?)?.toInt(),
       temperatureDeviation: (json['temperature_deviation'] as num?)?.toDouble(),
       timestamp: json['timestamp'] as String,
     );
@@ -147,6 +156,9 @@ class OuraReadinessData {
   OuraReadinessData({required this.records});
 
   factory OuraReadinessData.fromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('data')) {
+      throw FormatException('Oura response missing "data" array');
+    }
     final data = json['data'] as List<dynamic>? ?? [];
     return OuraReadinessData(
       records: data.map((e) => OuraReadinessRecord.fromJson(e as Map<String, dynamic>)).toList(),
