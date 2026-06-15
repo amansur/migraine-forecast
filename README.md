@@ -46,6 +46,24 @@ flutter run
 
 `flutter build web` works and serves the app. SQLite runs via WASM (the `sqlite3.wasm` + drift worker are bundled in `web/`). Limitations: the `health` plugin has no web implementation; geolocator on web requires HTTPS + browser permission; background notifications go through the browser's Push API which we don't wire in v1.
 
+## Oura Ring integration
+
+The app can pull sleep, HRV, activity, and readiness from Oura as an alternative to Apple Health / Health Connect. Connect from Settings → "Health Data Sources" → Connect.
+
+Builds that exercise Oura need two compile-time defines and one entry in the Oura developer console:
+
+```bash
+flutter run --dart-define=OURA_CLIENT_ID=<your-client-id> \
+            --dart-define=OURA_CLIENT_SECRET=<your-client-secret>
+```
+
+In the [Oura Cloud developer portal](https://cloud.ouraring.com/oauth/applications), register:
+
+- **Redirect URI:** `com.migraine-forecast://oauth/callback`
+- **Scopes:** `email personal daily heartrate session sleep tag workout`
+
+The URL scheme `com.migraine-forecast` is already registered in `ios/Runner/Info.plist` and `android/app/src/main/AndroidManifest.xml` so `flutter_web_auth_2` can catch the redirect. Without the dart-defines, the Connect button trips a debug-build assertion before opening the browser; refresh in the background fails silently and logs the user out on their next session.
+
 ## Testing
 
 ```bash

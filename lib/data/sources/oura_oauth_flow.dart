@@ -28,8 +28,13 @@ class OuraOAuthFlow {
         _browserLauncher = browserLauncher ??
             ((url) => FlutterWebAuth2.authenticate(
                   url: url,
-                  callbackUrlScheme: 'com.migraine-forecast',
-                ));
+                  callbackUrlScheme: Uri.parse(redirectUri).scheme,
+                )) {
+    assert(clientId.isNotEmpty,
+        'OURA_CLIENT_ID missing — pass via --dart-define=OURA_CLIENT_ID=...');
+    assert(clientSecret.isNotEmpty,
+        'OURA_CLIENT_SECRET missing — pass via --dart-define=OURA_CLIENT_SECRET=...');
+  }
 
   final String clientId;
   final String clientSecret;
