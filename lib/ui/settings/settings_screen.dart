@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../data/sources/location_source.dart';
-import '../../data/sources/open_meteo/open_meteo_geocoder.dart';
+import '../common/location_search_dialog.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
@@ -303,7 +303,7 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _showLocationDialog(BuildContext context, WidgetRef ref, UserLocation? current) async {
     await showDialog<void>(
       context: context,
-      builder: (ctx) => _LocationSearchDialog(
+      builder: (ctx) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
         onPick: (result) => ref.read(setManualLocationProvider)(result.lat, result.lon),
       ),
@@ -332,107 +332,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _LocationSearchDialog extends StatefulWidget {
-  final OpenMeteoGeocoder geocoder;
-  final void Function(GeocodingResult) onPick;
-  const _LocationSearchDialog({required this.geocoder, required this.onPick});
-
-  @override
-  State<_LocationSearchDialog> createState() => _LocationSearchDialogState();
-}
-
-class _LocationSearchDialogState extends State<_LocationSearchDialog> {
-  final _ctrl = TextEditingController();
-  List<GeocodingResult> _results = [];
-  bool _loading = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _search() async {
-    final q = _ctrl.text.trim();
-    if (q.isEmpty) return;
-    setState(() { _loading = true; _error = null; });
-    try {
-      final results = await widget.geocoder.search(q);
-      setState(() { _results = results; _loading = false; });
-    } catch (e) {
-      setState(() { _error = 'Search failed: $e'; _loading = false; });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Set location'),
-      content: SizedBox(
-        width: 360,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _ctrl,
-                    decoration: const InputDecoration(
-                      labelText: 'City, state, country or postal code',
-                      hintText: 'San Francisco, CA',
-                    ),
-                    onSubmitted: (_) => _search(),
-                    autofocus: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(icon: const Icon(Icons.search), onPressed: _search),
-              ],
-            ),
-            if (_loading) const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: CircularProgressIndicator(),
-            ),
-            if (_error != null) Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-            if (_results.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 240),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _results.length,
-                  itemBuilder: (_, i) {
-                    final r = _results[i];
-                    return ListTile(
-                      title: Text(r.displayName),
-                      subtitle: Text('${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
-                      onTap: () {
-                        widget.onPick(r);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ] else if (!_loading && _ctrl.text.isNotEmpty && _results.isEmpty && _error == null)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text('No results — try a different search term'),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-      ],
-    );
-  }
-}
+// LocationSearchDialog extracted to lib/ui/common/location_search_dialog.dart
 
 class _CycleSettingsSection extends ConsumerWidget {
   const _CycleSettingsSection();
