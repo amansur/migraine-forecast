@@ -66,6 +66,7 @@ final ouraApiClientProvider = Provider<OuraApiClient>((ref) {
 final ouraHealthSourceProvider = Provider<HealthSource>((ref) => OuraHealthSource(
       authManager: ref.watch(ouraAuthManagerProvider),
       apiClient: ref.watch(ouraApiClientProvider),
+      database: ref.watch(databaseProvider),
     ));
 
 final appleHealthSourceProvider = Provider<HealthSource>((ref) => MergedHealthSource(

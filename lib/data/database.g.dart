@@ -4237,17 +4237,6 @@ class $OuraSleepTable extends OuraSleep
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sleepScoreMeta = const VerificationMeta(
-    'sleepScore',
-  );
-  @override
-  late final GeneratedColumn<int> sleepScore = GeneratedColumn<int>(
-    'sleep_score',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _lowestHeartRateMeta = const VerificationMeta(
     'lowestHeartRate',
   );
@@ -4307,7 +4296,6 @@ class $OuraSleepTable extends OuraSleep
   List<GeneratedColumn> get $columns => [
     id,
     day,
-    sleepScore,
     lowestHeartRate,
     restlessPeriods,
     averageHeartRate,
@@ -4338,12 +4326,6 @@ class $OuraSleepTable extends OuraSleep
       );
     } else if (isInserting) {
       context.missing(_dayMeta);
-    }
-    if (data.containsKey('sleep_score')) {
-      context.handle(
-        _sleepScoreMeta,
-        sleepScore.isAcceptableOrUnknown(data['sleep_score']!, _sleepScoreMeta),
-      );
     }
     if (data.containsKey('lowest_heart_rate')) {
       context.handle(
@@ -4403,10 +4385,6 @@ class $OuraSleepTable extends OuraSleep
         DriftSqlType.dateTime,
         data['${effectivePrefix}day'],
       )!,
-      sleepScore: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sleep_score'],
-      ),
       lowestHeartRate: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}lowest_heart_rate'],
@@ -4439,7 +4417,6 @@ class $OuraSleepTable extends OuraSleep
 class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   final String id;
   final DateTime day;
-  final int? sleepScore;
   final int? lowestHeartRate;
   final int? restlessPeriods;
   final int? averageHeartRate;
@@ -4448,7 +4425,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   const OuraSleepData({
     required this.id,
     required this.day,
-    this.sleepScore,
     this.lowestHeartRate,
     this.restlessPeriods,
     this.averageHeartRate,
@@ -4460,9 +4436,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['day'] = Variable<DateTime>(day);
-    if (!nullToAbsent || sleepScore != null) {
-      map['sleep_score'] = Variable<int>(sleepScore);
-    }
     if (!nullToAbsent || lowestHeartRate != null) {
       map['lowest_heart_rate'] = Variable<int>(lowestHeartRate);
     }
@@ -4483,9 +4456,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     return OuraSleepCompanion(
       id: Value(id),
       day: Value(day),
-      sleepScore: sleepScore == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sleepScore),
       lowestHeartRate: lowestHeartRate == null && nullToAbsent
           ? const Value.absent()
           : Value(lowestHeartRate),
@@ -4510,7 +4480,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     return OuraSleepData(
       id: serializer.fromJson<String>(json['id']),
       day: serializer.fromJson<DateTime>(json['day']),
-      sleepScore: serializer.fromJson<int?>(json['sleepScore']),
       lowestHeartRate: serializer.fromJson<int?>(json['lowestHeartRate']),
       restlessPeriods: serializer.fromJson<int?>(json['restlessPeriods']),
       averageHeartRate: serializer.fromJson<int?>(json['averageHeartRate']),
@@ -4524,7 +4493,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'day': serializer.toJson<DateTime>(day),
-      'sleepScore': serializer.toJson<int?>(sleepScore),
       'lowestHeartRate': serializer.toJson<int?>(lowestHeartRate),
       'restlessPeriods': serializer.toJson<int?>(restlessPeriods),
       'averageHeartRate': serializer.toJson<int?>(averageHeartRate),
@@ -4536,7 +4504,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   OuraSleepData copyWith({
     String? id,
     DateTime? day,
-    Value<int?> sleepScore = const Value.absent(),
     Value<int?> lowestHeartRate = const Value.absent(),
     Value<int?> restlessPeriods = const Value.absent(),
     Value<int?> averageHeartRate = const Value.absent(),
@@ -4545,7 +4512,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   }) => OuraSleepData(
     id: id ?? this.id,
     day: day ?? this.day,
-    sleepScore: sleepScore.present ? sleepScore.value : this.sleepScore,
     lowestHeartRate: lowestHeartRate.present
         ? lowestHeartRate.value
         : this.lowestHeartRate,
@@ -4562,9 +4528,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     return OuraSleepData(
       id: data.id.present ? data.id.value : this.id,
       day: data.day.present ? data.day.value : this.day,
-      sleepScore: data.sleepScore.present
-          ? data.sleepScore.value
-          : this.sleepScore,
       lowestHeartRate: data.lowestHeartRate.present
           ? data.lowestHeartRate.value
           : this.lowestHeartRate,
@@ -4586,7 +4549,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
     return (StringBuffer('OuraSleepData(')
           ..write('id: $id, ')
           ..write('day: $day, ')
-          ..write('sleepScore: $sleepScore, ')
           ..write('lowestHeartRate: $lowestHeartRate, ')
           ..write('restlessPeriods: $restlessPeriods, ')
           ..write('averageHeartRate: $averageHeartRate, ')
@@ -4600,7 +4562,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
   int get hashCode => Object.hash(
     id,
     day,
-    sleepScore,
     lowestHeartRate,
     restlessPeriods,
     averageHeartRate,
@@ -4613,7 +4574,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
       (other is OuraSleepData &&
           other.id == this.id &&
           other.day == this.day &&
-          other.sleepScore == this.sleepScore &&
           other.lowestHeartRate == this.lowestHeartRate &&
           other.restlessPeriods == this.restlessPeriods &&
           other.averageHeartRate == this.averageHeartRate &&
@@ -4624,7 +4584,6 @@ class OuraSleepData extends DataClass implements Insertable<OuraSleepData> {
 class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   final Value<String> id;
   final Value<DateTime> day;
-  final Value<int?> sleepScore;
   final Value<int?> lowestHeartRate;
   final Value<int?> restlessPeriods;
   final Value<int?> averageHeartRate;
@@ -4634,7 +4593,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   const OuraSleepCompanion({
     this.id = const Value.absent(),
     this.day = const Value.absent(),
-    this.sleepScore = const Value.absent(),
     this.lowestHeartRate = const Value.absent(),
     this.restlessPeriods = const Value.absent(),
     this.averageHeartRate = const Value.absent(),
@@ -4645,7 +4603,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   OuraSleepCompanion.insert({
     required String id,
     required DateTime day,
-    this.sleepScore = const Value.absent(),
     this.lowestHeartRate = const Value.absent(),
     this.restlessPeriods = const Value.absent(),
     this.averageHeartRate = const Value.absent(),
@@ -4658,7 +4615,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   static Insertable<OuraSleepData> custom({
     Expression<String>? id,
     Expression<DateTime>? day,
-    Expression<int>? sleepScore,
     Expression<int>? lowestHeartRate,
     Expression<int>? restlessPeriods,
     Expression<int>? averageHeartRate,
@@ -4669,7 +4625,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (day != null) 'day': day,
-      if (sleepScore != null) 'sleep_score': sleepScore,
       if (lowestHeartRate != null) 'lowest_heart_rate': lowestHeartRate,
       if (restlessPeriods != null) 'restless_periods': restlessPeriods,
       if (averageHeartRate != null) 'average_heart_rate': averageHeartRate,
@@ -4682,7 +4637,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
   OuraSleepCompanion copyWith({
     Value<String>? id,
     Value<DateTime>? day,
-    Value<int?>? sleepScore,
     Value<int?>? lowestHeartRate,
     Value<int?>? restlessPeriods,
     Value<int?>? averageHeartRate,
@@ -4693,7 +4647,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     return OuraSleepCompanion(
       id: id ?? this.id,
       day: day ?? this.day,
-      sleepScore: sleepScore ?? this.sleepScore,
       lowestHeartRate: lowestHeartRate ?? this.lowestHeartRate,
       restlessPeriods: restlessPeriods ?? this.restlessPeriods,
       averageHeartRate: averageHeartRate ?? this.averageHeartRate,
@@ -4711,9 +4664,6 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     }
     if (day.present) {
       map['day'] = Variable<DateTime>(day.value);
-    }
-    if (sleepScore.present) {
-      map['sleep_score'] = Variable<int>(sleepScore.value);
     }
     if (lowestHeartRate.present) {
       map['lowest_heart_rate'] = Variable<int>(lowestHeartRate.value);
@@ -4741,11 +4691,318 @@ class OuraSleepCompanion extends UpdateCompanion<OuraSleepData> {
     return (StringBuffer('OuraSleepCompanion(')
           ..write('id: $id, ')
           ..write('day: $day, ')
-          ..write('sleepScore: $sleepScore, ')
           ..write('lowestHeartRate: $lowestHeartRate, ')
           ..write('restlessPeriods: $restlessPeriods, ')
           ..write('averageHeartRate: $averageHeartRate, ')
           ..write('averageHrv: $averageHrv, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OuraDailySleepTable extends OuraDailySleep
+    with TableInfo<$OuraDailySleepTable, OuraDailySleepData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OuraDailySleepTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  @override
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+    'score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, day, score, fetchedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'oura_daily_sleep';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OuraDailySleepData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OuraDailySleepData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OuraDailySleepData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}score'],
+      ),
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OuraDailySleepTable createAlias(String alias) {
+    return $OuraDailySleepTable(attachedDatabase, alias);
+  }
+}
+
+class OuraDailySleepData extends DataClass
+    implements Insertable<OuraDailySleepData> {
+  final String id;
+  final DateTime day;
+  final int? score;
+  final DateTime fetchedAt;
+  const OuraDailySleepData({
+    required this.id,
+    required this.day,
+    this.score,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['day'] = Variable<DateTime>(day);
+    if (!nullToAbsent || score != null) {
+      map['score'] = Variable<int>(score);
+    }
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  OuraDailySleepCompanion toCompanion(bool nullToAbsent) {
+    return OuraDailySleepCompanion(
+      id: Value(id),
+      day: Value(day),
+      score: score == null && nullToAbsent
+          ? const Value.absent()
+          : Value(score),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory OuraDailySleepData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OuraDailySleepData(
+      id: serializer.fromJson<String>(json['id']),
+      day: serializer.fromJson<DateTime>(json['day']),
+      score: serializer.fromJson<int?>(json['score']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'day': serializer.toJson<DateTime>(day),
+      'score': serializer.toJson<int?>(score),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  OuraDailySleepData copyWith({
+    String? id,
+    DateTime? day,
+    Value<int?> score = const Value.absent(),
+    DateTime? fetchedAt,
+  }) => OuraDailySleepData(
+    id: id ?? this.id,
+    day: day ?? this.day,
+    score: score.present ? score.value : this.score,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  OuraDailySleepData copyWithCompanion(OuraDailySleepCompanion data) {
+    return OuraDailySleepData(
+      id: data.id.present ? data.id.value : this.id,
+      day: data.day.present ? data.day.value : this.day,
+      score: data.score.present ? data.score.value : this.score,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraDailySleepData(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('score: $score, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, day, score, fetchedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OuraDailySleepData &&
+          other.id == this.id &&
+          other.day == this.day &&
+          other.score == this.score &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class OuraDailySleepCompanion extends UpdateCompanion<OuraDailySleepData> {
+  final Value<String> id;
+  final Value<DateTime> day;
+  final Value<int?> score;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const OuraDailySleepCompanion({
+    this.id = const Value.absent(),
+    this.day = const Value.absent(),
+    this.score = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OuraDailySleepCompanion.insert({
+    required String id,
+    required DateTime day,
+    this.score = const Value.absent(),
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       day = Value(day),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<OuraDailySleepData> custom({
+    Expression<String>? id,
+    Expression<DateTime>? day,
+    Expression<int>? score,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (day != null) 'day': day,
+      if (score != null) 'score': score,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OuraDailySleepCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? day,
+    Value<int?>? score,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return OuraDailySleepCompanion(
+      id: id ?? this.id,
+      day: day ?? this.day,
+      score: score ?? this.score,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<int>(score.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OuraDailySleepCompanion(')
+          ..write('id: $id, ')
+          ..write('day: $day, ')
+          ..write('score: $score, ')
           ..write('fetchedAt: $fetchedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5478,6 +5735,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DayLocationOverridesTable dayLocationOverrides =
       $DayLocationOverridesTable(this);
   late final $OuraSleepTable ouraSleep = $OuraSleepTable(this);
+  late final $OuraDailySleepTable ouraDailySleep = $OuraDailySleepTable(this);
   late final $OuraActivityTable ouraActivity = $OuraActivityTable(this);
   late final $OuraReadinessTable ouraReadiness = $OuraReadinessTable(this);
   @override
@@ -5498,6 +5756,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     manualSleepRecords,
     dayLocationOverrides,
     ouraSleep,
+    ouraDailySleep,
     ouraActivity,
     ouraReadiness,
   ];
@@ -7921,7 +8180,6 @@ typedef $$OuraSleepTableCreateCompanionBuilder =
     OuraSleepCompanion Function({
       required String id,
       required DateTime day,
-      Value<int?> sleepScore,
       Value<int?> lowestHeartRate,
       Value<int?> restlessPeriods,
       Value<int?> averageHeartRate,
@@ -7933,7 +8191,6 @@ typedef $$OuraSleepTableUpdateCompanionBuilder =
     OuraSleepCompanion Function({
       Value<String> id,
       Value<DateTime> day,
-      Value<int?> sleepScore,
       Value<int?> lowestHeartRate,
       Value<int?> restlessPeriods,
       Value<int?> averageHeartRate,
@@ -7958,11 +8215,6 @@ class $$OuraSleepTableFilterComposer
 
   ColumnFilters<DateTime> get day => $composableBuilder(
     column: $table.day,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get sleepScore => $composableBuilder(
-    column: $table.sleepScore,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8011,11 +8263,6 @@ class $$OuraSleepTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get sleepScore => $composableBuilder(
-    column: $table.sleepScore,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<int> get lowestHeartRate => $composableBuilder(
     column: $table.lowestHeartRate,
     builder: (column) => ColumnOrderings(column),
@@ -8056,11 +8303,6 @@ class $$OuraSleepTableAnnotationComposer
 
   GeneratedColumn<DateTime> get day =>
       $composableBuilder(column: $table.day, builder: (column) => column);
-
-  GeneratedColumn<int> get sleepScore => $composableBuilder(
-    column: $table.sleepScore,
-    builder: (column) => column,
-  );
 
   GeneratedColumn<int> get lowestHeartRate => $composableBuilder(
     column: $table.lowestHeartRate,
@@ -8119,7 +8361,6 @@ class $$OuraSleepTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<DateTime> day = const Value.absent(),
-                Value<int?> sleepScore = const Value.absent(),
                 Value<int?> lowestHeartRate = const Value.absent(),
                 Value<int?> restlessPeriods = const Value.absent(),
                 Value<int?> averageHeartRate = const Value.absent(),
@@ -8129,7 +8370,6 @@ class $$OuraSleepTableTableManager
               }) => OuraSleepCompanion(
                 id: id,
                 day: day,
-                sleepScore: sleepScore,
                 lowestHeartRate: lowestHeartRate,
                 restlessPeriods: restlessPeriods,
                 averageHeartRate: averageHeartRate,
@@ -8141,7 +8381,6 @@ class $$OuraSleepTableTableManager
               ({
                 required String id,
                 required DateTime day,
-                Value<int?> sleepScore = const Value.absent(),
                 Value<int?> lowestHeartRate = const Value.absent(),
                 Value<int?> restlessPeriods = const Value.absent(),
                 Value<int?> averageHeartRate = const Value.absent(),
@@ -8151,7 +8390,6 @@ class $$OuraSleepTableTableManager
               }) => OuraSleepCompanion.insert(
                 id: id,
                 day: day,
-                sleepScore: sleepScore,
                 lowestHeartRate: lowestHeartRate,
                 restlessPeriods: restlessPeriods,
                 averageHeartRate: averageHeartRate,
@@ -8182,6 +8420,193 @@ typedef $$OuraSleepTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $OuraSleepTable, OuraSleepData>,
       ),
       OuraSleepData,
+      PrefetchHooks Function()
+    >;
+typedef $$OuraDailySleepTableCreateCompanionBuilder =
+    OuraDailySleepCompanion Function({
+      required String id,
+      required DateTime day,
+      Value<int?> score,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$OuraDailySleepTableUpdateCompanionBuilder =
+    OuraDailySleepCompanion Function({
+      Value<String> id,
+      Value<DateTime> day,
+      Value<int?> score,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$OuraDailySleepTableFilterComposer
+    extends Composer<_$AppDatabase, $OuraDailySleepTable> {
+  $$OuraDailySleepTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OuraDailySleepTableOrderingComposer
+    extends Composer<_$AppDatabase, $OuraDailySleepTable> {
+  $$OuraDailySleepTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OuraDailySleepTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OuraDailySleepTable> {
+  $$OuraDailySleepTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$OuraDailySleepTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OuraDailySleepTable,
+          OuraDailySleepData,
+          $$OuraDailySleepTableFilterComposer,
+          $$OuraDailySleepTableOrderingComposer,
+          $$OuraDailySleepTableAnnotationComposer,
+          $$OuraDailySleepTableCreateCompanionBuilder,
+          $$OuraDailySleepTableUpdateCompanionBuilder,
+          (
+            OuraDailySleepData,
+            BaseReferences<
+              _$AppDatabase,
+              $OuraDailySleepTable,
+              OuraDailySleepData
+            >,
+          ),
+          OuraDailySleepData,
+          PrefetchHooks Function()
+        > {
+  $$OuraDailySleepTableTableManager(
+    _$AppDatabase db,
+    $OuraDailySleepTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OuraDailySleepTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OuraDailySleepTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OuraDailySleepTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> day = const Value.absent(),
+                Value<int?> score = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OuraDailySleepCompanion(
+                id: id,
+                day: day,
+                score: score,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime day,
+                Value<int?> score = const Value.absent(),
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => OuraDailySleepCompanion.insert(
+                id: id,
+                day: day,
+                score: score,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OuraDailySleepTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OuraDailySleepTable,
+      OuraDailySleepData,
+      $$OuraDailySleepTableFilterComposer,
+      $$OuraDailySleepTableOrderingComposer,
+      $$OuraDailySleepTableAnnotationComposer,
+      $$OuraDailySleepTableCreateCompanionBuilder,
+      $$OuraDailySleepTableUpdateCompanionBuilder,
+      (
+        OuraDailySleepData,
+        BaseReferences<_$AppDatabase, $OuraDailySleepTable, OuraDailySleepData>,
+      ),
+      OuraDailySleepData,
       PrefetchHooks Function()
     >;
 typedef $$OuraActivityTableCreateCompanionBuilder =
@@ -8605,6 +9030,8 @@ class $AppDatabaseManager {
       $$DayLocationOverridesTableTableManager(_db, _db.dayLocationOverrides);
   $$OuraSleepTableTableManager get ouraSleep =>
       $$OuraSleepTableTableManager(_db, _db.ouraSleep);
+  $$OuraDailySleepTableTableManager get ouraDailySleep =>
+      $$OuraDailySleepTableTableManager(_db, _db.ouraDailySleep);
   $$OuraActivityTableTableManager get ouraActivity =>
       $$OuraActivityTableTableManager(_db, _db.ouraActivity);
   $$OuraReadinessTableTableManager get ouraReadiness =>

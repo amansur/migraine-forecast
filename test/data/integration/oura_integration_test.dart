@@ -15,6 +15,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:migraine_forecast/data/database.dart' as db;
 import 'package:migraine_forecast/data/sources/health_source.dart';
 import 'package:migraine_forecast/data/sources/health_source_factory.dart';
 import 'package:migraine_forecast/data/sources/oura_api_client.dart';
@@ -112,6 +113,16 @@ void main() {
   });
 
   group('Oura Integration Test', () {
+    late db.AppDatabase database;
+
+    setUp(() {
+      database = db.AppDatabase.memory();
+    });
+
+    tearDown(() async {
+      await database.close();
+    });
+
     test('Factory returns Oura metrics when preferred and fresh', () async {
       // -----------------------------------------------------------------------
       // Setup: Mock secure storage
@@ -170,10 +181,11 @@ void main() {
         httpClient: mockHttpClient,
       );
 
-      // 4. Create OuraHealthSource combining auth + API
+      // 4. Create OuraHealthSource combining auth + API + in-memory cache
       final ouraSource = OuraHealthSource(
         authManager: authManager,
         apiClient: apiClient,
+        database: database,
       );
 
       // 6. Create fallback Apple Health source (returns fresh data)

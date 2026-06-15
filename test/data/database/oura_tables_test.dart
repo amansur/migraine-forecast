@@ -50,11 +50,30 @@ void main() {
       expect(columnNames, containsAll([
         'id',
         'day',
-        'sleep_score',
         'lowest_heart_rate',
         'restless_periods',
         'average_heart_rate',
         'average_hrv',
+        'fetched_at',
+      ]));
+      // sleep_score moved to its own table in v11.
+      expect(columnNames, isNot(contains('sleep_score')));
+      await db.close();
+    });
+
+    test('OuraDailySleep table has all required columns', () async {
+      final db = AppDatabase.memory();
+
+      final query = await db.customSelect(
+        "PRAGMA table_info(oura_daily_sleep)",
+      ).get();
+
+      final columnNames = query.map((row) => row.read<String>('name')).toList();
+
+      expect(columnNames, containsAll([
+        'id',
+        'day',
+        'score',
         'fetched_at',
       ]));
       await db.close();
@@ -105,7 +124,6 @@ void main() {
             OuraSleepCompanion(
               id: const Value('sleep-123'),
               day: Value(now),
-              sleepScore: const Value(82),
               lowestHeartRate: const Value(48),
               restlessPeriods: const Value(2),
               fetchedAt: Value(now),
@@ -115,8 +133,27 @@ void main() {
       final records = await db.select(db.ouraSleep).get();
 
       expect(records.length, 1);
-      expect(records.first.sleepScore, 82);
       expect(records.first.lowestHeartRate, 48);
+      await db.close();
+    });
+
+    test('Can insert and query OuraDailySleep data', () async {
+      final db = AppDatabase.memory();
+
+      final now = DateTime.now();
+      await db.into(db.ouraDailySleep).insert(
+            OuraDailySleepCompanion(
+              id: const Value('daily-sleep-123'),
+              day: Value(now),
+              score: const Value(82),
+              fetchedAt: Value(now),
+            ),
+          );
+
+      final records = await db.select(db.ouraDailySleep).get();
+
+      expect(records.length, 1);
+      expect(records.first.score, 82);
       await db.close();
     });
 

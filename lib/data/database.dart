@@ -145,6 +145,7 @@ class DayLocationOverrides extends Table {
   ManualSleepRecords,
   DayLocationOverrides,
   OuraSleep,
+  OuraDailySleep,
   OuraActivity,
   OuraReadiness,
 ])
@@ -153,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -230,6 +231,23 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(ouraActivity);
             await m.createTable(ouraReadiness);
           }
+          if (from < 11) {
+            // Daily sleep summaries previously shared the oura_sleep table
+            // (rows prefixed with "daily_"). Promote them to their own table
+            // and drop the now-unused sleep_score column from oura_sleep.
+            await m.createTable(ouraDailySleep);
+            await customStatement(
+              'INSERT INTO oura_daily_sleep (id, day, score, fetched_at) '
+              'SELECT id, day, sleep_score, fetched_at FROM oura_sleep '
+              "WHERE id LIKE 'daily_%'",
+            );
+            await customStatement(
+              "DELETE FROM oura_sleep WHERE id LIKE 'daily_%'",
+            );
+            await customStatement(
+              'ALTER TABLE oura_sleep DROP COLUMN sleep_score',
+            );
+          }
         },
       );
 
@@ -249,8 +267,73 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Selectable<OuraSleepData> get allOuraSleep => select(ouraSleep);
+  Selectable<OuraDailySleepData> get allOuraDailySleep => select(ouraDailySleep);
   Selectable<OuraActivityData> get allOuraActivity => select(ouraActivity);
   Selectable<OuraReadinessData> get allOuraReadiness => select(ouraReadiness);
+
+  // ---------------------------------------------------------------------------
+  // Oura upsert helpers
+  // ---------------------------------------------------------------------------
+
+  Future<void> upsertOuraSleep(List<OuraSleepCompanion> rows) async {
+    await batch((b) {
+      b.insertAll(ouraSleep, rows, mode: InsertMode.insertOrReplace);
+    });
+  }
+
+  Future<void> upsertOuraDailySleep(List<OuraDailySleepCompanion> rows) async {
+    await batch((b) {
+      b.insertAll(ouraDailySleep, rows, mode: InsertMode.insertOrReplace);
+    });
+  }
+
+  Future<void> upsertOuraActivity(List<OuraActivityCompanion> rows) async {
+    await batch((b) {
+      b.insertAll(ouraActivity, rows, mode: InsertMode.insertOrReplace);
+    });
+  }
+
+  Future<void> upsertOuraReadiness(List<OuraReadinessCompanion> rows) async {
+    await batch((b) {
+      b.insertAll(ouraReadiness, rows, mode: InsertMode.insertOrReplace);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Oura cache reads
+  // ---------------------------------------------------------------------------
+
+  Future<List<OuraSleepData>> recentOuraSleep({required Duration window}) {
+    final cutoff = DateTime.now().subtract(window);
+    return (select(ouraSleep)
+          ..where((t) => t.day.isBiggerOrEqualValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.day)]))
+        .get();
+  }
+
+  Future<List<OuraDailySleepData>> recentOuraDailySleep({required Duration window}) {
+    final cutoff = DateTime.now().subtract(window);
+    return (select(ouraDailySleep)
+          ..where((t) => t.day.isBiggerOrEqualValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.day)]))
+        .get();
+  }
+
+  Future<List<OuraActivityData>> recentOuraActivity({required Duration window}) {
+    final cutoff = DateTime.now().subtract(window);
+    return (select(ouraActivity)
+          ..where((t) => t.day.isBiggerOrEqualValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.day)]))
+        .get();
+  }
+
+  Future<List<OuraReadinessData>> recentOuraReadiness({required Duration window}) {
+    final cutoff = DateTime.now().subtract(window);
+    return (select(ouraReadiness)
+          ..where((t) => t.day.isBiggerOrEqualValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.day)]))
+        .get();
+  }
 
   Future<void> clearAllData() async {
     await transaction(() async {
