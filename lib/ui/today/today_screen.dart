@@ -54,16 +54,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('today-log-fab'),
-        icon: const Icon(Icons.add),
-        label: const Text('Log'),
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          showDragHandle: false,
-          builder: (_) => const LogPickerSheet(),
-        ),
-      ),
       appBar: AppBar(
         title: Column(
           children: [
@@ -139,6 +129,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
                     ),
                     const SizedBox(height: 8),
                     const _PeriodButton(),
+                    const SizedBox(height: 8),
+                    const _LogButton(),
                   ],
                 );
               },
@@ -181,6 +173,30 @@ class _PeriodButton extends ConsumerWidget {
             baselineSeverity: severity,
           ));
         },
+      ),
+    );
+  }
+}
+
+class _LogButton extends StatelessWidget {
+  const _LogButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        key: const Key('log-button'),
+        icon: const Icon(Icons.add),
+        label: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Text('Log food, drink, sleep, stress…'),
+        ),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          showDragHandle: false,
+          builder: (_) => const LogPickerSheet(),
+        ),
       ),
     );
   }

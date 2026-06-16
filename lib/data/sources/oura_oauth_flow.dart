@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 
@@ -48,19 +50,29 @@ class OuraOAuthFlow {
   static const _personalInfoUrl =
       'https://api.ouraring.com/v2/usercollection/personal_info';
 
-  String _generateState() {
+  String _randomBase64Url(int byteCount) {
     final rng = Random.secure();
-    final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
-    return base64Url.encode(bytes);
+    final bytes = List<int>.generate(byteCount, (_) => rng.nextInt(256));
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  /// Returns (verifier, challenge) for PKCE S256.
+  (String, String) _generatePkce() {
+    final verifier = _randomBase64Url(32); // 43-char url-safe string
+    final digest = sha256.convert(utf8.encode(verifier));
+    final challenge = base64Url.encode(digest.bytes).replaceAll('=', '');
+    return (verifier, challenge);
   }
 
   /// Launches the browser, lets the user grant access, exchanges the
   /// authorization code for tokens, and persists them via [authManager.saveTokens].
   ///
+  /// On web, uses PKCE instead of client_secret (secret is not safe in JS).
   /// Throws [OuraOAuthException] on cancellation, state mismatch, or token
   /// exchange failure.
   Future<void> connect() async {
-    final state = _generateState();
+    final state = _randomBase64Url(16);
+    final (codeVerifier, codeChallenge) = _generatePkce();
 
     final authorizeUrl = Uri.parse(_authBaseUrl).replace(queryParameters: {
       'client_id': clientId,
@@ -68,6 +80,8 @@ class OuraOAuthFlow {
       'response_type': 'code',
       'scope': 'email personal daily heartrate session tag workout',
       'state': state,
+      'code_challenge': codeChallenge,
+      'code_challenge_method': 'S256',
     }).toString();
 
     final String resultUrl;
@@ -89,6 +103,8 @@ class OuraOAuthFlow {
     }
 
     // Exchange code for tokens.
+    // Web: PKCE verifier (client_secret is not safe in a JS bundle).
+    // Native: client_secret (compiled into the binary, not extractable).
     final tokenResponse = await _httpClient.post(
       Uri.parse(_tokenUrl),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -96,7 +112,8 @@ class OuraOAuthFlow {
         'grant_type': 'authorization_code',
         'code': code,
         'client_id': clientId,
-        'client_secret': clientSecret,
+        if (kIsWeb) 'code_verifier': codeVerifier
+        else 'client_secret': clientSecret,
         'redirect_uri': redirectUri,
       },
     );

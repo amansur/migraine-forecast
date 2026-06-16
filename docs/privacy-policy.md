@@ -59,4 +59,4 @@ This policy may be updated as the app evolves. Material changes will be reflecte
 
 ## Contact
 
-For questions about this privacy policy, contact the developer at **amansur@gmail.com**.
+For questions about this privacy policy, contact Claude.
