@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sources/oura_auth_manager.dart';
@@ -64,7 +65,9 @@ final ouraOAuthFlowProvider = Provider<OuraOAuthFlow>((ref) {
   return OuraOAuthFlow(
     clientId: const String.fromEnvironment('OURA_CLIENT_ID'),
     clientSecret: const String.fromEnvironment('OURA_CLIENT_SECRET'),
-    redirectUri: 'com.migraine-forecast://oauth/callback',
+    redirectUri: kIsWeb
+        ? 'https://migraine-forecast.pages.dev/auth.html'
+        : 'com.migraine-forecast://oauth/callback',
     authManager: ref.watch(ouraAuthManagerProvider),
   );
 });
