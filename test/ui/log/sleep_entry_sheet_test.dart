@@ -20,7 +20,7 @@ class _FakeManual implements ManualSleepSource {
       Stream.value(const []);
 }
 
-Future<void> pumpSheet(WidgetTester tester, _FakeManual fake, {SleepRecord? initial}) async {
+Future<void> _pumpSheet(WidgetTester tester, _FakeManual fake, {SleepRecord? initial}) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [manualSleepSourceProvider.overrideWithValue(fake)],
     child: MaterialApp(home: Scaffold(body: SleepEntrySheet(initial: initial))),
@@ -30,7 +30,7 @@ Future<void> pumpSheet(WidgetTester tester, _FakeManual fake, {SleepRecord? init
 void main() {
   testWidgets('default 22:00→06:00 computes 8h sleep', (tester) async {
     final fake = _FakeManual();
-    await pumpSheet(tester, fake);
+    await _pumpSheet(tester, fake);
     await tester.tap(find.byKey(const Key('sleep-save')));
     await tester.pump();
     expect(fake.upserted, hasLength(1));
@@ -41,7 +41,7 @@ void main() {
     final fake = _FakeManual();
     // Compose an initial record with 30min sleep → still invalid because
     // the sheet will internally derive duration from start/end times.
-    await pumpSheet(tester, fake, initial: SleepRecord(
+    await _pumpSheet(tester, fake, initial: SleepRecord(
       night: DateTime.utc(2026, 6, 12),
       sleepStart: DateTime.utc(2026, 6, 12, 23, 30),
       totalSleep: const Duration(minutes: 30),
@@ -53,7 +53,7 @@ void main() {
 
   testWidgets('cross-midnight times produce positive duration', (tester) async {
     final fake = _FakeManual();
-    await pumpSheet(tester, fake);
+    await _pumpSheet(tester, fake);
     // The sheet's default already crosses midnight; verify night PK is the
     // calendar date of bedtime.
     await tester.tap(find.byKey(const Key('sleep-save')));

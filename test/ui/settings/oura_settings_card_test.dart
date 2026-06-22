@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:migraine_forecast/data/sources/oura_auth_manager.dart';
 import 'package:migraine_forecast/data/sources/oura_oauth_flow.dart';
 import 'package:migraine_forecast/state/oura_settings_provider.dart';
-import 'package:migraine_forecast/state/settings_provider.dart';
 import 'package:migraine_forecast/ui/settings/oura_settings_card.dart';
 
 // ---------------------------------------------------------------------------
@@ -121,8 +120,6 @@ void main() {
       final mockFlow = MockOuraOAuthFlow();
       when(() => mockFlow.connect()).thenAnswer((_) async {});
 
-      late OuraAuthStateNotifier capturedNotifier;
-
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -131,9 +128,7 @@ void main() {
               when(() => mockManager.isAuthenticated).thenReturn(false);
               when(() => mockManager.userEmail).thenReturn(null);
               when(() => mockManager.initialize()).thenAnswer((_) async {});
-              final notifier = OuraAuthStateNotifier(mockManager);
-              capturedNotifier = notifier;
-              return notifier;
+              return OuraAuthStateNotifier(mockManager);
             }),
             ouraOAuthFlowProvider.overrideWithValue(mockFlow),
           ],

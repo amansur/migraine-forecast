@@ -1,4 +1,6 @@
 /// Widget tests for the location-override row in DayDetailSheet.
+library;
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

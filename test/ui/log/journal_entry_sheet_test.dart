@@ -23,7 +23,7 @@ class _FakeJournal implements JournalSource {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
-Future<void> pumpSheet(WidgetTester tester, _FakeJournal fake, JournalKind kind, {JournalEntry? initial}) async {
+Future<void> _pumpSheet(WidgetTester tester, _FakeJournal fake, JournalKind kind, {JournalEntry? initial}) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [journalSourceProvider.overrideWithValue(fake)],
     child: MaterialApp(
@@ -35,7 +35,7 @@ Future<void> pumpSheet(WidgetTester tester, _FakeJournal fake, JournalKind kind,
 void main() {
   testWidgets('alcohol: tapping +1 then Save writes units=1', (tester) async {
     final fake = _FakeJournal();
-    await pumpSheet(tester, fake, JournalKind.alcohol);
+    await _pumpSheet(tester, fake, JournalKind.alcohol);
     await tester.tap(find.byKey(const Key('alcohol-inc')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('entry-save')));
@@ -47,7 +47,7 @@ void main() {
 
   testWidgets('caffeine: selecting Coffee preset writes mg=95', (tester) async {
     final fake = _FakeJournal();
-    await pumpSheet(tester, fake, JournalKind.caffeine);
+    await _pumpSheet(tester, fake, JournalKind.caffeine);
     await tester.tap(find.byKey(const Key('caffeine-preset-coffee')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('entry-save')));
@@ -57,7 +57,7 @@ void main() {
 
   testWidgets('hydration: tapping Bottle writes liters=0.5', (tester) async {
     final fake = _FakeJournal();
-    await pumpSheet(tester, fake, JournalKind.hydration);
+    await _pumpSheet(tester, fake, JournalKind.hydration);
     await tester.tap(find.byKey(const Key('hydration-preset-bottle')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('entry-save')));
@@ -67,7 +67,7 @@ void main() {
 
   testWidgets('stress: selecting rating 4 writes rating=4', (tester) async {
     final fake = _FakeJournal();
-    await pumpSheet(tester, fake, JournalKind.stress);
+    await _pumpSheet(tester, fake, JournalKind.stress);
     await tester.tap(find.byKey(const Key('stress-rating-4')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('entry-save')));
@@ -83,7 +83,7 @@ void main() {
       kind: JournalKind.stress,
       payload: const {'rating': 2},
     );
-    await pumpSheet(tester, fake, JournalKind.stress, initial: initial);
+    await _pumpSheet(tester, fake, JournalKind.stress, initial: initial);
     await tester.tap(find.byKey(const Key('stress-rating-5')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('entry-save')));
@@ -95,7 +95,7 @@ void main() {
 
   testWidgets('save is disabled until payload is valid', (tester) async {
     final fake = _FakeJournal();
-    await pumpSheet(tester, fake, JournalKind.stress);
+    await _pumpSheet(tester, fake, JournalKind.stress);
     final saveBtn = tester.widget<FilledButton>(find.byKey(const Key('entry-save')));
     expect(saveBtn.onPressed, isNull);
   });

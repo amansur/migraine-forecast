@@ -162,7 +162,7 @@ void main() {
 
     testWidgets('shows legend with severity labels', (tester) async {
       await tester.pumpWidget(_wrapHeatmap(CalendarHeatmap(
-        severityByDay: {},
+        severityByDay: const {},
         windowStart: windowStart,
         windowEnd: baseDay,
       )));
