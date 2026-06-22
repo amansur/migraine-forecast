@@ -55,14 +55,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 'You can change these any time in Settings.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              TextButton(
-                onPressed: () => launchUrl(Uri(path: '/home/')),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: Size.zero,
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => launchUrl(Uri(path: '/home/')),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      'Learn how it works →',
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ),
                 ),
-                child: const Text('Learn how it works →'),
               ),
               const SizedBox(height: 16),
               Expanded(
