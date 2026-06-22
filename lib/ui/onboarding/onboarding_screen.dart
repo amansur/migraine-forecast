@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../state/backfill_provider.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
@@ -53,7 +55,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 'You can change these any time in Settings.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () => launchUrl(Uri(path: '/home/')),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: const Text('Learn how it works →'),
+              ),
+              const SizedBox(height: 16),
               Expanded(
                 child: SingleChildScrollView(
                   child: Wrap(
