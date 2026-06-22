@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:domain/domain.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,19 +56,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 'You can change these any time in Settings.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () => launchUrl(Uri(path: '/home/')),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      'Learn how it works →',
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              if (kIsWeb)
+                Semantics(
+                  link: true,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => unawaited(launchUrl(Uri(path: '/home/'))),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Learn how it works →',
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(height: 16),
               Expanded(
                 child: SingleChildScrollView(
