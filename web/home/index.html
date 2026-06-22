@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Migraine Forecast — daily risk from evidence-backed triggers</title>
+  <meta name="description" content="Daily migraine risk forecasts from barometric pressure, sleep, HRV, and the triggers that matter to you. Local-first. No account.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    // Inline, runs pre-paint to avoid flash-of-wrong-theme.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var preferred = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', preferred);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand" href="/home/">Migraine Forecast</a>
+      <nav>
+        <a href="/how-it-works/">How it works</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/privacy/">Privacy</a>
+        <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="block">
+        <h1 class="hero">Know your <span class="accent">migraine risk</span> before it hits.</h1>
+        <p class="lead muted">Daily forecasts from barometric pressure, sleep, HRV, and the triggers that matter to you.</p>
+        <div class="ctas">
+          <a class="cta cta-primary" href="https://migraine-forecast.pages.dev">Try in browser →</a>
+          <span class="cta cta-disabled" aria-disabled="true">iOS · coming soon</span>
+          <span class="cta cta-disabled" aria-disabled="true">Android · coming soon</span>
+        </div>
+      </section>
+
+      <section class="block">
+        <span class="label accent">What it does</span>
+        <h2>Three things, in plain English.</h2>
+        <div class="feature-grid">
+          <div class="feature surface">
+            <h3>Daily risk score</h3>
+            <p class="muted">A 0–100 score with the top drivers explained — no black box.</p>
+          </div>
+          <div class="feature surface">
+            <h3>Learns from you</h3>
+            <p class="muted">Logging headaches sharpens the model around <em>your</em> triggers, not generic ones.</p>
+          </div>
+          <div class="feature surface">
+            <h3>Local-first</h3>
+            <p class="muted">All data stays on the device. No account required.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <span class="label accent">Triggers tracked</span>
+        <h2>Eleven evidence-backed factors.</h2>
+        <p class="muted">The score blends environmental, physiological, and behavioral signals.</p>
+        <div class="pills">
+          <span class="pill surface">Barometric pressure</span>
+          <span class="pill surface">Sleep</span>
+          <span class="pill surface">HRV</span>
+          <span class="pill surface">Hormones</span>
+          <span class="pill surface">Hydration</span>
+          <span class="pill surface">Alcohol</span>
+          <span class="pill surface">Stress</span>
+          <span class="pill surface">Caffeine</span>
+          <span class="pill surface">Meals</span>
+          <span class="pill surface">Light / screens</span>
+          <span class="pill surface">Activity</span>
+        </div>
+      </section>
+
+      <section class="block">
+        <span class="label accent">How it works</span>
+        <h2>Evidence in, personalization out.</h2>
+        <p class="muted">Each trigger module is built from peer-reviewed evidence and contributes to the daily score with a confidence weight. As you log headaches, a correlation engine learns which triggers fire for <em>you</em> and reweights accordingly.</p>
+        <p><a class="accent" href="/how-it-works/">Read the full explainer →</a></p>
+      </section>
+
+      <section class="block">
+        <h2>Ready to try it?</h2>
+        <div class="ctas">
+          <a class="cta cta-primary" href="https://migraine-forecast.pages.dev">Try in browser →</a>
+          <span class="cta cta-disabled" aria-disabled="true">iOS · coming soon</span>
+          <span class="cta cta-disabled" aria-disabled="true">Android · coming soon</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer surface">
+      <div class="cols">
+        <div>
+          <strong>Migraine Forecast</strong>
+          <p class="dim">Daily risk forecasts from evidence-backed triggers. Local-first. Open source.</p>
+        </div>
+        <div>
+          <strong>Product</strong>
+          <a href="/how-it-works/">How it works</a>
+          <a href="/faq/">FAQ</a>
+          <a href="https://migraine-forecast.pages.dev">Try in browser</a>
+        </div>
+        <div>
+          <strong>Legal</strong>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="/theme.js" defer></script>
+</body>
+</html>
