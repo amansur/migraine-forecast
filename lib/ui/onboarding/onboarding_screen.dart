@@ -57,7 +57,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               TextButton(
                 onPressed: () => launchUrl(Uri(path: '/home/')),
-                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: Size.zero,
+                ),
                 child: const Text('Learn how it works →'),
               ),
               const SizedBox(height: 16),
