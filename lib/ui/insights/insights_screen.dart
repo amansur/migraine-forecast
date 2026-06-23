@@ -19,6 +19,7 @@ import '../../state/suggestions_provider.dart';
 import '../common/location_search_dialog.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../shared/contributor_order.dart';
+import '../shared/unit_formatter.dart';
 import 'calendar_heatmap.dart';
 import 'correlation_card.dart';
 import 'phase_ribbon.dart';
@@ -228,6 +229,7 @@ class DayDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final assessment = ref.watch(dayAssessmentProvider(day));
     final attacks = ref.watch(dayAttacksProvider(day));
+    final formatter = ref.watch(unitFormatterProvider).asData?.value ?? const UnitFormatter();
 
     final d = DateTime.now();
     // Compare normalized markers (both UTC midnight)
@@ -289,7 +291,7 @@ class DayDetailSheet extends ConsumerWidget {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          '${f.moduleId}: ${f.explanation}',
+                                          '${f.moduleId}: ${formatter.formatExplanation(f.explanation)}',
                                           style: Theme.of(context).textTheme.bodySmall,
                                         ),
                                       ),
