@@ -19,10 +19,14 @@ class WhyChips extends StatelessWidget {
       children: [
         Text('Why', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: shown.map((c) => ContributorChip(signal: c)).toList(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: shown
+              .map((c) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: ContributorChip(signal: c),
+                  ))
+              .toList(),
         ),
       ],
     );
