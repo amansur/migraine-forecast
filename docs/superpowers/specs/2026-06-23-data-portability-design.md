@@ -48,7 +48,7 @@ Produces a ZIP file (`migraine_forecast_export_YYYY-MM-DD.zip`) containing three
 
 **`attacks.csv`**
 ```
-id, started_at, ended_at, severity, notes, in_progress
+id, started_at, ended_at, severity, notes, risk_assessment_id, in_progress
 ```
 
 **`journal_entries.csv`**
@@ -74,6 +74,8 @@ menstrual_phase_contribution, menstrual_phase_explanation
 
 Trigger columns are populated by parsing `contributors_json` from the risk assessments table. Missing modules for a given row get empty cells. `{id}_contribution` = `weight × confidence` (the `TriggerSignal.contribution` getter).
 
+**DateTime format:** all DateTime values in CSV and JSON are serialised as UTC ISO 8601 strings (e.g. `2026-06-23T12:00:00.000Z`). The importer parses them with `DateTime.parse(...).toUtc()` before writing to Drift. This is already the case for the existing JSON export; the new CSV path must match.
+
 ## Import
 
 ### UI
@@ -81,7 +83,8 @@ Trigger columns are populated by parsing `contributors_json` from the risk asses
 - New **"Import Data"** settings row below "Export Data"
 - Subtitle: "Restore from a previous JSON or CSV export"
 - Tapping immediately opens the file picker (no pre-dialog)
-- Picker accepts: `.json`, `.zip`
+- Picker is configured with `FileType.any` (extension filtering via MIME/UTI is unreliable on Android/iOS); after selection the extension is checked in code and an error dialog shown for unsupported types
+- Accepted extensions: `.json`, `.zip`
 - After file selection: format is detected by extension, then a conflict dialog is shown
 
 ### Conflict Dialog
@@ -90,23 +93,31 @@ Trigger columns are populated by parsing `contributors_json` from the risk asses
 > - **Replace all** — Wipe existing data for the imported tables and restore from file
 > - **Merge** — Keep existing records; only import records not already present
 
+### Atomicity
+
+All import operations (both replace-all and merge) are wrapped in a single Drift transaction. If any step fails the entire import is rolled back and an error dialog is shown. This prevents half-wiped databases on replace-all failures.
+
 ### JSON Import
 
 1. Parse JSON, validate `schema_version` is 1 or 2; reject anything else with an error dialog
 2. Apply conflict mode (replace-all or merge) to each table present in the file
-3. Merge primary keys:
+3. Merge semantics per table:
 
-| Table | Merge key |
-|-------|-----------|
-| attacks | `id` |
-| journal_entries | `id` |
-| risk_assessments | `(target_date, horizon)` |
-| settings | `key` |
-| user_trigger_flags | `module_id` |
-| manual_sleep_records | `night` |
-| periods | `id` |
-| period_day_severities | `day` |
-| day_location_overrides | `day` |
+| Table | Merge key | Insert mode |
+|-------|-----------|-------------|
+| attacks | `id` | `INSERT OR IGNORE` — skip if id already exists |
+| journal_entries | `id` | `INSERT OR IGNORE` — skip if id already exists |
+| risk_assessments | `(target_date, horizon)` unique index | `INSERT OR REPLACE` — overwrite if same date+horizon exists |
+| settings | `key` | `INSERT OR REPLACE` |
+| user_trigger_flags | `module_id` | `INSERT OR REPLACE` |
+| manual_sleep_records | `night` | `INSERT OR IGNORE` |
+| periods | `id` | `INSERT OR IGNORE` |
+| period_day_severities | `day` | `INSERT OR IGNORE` |
+| day_location_overrides | `day` | `INSERT OR IGNORE` |
+
+`INSERT OR IGNORE` is used for `attacks` and `journal_entries` because their IDs are autoincrement and a conflicting ID from another device would replace an unrelated local record. Existing records always win for these tables.
+
+**v1 JSON imports:** tables absent from the file are left untouched regardless of conflict mode (replace-all only clears tables that are present in the file).
 
 4. Show success snackbar: "Imported N records" (N = total rows inserted or upserted across all tables)
 
