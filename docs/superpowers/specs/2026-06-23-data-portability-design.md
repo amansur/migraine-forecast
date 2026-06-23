@@ -1,0 +1,140 @@
+# Data Portability (Export & Import) Design
+
+**Date:** 2026-06-23  
+**Status:** Approved
+
+## Goal
+
+Replace the inaccessible "Save to Documents" export with an OS share sheet, add CSV export with historical trigger data as expanded columns, and add JSON and CSV import with replace-all or merge conflict resolution.
+
+## New Packages
+
+| Package | Purpose |
+|---------|---------|
+| `share_plus` | OS share sheet (Android, iOS, web download fallback) |
+| `file_picker` | File picker for import |
+| `archive` | Pure-Dart ZIP creation and extraction |
+
+## Export
+
+### UI Changes
+
+- "Export JSON Data" settings row renamed to **"Export Data"**; subtitle updated to reflect both formats and risk history inclusion
+- Export dialog title: "Export Data"
+- Format radio toggle added: **JSON** (default) / **CSV**
+- Actions: Cancel · Copy to Clipboard (JSON only; greyed out when CSV selected) · **Share**
+- "Save to Documents" action removed
+- Share invokes `share_plus`, writing the file to a system temp path first
+
+### JSON Export (`schema_version` 2)
+
+Adds the following tables to the existing four (`attacks`, `journal_entries`, `settings`, `user_trigger_flags`):
+
+| New table | Notes |
+|-----------|-------|
+| `risk_assessments` | Includes full `contributors_json` blob |
+| `periods` | Menstrual cycle periods |
+| `period_day_severities` | Per-day severity within a period |
+| `manual_sleep_records` | Manually entered sleep data |
+| `day_location_overrides` | User-set location overrides per day |
+
+Old v1 backups remain importable — the importer handles missing tables gracefully.
+
+`WeatherSnapshots` and `BaselinesKv` are excluded (large, fully re-derivable).
+
+### CSV Export
+
+Produces a ZIP file (`migraine_forecast_export_YYYY-MM-DD.zip`) containing three CSVs:
+
+**`attacks.csv`**
+```
+id, started_at, ended_at, severity, notes, in_progress
+```
+
+**`journal_entries.csv`**
+```
+id, at, kind, payload_json
+```
+`payload_json` stays as a JSON string in a single cell — each journal kind has a different payload shape.
+
+**`risk_assessments.csv`**
+```
+target_date, horizon, score, band, computed_at, config_version, backfilled,
+pressure_drop_contribution, pressure_drop_explanation,
+humidity_contribution, humidity_explanation,
+temp_swing_contribution, temp_swing_explanation,
+air_quality_contribution, air_quality_explanation,
+stress_contribution, stress_explanation,
+sleep_deficit_contribution, sleep_deficit_explanation,
+alcohol_contribution, alcohol_explanation,
+caffeine_contribution, caffeine_explanation,
+hydration_contribution, hydration_explanation,
+menstrual_phase_contribution, menstrual_phase_explanation
+```
+
+Trigger columns are populated by parsing `contributors_json` from the risk assessments table. Missing modules for a given row get empty cells. `{id}_contribution` = `weight × confidence` (the `TriggerSignal.contribution` getter).
+
+## Import
+
+### UI
+
+- New **"Import Data"** settings row below "Export Data"
+- Subtitle: "Restore from a previous JSON or CSV export"
+- Tapping immediately opens the file picker (no pre-dialog)
+- Picker accepts: `.json`, `.zip`
+- After file selection: format is detected by extension, then a conflict dialog is shown
+
+### Conflict Dialog
+
+> **How should we handle conflicts?**
+> - **Replace all** — Wipe existing data for the imported tables and restore from file
+> - **Merge** — Keep existing records; only import records not already present
+
+### JSON Import
+
+1. Parse JSON, validate `schema_version` is 1 or 2; reject anything else with an error dialog
+2. Apply conflict mode (replace-all or merge) to each table present in the file
+3. Merge primary keys:
+
+| Table | Merge key |
+|-------|-----------|
+| attacks | `id` |
+| journal_entries | `id` |
+| risk_assessments | `(target_date, horizon)` |
+| settings | `key` |
+| user_trigger_flags | `module_id` |
+| manual_sleep_records | `night` |
+| periods | `id` |
+| period_day_severities | `day` |
+| day_location_overrides | `day` |
+
+4. Show success snackbar: "Imported N records" (N = total rows inserted or upserted across all tables)
+
+### CSV ZIP Import
+
+1. Extract ZIP; process the three known filenames; ignore unknown files
+2. Apply same replace-all / merge logic as JSON, limited to the three tables present in CSV
+3. Show success snackbar: "Imported N records" (N = total rows inserted or upserted across all tables)
+
+### Error Handling
+
+The following each show an `AlertDialog` with a plain-English message — no silent failures:
+
+- Malformed JSON
+- Unrecognised `schema_version`
+- Missing required CSV columns
+- ZIP extraction failure
+- File picker cancelled (no dialog, just no-op)
+
+## What Is Not Changing
+
+- "Rebuild risk history" and "Clear all data" settings rows are untouched
+- `WeatherSnapshots` and `BaselinesKv` excluded from all export/import formats
+- Web export: `share_plus` web implementation triggers a browser download
+- `ExportRepo.buildJson()` (v1, existing method) is kept for existing tests; new method is `buildJsonFull()`
+
+## Out of Scope
+
+- Automatic cloud backup / sync
+- Selective import (choosing which tables to restore)
+- CSV import of `periods`, `period_day_severities`, `manual_sleep_records`, `day_location_overrides` (JSON only for those tables)
