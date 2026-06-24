@@ -13,6 +13,7 @@ import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/trigger_flags_provider.dart';
+import '../shared/mascot/mascot_widget.dart';
 
 /// User-facing labels for the multi-select. Each maps to one or more module IDs;
 /// a single chip can stand in for a family of related modules.
@@ -36,6 +37,13 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final Set<String> _selected = {};
   bool _isLoading = false;
+  final _mascot = MascotController();
+
+  @override
+  void dispose() {
+    _mascot.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +63,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Text(
                 'You can change these any time in Settings.',
                 style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: MascotWidget(band: RiskBand.low, size: 80, controller: _mascot),
               ),
               if (kIsWeb)
                 Semantics(
@@ -118,9 +130,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_isLoading) return;
     setState(() => _isLoading = true);
 
-    // Capture the long-lived container before any async gap so the post-await
-    // backfill kickoff doesn't read a disposed BuildContext.
+    // Capture values from BuildContext before any async gap.
     final container = ProviderScope.containerOf(context, listen: false);
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
 
     try {
       await ref.read(permissionServiceProvider).requestLocation();
@@ -138,7 +150,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       await saveFlags(UserTriggerFlags(flaggedModuleIds: moduleIds));
       final markDone = ref.read(markOnboardingCompletedProvider);
       await markDone();
-      
+
+      // Cheerful wave before we navigate away.
+      _mascot.wave();
+      if (!disableAnimations) {
+        await Future<void>.delayed(const Duration(milliseconds: 450));
+      }
+
       // Wait for the provider to resolve before navigating, otherwise the router redirect will bounce us back
       await ref.read(onboardingCompletedProvider.future);
       
