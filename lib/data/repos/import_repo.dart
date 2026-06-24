@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
+import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 
 import '../database.dart';
@@ -184,6 +187,156 @@ class ImportRepo {
             )).toList();
     await _db.batch((b) => b.insertAll(_db.dayLocationOverrides, companions,
         mode: InsertMode.insertOrIgnore));
+    return companions.length;
+  }
+
+  static const _knownModules = [
+    'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
+    'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
+  ];
+
+  /// Imports a ZIP produced by [ExportRepo.buildCsvZipBytes].
+  /// Returns total rows inserted/upserted.
+  /// Throws [FormatException] for an unreadable ZIP or a CSV missing required
+  /// columns.
+  Future<int> importCsvZip(Uint8List zipBytes, ImportMode mode) async {
+    final Archive archive;
+    try {
+      archive = ZipDecoder().decodeBytes(zipBytes);
+    } catch (_) {
+      throw const FormatException('The file could not be read as a ZIP archive.');
+    }
+
+    int count = 0;
+    await _db.transaction(() async {
+      for (final file in archive) {
+        if (!file.isFile) continue;
+        final content = utf8.decode(file.content as List<int>);
+        switch (file.name) {
+          case 'attacks.csv':
+            count += await _importAttacksCsv(content, mode);
+          case 'journal_entries.csv':
+            count += await _importJournalEntriesCsv(content, mode);
+          case 'risk_assessments.csv':
+            count += await _importRiskAssessmentsCsv(content, mode);
+        }
+        // Unknown filenames are silently ignored.
+      }
+    });
+    return count;
+  }
+
+  static List<List<dynamic>> _parseCsv(String content) =>
+      const CsvToListConverter(eol: '\n').convert(content.trim());
+
+  static Map<String, int> _headerIndex(List<dynamic> header) =>
+      {for (var i = 0; i < header.length; i++) header[i].toString(): i};
+
+  static String? _cell(List<dynamic> row, Map<String, int> idx, String col) {
+    final i = idx[col];
+    if (i == null || i >= row.length) return null;
+    final v = row[i];
+    if (v == null || v.toString().isEmpty) return null;
+    // Reverse the newline escaping applied during export.
+    return v.toString().replaceAll(r'\n', '\n');
+  }
+
+  Future<int> _importAttacksCsv(String content, ImportMode mode) async {
+    final rows = _parseCsv(content);
+    if (rows.isEmpty) return 0;
+    final idx = _headerIndex(rows.first);
+    for (final col in ['id', 'started_at', 'severity', 'in_progress']) {
+      if (!idx.containsKey(col)) {
+        throw FormatException('attacks.csv is missing required column: $col');
+      }
+    }
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.attacks).go();
+    final companions = rows.skip(1).map((r) => AttacksCompanion(
+          id: Value(int.parse(_cell(r, idx, 'id')!)),
+          startedAt: Value(DateTime.parse(_cell(r, idx, 'started_at')!).toUtc()),
+          endedAt: Value(_cell(r, idx, 'ended_at') != null
+              ? DateTime.parse(_cell(r, idx, 'ended_at')!).toUtc()
+              : null),
+          severity: Value(int.parse(_cell(r, idx, 'severity')!)),
+          notes: Value(_cell(r, idx, 'notes')),
+          riskAssessmentId: Value(_cell(r, idx, 'risk_assessment_id') != null
+              ? int.parse(_cell(r, idx, 'risk_assessment_id')!)
+              : null),
+          inProgress: Value(_cell(r, idx, 'in_progress') == 'true'),
+        )).toList();
+    await _db.batch(
+        (b) => b.insertAll(_db.attacks, companions, mode: InsertMode.insertOrIgnore));
+    return companions.length;
+  }
+
+  Future<int> _importJournalEntriesCsv(String content, ImportMode mode) async {
+    final rows = _parseCsv(content);
+    if (rows.isEmpty) return 0;
+    final idx = _headerIndex(rows.first);
+    for (final col in ['id', 'at', 'kind', 'payload_json']) {
+      if (!idx.containsKey(col)) {
+        throw FormatException(
+            'journal_entries.csv is missing required column: $col');
+      }
+    }
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.journalEntries).go();
+    final companions = rows.skip(1).map((r) => JournalEntriesCompanion(
+          id: Value(int.parse(_cell(r, idx, 'id')!)),
+          at: Value(DateTime.parse(_cell(r, idx, 'at')!).toUtc()),
+          kind: Value(_cell(r, idx, 'kind')!),
+          payloadJson: Value(_cell(r, idx, 'payload_json')!),
+        )).toList();
+    await _db.batch((b) =>
+        b.insertAll(_db.journalEntries, companions, mode: InsertMode.insertOrIgnore));
+    return companions.length;
+  }
+
+  Future<int> _importRiskAssessmentsCsv(String content, ImportMode mode) async {
+    final rows = _parseCsv(content);
+    if (rows.isEmpty) return 0;
+    final idx = _headerIndex(rows.first);
+    for (final col in [
+      'target_date', 'horizon', 'score', 'band', 'computed_at',
+      'config_version', 'backfilled',
+    ]) {
+      if (!idx.containsKey(col)) {
+        throw FormatException(
+            'risk_assessments.csv is missing required column: $col');
+      }
+    }
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
+
+    final companions = rows.skip(1).map((r) {
+      // Reconstruct contributors_json from the expanded per-module columns.
+      // Export wrote {id}_contribution = weight * confidence; we reconstruct
+      // with weight = contribution and confidence = 1.0 so downstream scoring
+      // can use contribution as-is.
+      final contributors = <Map<String, dynamic>>[];
+      for (final m in _knownModules) {
+        final contribution = _cell(r, idx, '${m}_contribution');
+        final explanation = _cell(r, idx, '${m}_explanation');
+        if (contribution != null) {
+          contributors.add({
+            'moduleId': m,
+            'weight': double.parse(contribution),
+            'confidence': 1.0,
+            'explanation': explanation ?? '',
+          });
+        }
+      }
+      return RiskAssessmentsCompanion(
+        targetDate: Value(DateTime.parse(_cell(r, idx, 'target_date')!).toUtc()),
+        horizon: Value(_cell(r, idx, 'horizon')!),
+        score: Value(int.parse(_cell(r, idx, 'score')!)),
+        band: Value(_cell(r, idx, 'band')!),
+        computedAt: Value(DateTime.parse(_cell(r, idx, 'computed_at')!).toUtc()),
+        configVersion: Value(int.parse(_cell(r, idx, 'config_version')!)),
+        contributorsJson: Value(jsonEncode(contributors)),
+        backfilled: Value(_cell(r, idx, 'backfilled') == 'true'),
+      );
+    }).toList();
+    await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
+        mode: InsertMode.insertOrReplace));
     return companions.length;
   }
 }
