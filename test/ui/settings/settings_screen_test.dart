@@ -65,10 +65,13 @@ Widget _wrap({required _FakeJournal fake}) {
       riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.gauge),
       notificationsEnabledProvider.overrideWith((ref) async => false),
     ],
-    child: MaterialApp.router(
-      routerConfig: GoRouter(routes: [
-        GoRoute(path: '/', builder: (_, __) => const SettingsScreen()),
-      ]),
+    child: MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: MaterialApp.router(
+        routerConfig: GoRouter(routes: [
+          GoRoute(path: '/', builder: (_, __) => const SettingsScreen()),
+        ]),
+      ),
     ),
   );
 }
@@ -77,8 +80,9 @@ void main() {
   testWidgets('renders trigger list and reflects flagged state', (tester) async {
     await tester.pumpWidget(_wrap(fake: _FakeJournal()));
     await tester.pumpAndSettle();
-    expect(find.text('Stress'), findsOneWidget);
-    expect(find.text('Pressure changes'), findsOneWidget);
+    // Trigger items may be below the fold — check the tree regardless of visibility.
+    expect(find.text('Stress', skipOffstage: false), findsOneWidget);
+    expect(find.text('Pressure changes', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('Cycle section shows Log period when none active', (tester) async {
@@ -120,6 +124,9 @@ void main() {
     await tester.pumpWidget(_wrap(fake: fake));
     await tester.pumpAndSettle();
 
+    // Scroll until the delete button is visible before asserting and tapping.
+    await tester.ensureVisible(find.byKey(Key('period-delete-${start.toIso8601String()}')));
+    await tester.pumpAndSettle();
     expect(find.byKey(Key('period-row-${start.toIso8601String()}')), findsOneWidget);
 
     await tester.tap(find.byKey(Key('period-delete-${start.toIso8601String()}')));

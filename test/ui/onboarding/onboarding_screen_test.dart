@@ -39,7 +39,10 @@ void main() {
           markOnboardingCompletedProvider.overrideWithValue(() async { onboardingDone = true; }),
           onboardingCompletedProvider.overrideWith((ref) => Future.value(onboardingDone)),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: MaterialApp.router(routerConfig: router),
+        ),
       ),
     );
     await tester.pumpAndSettle();

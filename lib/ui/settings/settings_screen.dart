@@ -22,6 +22,8 @@ import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
+import '../shared/animations/celebration_overlay.dart';
+import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';
 import 'oura_settings_card.dart';
 
@@ -39,11 +41,30 @@ const _moduleLabels = <String, String>{
   'hydration': 'Hydration',
 };
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _mascot = MascotController();
+
+  @override
+  void dispose() {
+    _mascot.dispose();
+    super.dispose();
+  }
+
+  void _celebrateSave() {
+    if (!mounted) return;
+    CelebrationOverlay.showCheckmark(context, controller: _mascot);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final flagsAsync = ref.watch(triggerFlagsProvider);
     final modeAsync = ref.watch(riskDisplayModeProvider);
     final notifAsync = ref.watch(notificationsEnabledProvider);
@@ -56,6 +77,12 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: MascotWidget(band: RiskBand.low, size: 80, controller: _mascot),
+            ),
+          ),
           Text('Display', style: Theme.of(context).textTheme.titleSmall),
           modeAsync.when(
             loading: () => const ListTile(
@@ -213,6 +240,7 @@ class SettingsScreen extends ConsumerWidget {
                             flaggedModuleIds: next,
                             weightOverrides: flags.weightOverrides,
                           ));
+                          _celebrateSave();
                         },
                       ),
                       Padding(
