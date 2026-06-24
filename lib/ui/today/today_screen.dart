@@ -11,6 +11,7 @@ import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
+import '../shared/mascot/mascot_widget.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
@@ -103,6 +104,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: MascotWidget(band: a.band, size: 160),
+                      ),
+                    ),
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),

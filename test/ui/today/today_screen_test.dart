@@ -57,12 +57,15 @@ void main() {
           tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(score: 30, band: RiskBand.moderate))),
           riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.numeric),
         ],
-        child: MaterialApp.router(
-          routerConfig: GoRouter(routes: [
-            GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
-            GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
-            GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
-          ]),
+        child: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: MaterialApp.router(
+            routerConfig: GoRouter(routes: [
+              GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+              GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
+              GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
+            ]),
+          ),
         ),
       ),
     );
@@ -91,11 +94,14 @@ void main() {
           tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(ass)),
           riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.gauge),
         ],
-        child: MaterialApp.router(
-          routerConfig: GoRouter(routes: [
-            GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
-            GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
-          ]),
+        child: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: MaterialApp.router(
+            routerConfig: GoRouter(routes: [
+              GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+              GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
+            ]),
+          ),
         ),
       ),
     );
