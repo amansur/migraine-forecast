@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart'
@@ -317,6 +319,126 @@ void main() {
 
       final count = await importRepo.importJson(incoming, ImportMode.merge);
       expect(count, 3); // 2 attacks + 1 setting
+    });
+  });
+
+  // ── CSV ZIP ───────────────────────────────────────────────────────────────
+
+  group('importCsvZip', () {
+    test('round-trips attacks through CSV ZIP replace-all', () async {
+      await db.into(db.attacks).insert(AttacksCompanion.insert(
+            startedAt: DateTime.utc(2026, 6, 1, 8),
+            severity: 3,
+          ));
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+
+      await db.delete(db.attacks).go();
+      final count = await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      expect(count, greaterThan(0));
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      expect(attacks.first.severity, 3);
+      expect(attacks.first.startedAt.toUtc().toIso8601String(),
+          '2026-06-01T08:00:00.000Z');
+    });
+
+    test('round-trips journal entries through CSV ZIP', () async {
+      await db.into(db.journalEntries).insert(JournalEntriesCompanion.insert(
+            at: DateTime.utc(2026, 6, 1, 9),
+            kind: 'caffeine',
+            payloadJson: '{"cups":2}',
+          ));
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+      await db.delete(db.journalEntries).go();
+
+      await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      final entries = await db.select(db.journalEntries).get();
+      expect(entries, hasLength(1));
+      expect(entries.first.kind, 'caffeine');
+      expect(entries.first.payloadJson, '{"cups":2}');
+    });
+
+    test('round-trips risk assessments with expanded trigger columns', () async {
+      await db.into(db.riskAssessments).insert(
+            RiskAssessmentsCompanion.insert(
+              targetDate: DateTime.utc(2026, 6, 1),
+              horizon: 'today',
+              score: 55,
+              band: 'moderate',
+              computedAt: DateTime.utc(2026, 6, 1, 6),
+              configVersion: 1,
+              contributorsJson:
+                  '[{"moduleId":"pressure_drop","weight":0.8,"confidence":0.9,"explanation":"Dropped 5 hPa"}]',
+            ),
+            onConflict: DoNothing(),
+          );
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+      await db.delete(db.riskAssessments).go();
+
+      await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      final assessments = await db.select(db.riskAssessments).get();
+      expect(assessments, hasLength(1));
+      expect(assessments.first.score, 55);
+      expect(assessments.first.contributorsJson, contains('pressure_drop'));
+    });
+
+    test('merge skips existing attacks by id', () async {
+      await db.into(db.attacks).insert(AttacksCompanion.insert(
+            startedAt: DateTime.utc(2026, 6, 1, 8),
+            severity: 7,
+          ));
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+
+      // Change local severity after capturing the ZIP.
+      final existingId = (await db.select(db.attacks).get()).first.id;
+      await (db.update(db.attacks)..where((t) => t.id.equals(existingId)))
+          .write(const AttacksCompanion(severity: Value(2)));
+
+      await importRepo.importCsvZip(zipBytes, ImportMode.merge);
+
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      expect(attacks.first.severity, 2); // local change kept via INSERT OR IGNORE
+    });
+
+    test('payload_json with commas is preserved after round-trip', () async {
+      const payload = '{"note":"coffee, then headache"}';
+      await db.into(db.journalEntries).insert(JournalEntriesCompanion.insert(
+            at: DateTime.utc(2026, 6, 1, 9),
+            kind: 'stress',
+            payloadJson: payload,
+          ));
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+      await db.delete(db.journalEntries).go();
+
+      await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      final entries = await db.select(db.journalEntries).get();
+      expect(entries.first.payloadJson, payload);
+    });
+
+    test('throws FormatException for invalid ZIP bytes', () {
+      expect(
+        () => importRepo.importCsvZip(
+            Uint8List.fromList([1, 2, 3]), ImportMode.replaceAll),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('unknown files inside ZIP are ignored without error', () async {
+      // Build a ZIP that contains an extra unexpected file.
+      final validZip = await exportRepo.buildCsvZipBytes();
+      final archive = ZipDecoder().decodeBytes(validZip);
+      archive.addFile(ArchiveFile('extra.txt', 5, [104, 101, 108, 108, 111]));
+      final withExtra = Uint8List.fromList(ZipEncoder().encode(archive)!);
+
+      await expectLater(
+        importRepo.importCsvZip(withExtra, ImportMode.replaceAll),
+        completes,
+      );
     });
   });
 }
