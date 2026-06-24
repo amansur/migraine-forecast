@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/providers.dart';
+import '../shared/animations/celebration_overlay.dart';
+import '../shared/mascot/mascot_widget.dart';
 
 class JournalEntrySheet extends ConsumerStatefulWidget {
   final JournalKind kind;
@@ -78,12 +80,17 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
       kind: widget.kind,
       payload: _payload(),
     );
-    if (entry.id == null) {
+    final isNew = entry.id == null;
+    if (isNew) {
       await journal.addEntry(entry);
     } else {
       await journal.updateEntry(entry);
     }
-    if (mounted) Navigator.of(context).pop(true);
+    if (!mounted) return;
+    if (isNew) {
+      CelebrationOverlay.show(context, controller: MascotController());
+    }
+    Navigator.of(context).pop(true);
   }
 
   Future<void> _delete() async {
