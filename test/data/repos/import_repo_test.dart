@@ -82,6 +82,40 @@ void main() {
       expect(periods, hasLength(1));
     });
 
+    test('attack riskAssessmentId links to preserved risk_assessment id after import',
+        () async {
+      // Build source DB with one risk assessment and one attack that references it.
+      final sourceDb = AppDatabase.memory();
+      final raId = await sourceDb.into(sourceDb.riskAssessments).insert(
+            RiskAssessmentsCompanion.insert(
+              targetDate: DateTime.utc(2026, 6, 1),
+              horizon: 'today',
+              score: 50,
+              band: 'moderate',
+              computedAt: DateTime.utc(2026, 6, 1, 6),
+              configVersion: 1,
+              contributorsJson: '[]',
+            ),
+            onConflict: DoNothing(),
+          );
+      await sourceDb.into(sourceDb.attacks).insert(AttacksCompanion(
+            startedAt: Value(DateTime.utc(2026, 6, 1, 8)),
+            severity: const Value(4),
+            riskAssessmentId: Value(raId),
+          ));
+      final json = await ExportRepo(sourceDb).buildJsonFull(appVersionOverride: '2.0.0');
+      await sourceDb.close();
+
+      await importRepo.importJson(json, ImportMode.replaceAll);
+
+      final assessments = await db.select(db.riskAssessments).get();
+      expect(assessments, hasLength(1));
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      // The attack's riskAssessmentId must match the imported assessment's id.
+      expect(attacks.first.riskAssessmentId, assessments.first.id);
+    });
+
     test('v1 JSON imports only the four v1 tables and leaves v2 tables untouched',
         () async {
       // Pre-seed a risk assessment that must survive (absent from v1 file).
