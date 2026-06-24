@@ -26,7 +26,16 @@ class AnimatedEntry extends StatefulWidget {
 class _AnimatedEntryState extends State<AnimatedEntry> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
       AnimationController(vsync: this, duration: widget.duration);
+  late final CurvedAnimation _curved;
+  late final CurvedAnimation _curvedBack;
   bool _reducedResolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _curved = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    _curvedBack = CurvedAnimation(parent: _c, curve: Curves.easeOutBack);
+  }
 
   @override
   void didChangeDependencies() {
@@ -46,6 +55,8 @@ class _AnimatedEntryState extends State<AnimatedEntry> with SingleTickerProvider
 
   @override
   void dispose() {
+    _curved.dispose();
+    _curvedBack.dispose();
     _c.dispose();
     super.dispose();
   }
@@ -54,7 +65,7 @@ class _AnimatedEntryState extends State<AnimatedEntry> with SingleTickerProvider
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).disableAnimations) return widget.child;
 
-    final curved = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    final curved = _curved;
     switch (widget.effect) {
       case AnimatedEntryEffect.slideFade:
         return FadeTransition(
@@ -69,9 +80,7 @@ class _AnimatedEntryState extends State<AnimatedEntry> with SingleTickerProvider
         return FadeTransition(
           opacity: curved,
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-              CurvedAnimation(parent: _c, curve: Curves.easeOutBack),
-            ),
+            scale: Tween<double>(begin: 0.85, end: 1.0).animate(_curvedBack),
             child: widget.child,
           ),
         );
