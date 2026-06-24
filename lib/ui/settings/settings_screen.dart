@@ -649,19 +649,29 @@ class _ExportDataDialogState extends State<_ExportDataDialog> {
           const Text(
               'Includes attacks, journal entries, risk history, and settings.'),
           const SizedBox(height: 12),
-          RadioListTile<_ExportFormat>(
-            title: const Text('JSON (full backup, importable)'),
-            value: _ExportFormat.json,
+          RadioGroup<_ExportFormat>(
             groupValue: _format,
-            onChanged: _loading ? null : (v) => setState(() => _format = v!),
-            contentPadding: EdgeInsets.zero,
-          ),
-          RadioListTile<_ExportFormat>(
-            title: const Text('CSV (3-file ZIP, opens in spreadsheets)'),
-            value: _ExportFormat.csv,
-            groupValue: _format,
-            onChanged: _loading ? null : (v) => setState(() => _format = v!),
-            contentPadding: EdgeInsets.zero,
+            onChanged: (v) {
+              if (_loading || v == null) return;
+              setState(() => _format = v);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<_ExportFormat>(
+                  title: const Text('JSON (full backup, importable)'),
+                  value: _ExportFormat.json,
+                  enabled: !_loading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                RadioListTile<_ExportFormat>(
+                  title: const Text('CSV (3-file ZIP, opens in spreadsheets)'),
+                  value: _ExportFormat.csv,
+                  enabled: !_loading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
           ),
         ],
       ),
