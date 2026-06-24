@@ -57,19 +57,17 @@ void main() {
     final controller = MascotController();
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        body: MascotWidget(
+        body: reducedMotion(MascotWidget(
           band: RiskBand.low,
           controller: controller,
           onWiggle: () => wiggled = true,
-        ),
+        )),
       ),
     ));
     controller.wiggle();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(wiggled, isTrue);
-    // settle the idle loop so the test can end cleanly
-    await tester.binding.setSurfaceSize(null);
   });
 
   testWidgets('band change updates accessory via didUpdateWidget', (tester) async {
