@@ -47,7 +47,10 @@ void main() {
         riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
         tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.moderate))),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(routerConfig: router),
+      ),
     ));
     await tester.pump();
 
