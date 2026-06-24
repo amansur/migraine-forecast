@@ -1,6 +1,7 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 
+import '../shared/animations/animated_entry.dart';
 import '../shared/contributor_order.dart';
 import 'contributor_chip.dart';
 
@@ -21,12 +22,17 @@ class WhyChips extends StatelessWidget {
         const SizedBox(height: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: shown
-              .map((c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: ContributorChip(signal: c),
-                  ))
-              .toList(),
+          children: [
+            for (var i = 0; i < shown.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AnimatedEntry(
+                  delay: Duration(milliseconds: 60 * i),
+                  effect: AnimatedEntryEffect.scalePop,
+                  child: ContributorChip(signal: shown[i]),
+                ),
+              ),
+          ],
         ),
       ],
     );

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../state/risk_assessment_provider.dart';
+import '../shared/animations/animated_entry.dart';
 
 class TomorrowTile extends ConsumerWidget {
   const TomorrowTile({super.key});
@@ -12,34 +13,36 @@ class TomorrowTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tomorrow = ref.watch(tomorrowRiskAssessmentProvider);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/tomorrow'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: tomorrow.when(
-            loading: () => const Center(child: SizedBox(
-              width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2),
-            )),
-            error: (e, _) => Text('Tomorrow: --', style: Theme.of(context).textTheme.titleSmall),
-            data: (ass) {
-              final color = colorForBand(ass.band.name);
-              return Row(
-                children: [
-                  Container(
-                    width: 14, height: 14,
-                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text('Tomorrow: ${_label(ass.band)} (${ass.score})',
-                        style: Theme.of(context).textTheme.titleSmall),
-                  ),
-                  const Icon(Icons.chevron_right),
-                ],
-              );
-            },
+    return AnimatedEntry(
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/tomorrow'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: tomorrow.when(
+              loading: () => const Center(child: SizedBox(
+                width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2),
+              )),
+              error: (e, _) => Text('Tomorrow: --', style: Theme.of(context).textTheme.titleSmall),
+              data: (ass) {
+                final color = colorForBand(ass.band.name);
+                return Row(
+                  children: [
+                    Container(
+                      width: 14, height: 14,
+                      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text('Tomorrow: ${_label(ass.band)} (${ass.score})',
+                          style: Theme.of(context).textTheme.titleSmall),
+                    ),
+                    const Icon(Icons.chevron_right),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
