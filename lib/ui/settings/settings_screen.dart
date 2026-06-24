@@ -1,13 +1,17 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:domain/domain.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../data/repos/import_repo.dart';
 import '../../data/sources/location_source.dart';
 import '../common/location_search_dialog.dart';
 import '../../state/cycle_provider.dart';
@@ -250,10 +254,16 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           Text('Manage Data', style: Theme.of(context).textTheme.titleSmall),
           ListTile(
-            title: const Text('Export JSON Data'),
-            subtitle: const Text('Copy or save your attacks, journal entries, and settings.'),
+            title: const Text('Export Data'),
+            subtitle: const Text('Share your attacks, journal entries, risk history, and settings as JSON or CSV.'),
             trailing: const Icon(Icons.download_outlined),
             onTap: () => _showExportDialog(context, ref),
+          ),
+          ListTile(
+            title: const Text('Import Data'),
+            subtitle: const Text('Restore from a previous JSON or CSV export.'),
+            trailing: const Icon(Icons.upload_outlined),
+            onTap: () => _importData(context, ref),
           ),
           Consumer(builder: (context, ref, _) {
             final running = ref.watch(backfillProgressProvider) != null;
@@ -322,6 +332,120 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => _ExportDataDialog(ref: ref),
     );
+  }
+
+  Future<void> _importData(BuildContext context, WidgetRef ref) async {
+    // 1. Pick a file. FileType.any because MIME/UTI extension filtering is
+    //    unreliable on Android/iOS; we validate the extension below.
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result == null || result.files.isEmpty) return; // user cancelled
+
+    final path = result.files.first.path;
+    if (path == null) return;
+
+    final ext = path.toLowerCase().split('.').last;
+    if (ext != 'json' && ext != 'zip') {
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Unsupported File'),
+          content: const Text(
+              'Please select a .json or .zip file exported from Migraine Forecast.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 2. Ask how to handle conflicts.
+    if (!context.mounted) return;
+    final mode = await showDialog<ImportMode>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('How should we handle conflicts?'),
+        content: const Text(
+          'Replace all: wipe existing data for the imported tables and restore '
+          'from file.\n\n'
+          'Merge: keep existing records; only import records not already present.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ImportMode.replaceAll),
+              child: const Text('Replace All')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ImportMode.merge),
+              child: const Text('Merge')),
+        ],
+      ),
+    );
+    if (mode == null) return; // user cancelled conflict dialog
+
+    // 3. Import and report.
+    try {
+      final importRepo = ref.read(importRepoProvider);
+      final int count;
+      if (ext == 'json') {
+        final jsonStr = await File(path).readAsString();
+        count = await importRepo.importJson(jsonStr, mode);
+      } else {
+        final zipBytes = await File(path).readAsBytes();
+        count = await importRepo.importCsvZip(zipBytes, mode);
+      }
+      if (context.mounted) {
+        ref.invalidate(riskAssessmentProvider);
+        ref.invalidate(tomorrowRiskAssessmentProvider);
+        ref.invalidate(riskDisplayModeProvider);
+        ref.invalidate(notificationsEnabledProvider);
+        ref.invalidate(cycleTrackingEnabledProvider);
+        ref.invalidate(temperatureUnitProvider);
+        ref.invalidate(pressureUnitProvider);
+        ref.invalidate(comfortModeProvider);
+        ref.invalidate(unitFormatterProvider);
+        ref.invalidate(manualLocationProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Imported $count records')),
+        );
+      }
+    } on FormatException catch (e) {
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Import Failed'),
+            content: Text(e.message),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Import Failed'),
+            content: Text(
+                'An unexpected error occurred. Please try again.\n\n$e'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _showLocationDialog(BuildContext context, WidgetRef ref, UserLocation? current) async {
@@ -468,6 +592,8 @@ class _CycleSettingsSection extends ConsumerWidget {
   }
 }
 
+enum _ExportFormat { json, csv }
+
 class _ExportDataDialog extends StatefulWidget {
   final WidgetRef ref;
   const _ExportDataDialog({required this.ref});
@@ -478,39 +604,45 @@ class _ExportDataDialog extends StatefulWidget {
 
 class _ExportDataDialogState extends State<_ExportDataDialog> {
   bool _loading = false;
+  _ExportFormat _format = _ExportFormat.json;
 
   Future<void> _copyToClipboard() async {
     setState(() => _loading = true);
     try {
-      final json = await widget.ref.read(exportRepoProvider).buildJson();
+      final json = await widget.ref.read(exportRepoProvider).buildJsonFull();
       await Clipboard.setData(ClipboardData(text: json));
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Copied to clipboard')),
-        );
+        messenger.showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _saveToDocuments() async {
+  Future<void> _share() async {
     setState(() => _loading = true);
     try {
-      final json = await widget.ref.read(exportRepoProvider).buildJson();
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await getTemporaryDirectory();
       final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final path = '${dir.path}/migraine_forecast_export_$dateStr.json';
-      await File(path).writeAsString(json);
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        Navigator.pop(context);
-        messenger.showSnackBar(
-          SnackBar(content: Text('Saved to $path')),
-        );
+      final XFile xfile;
+
+      if (_format == _ExportFormat.json) {
+        final json = await widget.ref.read(exportRepoProvider).buildJsonFull();
+        final path = '${dir.path}/migraine_forecast_export_$dateStr.json';
+        await File(path).writeAsString(json);
+        xfile = XFile(path, mimeType: 'application/json');
+      } else {
+        final Uint8List zipBytes =
+            await widget.ref.read(exportRepoProvider).buildCsvZipBytes();
+        final path = '${dir.path}/migraine_forecast_export_$dateStr.zip';
+        await File(path).writeAsBytes(zipBytes);
+        xfile = XFile(path, mimeType: 'application/zip');
       }
+
+      await Share.shareXFiles([xfile], subject: 'Migraine Forecast Export');
+      if (mounted) Navigator.pop(context);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -519,14 +651,56 @@ class _ExportDataDialogState extends State<_ExportDataDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Export JSON Data'),
-      content: const Text('Choose how to export your data. Derived data (risk assessments, weather snapshots) is excluded.'),
+      title: const Text('Export Data'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+              'Includes attacks, journal entries, risk history, and settings.'),
+          const SizedBox(height: 12),
+          RadioGroup<_ExportFormat>(
+            groupValue: _format,
+            onChanged: (v) {
+              if (_loading || v == null) return;
+              setState(() => _format = v);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<_ExportFormat>(
+                  title: const Text('JSON (full backup, importable)'),
+                  value: _ExportFormat.json,
+                  enabled: !_loading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                RadioListTile<_ExportFormat>(
+                  title: const Text('CSV (3-file ZIP, opens in spreadsheets)'),
+                  value: _ExportFormat.csv,
+                  enabled: !_loading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       actions: _loading
-          ? [const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())]
+          ? [
+              const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator())
+            ]
           : [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              TextButton(onPressed: _copyToClipboard, child: const Text('Copy to Clipboard')),
-              TextButton(onPressed: _saveToDocuments, child: const Text('Save to Documents')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel')),
+              TextButton(
+                onPressed:
+                    _format == _ExportFormat.json ? _copyToClipboard : null,
+                child: const Text('Copy to Clipboard'),
+              ),
+              FilledButton(onPressed: _share, child: const Text('Share')),
             ],
     );
   }
