@@ -11,8 +11,8 @@ import '../mascot/mascot_widget.dart';
 class CelebrationOverlay {
   CelebrationOverlay._();
 
-  static void show(BuildContext context, {required MascotController controller}) {
-    controller.wiggle();
+  static void show(BuildContext context, {MascotController? controller}) {
+    controller?.wiggle();
     if (MediaQuery.of(context).disableAnimations) return;
     _insert(context, checkmark: false);
   }

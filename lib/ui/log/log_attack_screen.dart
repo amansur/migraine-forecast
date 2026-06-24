@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../shared/animations/celebration_overlay.dart';
-import '../shared/mascot/mascot_widget.dart';
 
 class LogAttackScreen extends ConsumerStatefulWidget {
   final Attack? initialAttack;
@@ -190,7 +189,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
       }
 
       if (mounted) {
-        CelebrationOverlay.show(context, controller: MascotController());
+        CelebrationOverlay.show(context);
         try {
           context.pop();
         } catch (_) {

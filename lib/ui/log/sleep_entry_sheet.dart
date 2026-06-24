@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/manual_sleep_provider.dart';
 import '../shared/animations/celebration_overlay.dart';
-import '../shared/mascot/mascot_widget.dart';
 
 class SleepEntrySheet extends ConsumerStatefulWidget {
   final SleepRecord? initial;
@@ -53,7 +52,7 @@ class _SleepEntrySheetState extends ConsumerState<SleepEntrySheet> {
       efficiency: 1.0,
     ));
     if (!mounted) return;
-    CelebrationOverlay.show(context, controller: MascotController());
+    CelebrationOverlay.show(context);
     Navigator.of(context).pop(true);
   }
 
