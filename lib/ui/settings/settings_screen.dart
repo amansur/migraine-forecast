@@ -9,7 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 
+import '../../data/repos/import_repo.dart';
 import '../../data/sources/location_source.dart';
 import '../common/location_search_dialog.dart';
 import '../../state/cycle_provider.dart';
@@ -257,6 +259,12 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.download_outlined),
             onTap: () => _showExportDialog(context, ref),
           ),
+          ListTile(
+            title: const Text('Import Data'),
+            subtitle: const Text('Restore from a previous JSON or CSV export.'),
+            trailing: const Icon(Icons.upload_outlined),
+            onTap: () => _importData(context, ref),
+          ),
           Consumer(builder: (context, ref, _) {
             final running = ref.watch(backfillProgressProvider) != null;
             return ListTile(
@@ -324,6 +332,110 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => _ExportDataDialog(ref: ref),
     );
+  }
+
+  Future<void> _importData(BuildContext context, WidgetRef ref) async {
+    // 1. Pick a file. FileType.any because MIME/UTI extension filtering is
+    //    unreliable on Android/iOS; we validate the extension below.
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result == null || result.files.isEmpty) return; // user cancelled
+
+    final path = result.files.first.path;
+    if (path == null) return;
+
+    final ext = path.toLowerCase().split('.').last;
+    if (ext != 'json' && ext != 'zip') {
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Unsupported File'),
+          content: const Text(
+              'Please select a .json or .zip file exported from Migraine Forecast.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 2. Ask how to handle conflicts.
+    if (!context.mounted) return;
+    final mode = await showDialog<ImportMode>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('How should we handle conflicts?'),
+        content: const Text(
+          'Replace all: wipe existing data for the imported tables and restore '
+          'from file.\n\n'
+          'Merge: keep existing records; only import records not already present.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ImportMode.replaceAll),
+              child: const Text('Replace All')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ImportMode.merge),
+              child: const Text('Merge')),
+        ],
+      ),
+    );
+    if (mode == null) return; // user cancelled conflict dialog
+
+    // 3. Import and report.
+    try {
+      final importRepo = ref.read(importRepoProvider);
+      final int count;
+      if (ext == 'json') {
+        final jsonStr = await File(path).readAsString();
+        count = await importRepo.importJson(jsonStr, mode);
+      } else {
+        final zipBytes = await File(path).readAsBytes();
+        count = await importRepo.importCsvZip(zipBytes, mode);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Imported $count records')),
+        );
+      }
+    } on FormatException catch (e) {
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Import Failed'),
+            content: Text(e.message),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Import Failed'),
+            content: Text(
+                'An unexpected error occurred. Please try again.\n\n$e'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK')),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _showLocationDialog(BuildContext context, WidgetRef ref, UserLocation? current) async {
