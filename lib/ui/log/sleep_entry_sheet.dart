@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/manual_sleep_provider.dart';
+import '../shared/animations/celebration_overlay.dart';
+import '../shared/mascot/mascot_widget.dart';
 
 class SleepEntrySheet extends ConsumerStatefulWidget {
   final SleepRecord? initial;
@@ -50,7 +52,9 @@ class _SleepEntrySheetState extends ConsumerState<SleepEntrySheet> {
       totalSleep: _duration,
       efficiency: 1.0,
     ));
-    if (mounted) Navigator.of(context).pop(true);
+    if (!mounted) return;
+    CelebrationOverlay.show(context, controller: MascotController());
+    Navigator.of(context).pop(true);
   }
 
   Future<void> _delete() async {
