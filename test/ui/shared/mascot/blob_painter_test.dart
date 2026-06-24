@@ -9,21 +9,24 @@ void main() {
   for (final band in RiskBand.values) {
     testWidgets('BlobPainter + accessories paint for $band', (tester) async {
       await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: Center(
-            child: SizedBox(
-              width: 160,
-              height: 160,
-              child: CustomPaint(
-                painter: BlobPainter(
-                  shape: BlobShape.forBand(band),
-                  color: colorForBand(band.name),
-                  face: MascotFace.forBand(band),
-                ),
-                foregroundPainter: MascotAccessoriesPainter(
-                  band: band,
-                  color: colorForBand(band.name),
+        MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: SizedBox(
+                width: 160,
+                height: 160,
+                child: CustomPaint(
+                  painter: BlobPainter(
+                    shape: BlobShape.forBand(band),
+                    color: colorForBand(band.name),
+                    face: MascotFace.forBand(band),
+                  ),
+                  foregroundPainter: MascotAccessoriesPainter(
+                    band: band,
+                    color: colorForBand(band.name),
+                  ),
                 ),
               ),
             ),
