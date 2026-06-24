@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/providers.dart';
 import '../../state/settings_provider.dart';
+import '../shared/animations/animated_entry.dart';
 
 class HealthMetricsCard extends ConsumerWidget {
   const HealthMetricsCard({super.key});
@@ -13,51 +14,54 @@ class HealthMetricsCard extends ConsumerWidget {
     final metricsAsync = ref.watch(healthMetricsProvider);
     final isRefreshing = ref.watch(healthMetricsRefreshingProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row with title and refresh button/spinner
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Health Metrics',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (isRefreshing)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () => _refreshMetrics(ref),
-                    constraints: const BoxConstraints.tightFor(width: 24, height: 24),
-                    padding: EdgeInsets.zero,
-                    iconSize: 20,
+    return AnimatedEntry(
+      delay: const Duration(milliseconds: 80),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row with title and refresh button/spinner
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Health Metrics',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Metrics display
-            metricsAsync.when(
-              data: (metrics) => _buildMetricsContent(context, metrics),
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
+                  if (isRefreshing)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () => _refreshMetrics(ref),
+                      constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+                      padding: EdgeInsets.zero,
+                      iconSize: 20,
+                    ),
+                ],
               ),
-              error: (error, stackTrace) => Text(
-                'Error loading metrics: $error',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
+              const SizedBox(height: 16),
+              // Metrics display
+              metricsAsync.when(
+                data: (metrics) => _buildMetricsContent(context, metrics),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                error: (error, stackTrace) => Text(
+                  'Error loading metrics: $error',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
