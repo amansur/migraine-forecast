@@ -24,10 +24,10 @@ class ImportRepo {
       throw const FormatException('The file does not contain valid JSON.');
     }
 
-    final version = map['schema_version'] as int?;
+    final version = map['schema_version'] is int ? map['schema_version'] as int : null;
     if (version != 1 && version != 2) {
       throw FormatException(
-          'Unsupported schema_version: $version. Expected 1 or 2.');
+          'Unsupported schema_version: ${map['schema_version']}. Expected 1 or 2.');
     }
 
     int count = 0;
@@ -115,6 +115,7 @@ class ImportRepo {
     if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
     final companions =
         rows.cast<Map<String, dynamic>>().map((r) => RiskAssessmentsCompanion(
+              id: Value(r['id'] as int),
               targetDate: Value(DateTime.parse(r['target_date'] as String).toUtc()),
               horizon: Value(r['horizon'] as String),
               score: Value(r['score'] as int),

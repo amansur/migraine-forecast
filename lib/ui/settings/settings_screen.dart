@@ -400,6 +400,16 @@ class SettingsScreen extends ConsumerWidget {
         count = await importRepo.importCsvZip(zipBytes, mode);
       }
       if (context.mounted) {
+        ref.invalidate(riskAssessmentProvider);
+        ref.invalidate(tomorrowRiskAssessmentProvider);
+        ref.invalidate(riskDisplayModeProvider);
+        ref.invalidate(notificationsEnabledProvider);
+        ref.invalidate(cycleTrackingEnabledProvider);
+        ref.invalidate(temperatureUnitProvider);
+        ref.invalidate(pressureUnitProvider);
+        ref.invalidate(comfortModeProvider);
+        ref.invalidate(unitFormatterProvider);
+        ref.invalidate(manualLocationProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Imported $count records')),
         );
