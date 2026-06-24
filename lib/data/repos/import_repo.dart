@@ -101,7 +101,7 @@ class ImportRepo {
         rows.cast<Map<String, dynamic>>().map((r) => UserTriggerFlagsTblCompanion(
               moduleId: Value(r['module_id'] as String),
               flagged: Value(r['flagged'] as bool),
-              weightOverride: Value((r['weight_override'] as num).toDouble()),
+              weightOverride: Value((r['weight_override'] as num?)?.toDouble() ?? 0.0),
             )).toList();
     await _db.batch((b) => b.insertAll(_db.userTriggerFlagsTbl, companions,
         mode: InsertMode.insertOrReplace));
