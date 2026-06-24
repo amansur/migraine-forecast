@@ -243,7 +243,7 @@ class ImportRepo {
 
   Future<int> _importAttacksCsv(String content, ImportMode mode) async {
     final rows = _parseCsv(content);
-    if (rows.isEmpty) return 0;
+    if (rows.length <= 1) return 0; // empty or header-only → skip (do not wipe)
     final idx = _headerIndex(rows.first);
     for (final col in ['id', 'started_at', 'severity', 'in_progress']) {
       if (!idx.containsKey(col)) {
@@ -271,7 +271,7 @@ class ImportRepo {
 
   Future<int> _importJournalEntriesCsv(String content, ImportMode mode) async {
     final rows = _parseCsv(content);
-    if (rows.isEmpty) return 0;
+    if (rows.length <= 1) return 0; // empty or header-only → skip (do not wipe)
     final idx = _headerIndex(rows.first);
     for (final col in ['id', 'at', 'kind', 'payload_json']) {
       if (!idx.containsKey(col)) {
@@ -293,7 +293,7 @@ class ImportRepo {
 
   Future<int> _importRiskAssessmentsCsv(String content, ImportMode mode) async {
     final rows = _parseCsv(content);
-    if (rows.isEmpty) return 0;
+    if (rows.length <= 1) return 0; // empty or header-only → skip (do not wipe)
     final idx = _headerIndex(rows.first);
     for (final col in [
       'target_date', 'horizon', 'score', 'band', 'computed_at',

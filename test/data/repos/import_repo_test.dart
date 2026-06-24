@@ -383,6 +383,9 @@ void main() {
       expect(assessments, hasLength(1));
       expect(assessments.first.score, 55);
       expect(assessments.first.contributorsJson, contains('pressure_drop'));
+      // weight = 0.8 * 0.9 = 0.72 (contribution), confidence reconstructed as 1.0
+      expect(assessments.first.contributorsJson, contains('"weight":0.72'));
+      expect(assessments.first.contributorsJson, contains('"confidence":1.0'));
     });
 
     test('merge skips existing attacks by id', () async {
@@ -438,6 +441,39 @@ void main() {
       await expectLater(
         importRepo.importCsvZip(withExtra, ImportMode.replaceAll),
         completes,
+      );
+    });
+
+    test('header-only attacks.csv does not wipe existing local attacks', () async {
+      // Seed a local attack.
+      await db.into(db.attacks).insert(AttacksCompanion.insert(
+            startedAt: DateTime.utc(2026, 6, 1, 8),
+            severity: 5,
+          ));
+
+      // Build a ZIP from a separate source DB that has NO attacks — so
+      // attacks.csv will be header-only.
+      final sourceDb = AppDatabase.memory();
+      final zipBytes = await ExportRepo(sourceDb).buildCsvZipBytes();
+      await sourceDb.close();
+
+      await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      // The local attack must still exist — header-only section is a no-op.
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      expect(attacks.first.severity, 5);
+    });
+
+    test('throws FormatException when attacks.csv is missing a required column', () {
+      final badCsv = utf8.encode('id,severity,in_progress\n1,3,false\n');
+      final archive = Archive()
+        ..addFile(ArchiveFile('attacks.csv', badCsv.length, badCsv));
+      final badZip = Uint8List.fromList(ZipEncoder().encode(archive)!);
+
+      expect(
+        () => importRepo.importCsvZip(badZip, ImportMode.replaceAll),
+        throwsA(isA<FormatException>()),
       );
     });
   });
