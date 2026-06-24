@@ -7,6 +7,7 @@ import '../data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskA
 import '../data/repos/assessment_repository.dart';
 import '../data/repos/baseline_snapshot_builder.dart';
 import '../data/repos/export_repo.dart';
+import '../data/repos/import_repo.dart';
 import '../data/repos/location_overrides_repo.dart';
 import '../data/repos/notification_dedup_repo.dart';
 import '../data/repos/settings_repo.dart';
@@ -101,6 +102,7 @@ final settingsRepoProvider = Provider<SettingsRepo>((ref) => SettingsRepo(ref.wa
 final flagsRepoProvider = Provider<UserTriggerFlagsRepo>((ref) => UserTriggerFlagsRepoDrift(ref.watch(databaseProvider)));
 
 final exportRepoProvider = Provider<ExportRepo>((ref) => ExportRepo(ref.watch(databaseProvider)));
+final importRepoProvider = Provider<ImportRepo>((ref) => ImportRepo(ref.watch(databaseProvider)));
 
 final locationOverridesRepoProvider = Provider<LocationOverridesRepo>(
     (ref) => LocationOverridesRepo(ref.watch(databaseProvider)));
