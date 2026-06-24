@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/providers.dart';
 import '../shared/animations/celebration_overlay.dart';
-import '../shared/mascot/mascot_widget.dart';
 
 class JournalEntrySheet extends ConsumerStatefulWidget {
   final JournalKind kind;
@@ -88,7 +87,7 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
     }
     if (!mounted) return;
     if (isNew) {
-      CelebrationOverlay.show(context, controller: MascotController());
+      CelebrationOverlay.show(context);
     }
     Navigator.of(context).pop(true);
   }
