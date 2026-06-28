@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sources/location_source.dart';
+import '../ui/shared/mascot/mascot_character.dart';
 import '../ui/shared/unit_formatter.dart';
 import 'providers.dart';
 import 'risk_assessment_provider.dart';
@@ -144,3 +145,18 @@ class HealthSourcePreferenceNotifier extends StateNotifier<HealthSourcePreferenc
 }
 
 final healthMetricsRefreshingProvider = StateProvider<bool>((ref) => false);
+
+final mascotCharacterProvider = FutureProvider<MascotCharacter>((ref) async {
+  final s = await ref.watch(settingsRepoProvider).getString('mascot_character');
+  return MascotCharacter.values.firstWhere(
+    (c) => c.name == s,
+    orElse: () => kDefaultMascotCharacter,
+  );
+});
+
+final setMascotCharacterProvider = Provider<Future<void> Function(MascotCharacter)>((ref) {
+  return (character) async {
+    await ref.read(settingsRepoProvider).setString('mascot_character', character.name);
+    ref.invalidate(mascotCharacterProvider);
+  };
+});
