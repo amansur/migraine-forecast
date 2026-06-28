@@ -2,7 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'mascot_character.dart';
+import '../../../state/mascot_character.dart';
 import 'mascot_face_painter.dart';
 
 enum MascotAction { wiggle, wave, blink }

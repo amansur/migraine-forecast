@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

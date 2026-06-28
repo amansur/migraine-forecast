@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sources/location_source.dart';
-import '../ui/shared/mascot/mascot_character.dart';
+import 'mascot_character.dart';
 import '../ui/shared/unit_formatter.dart';
 import 'providers.dart';
 import 'risk_assessment_provider.dart';

@@ -23,7 +23,7 @@ import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../shared/animations/celebration_overlay.dart';
-import '../shared/mascot/mascot_character.dart';
+import '../../state/mascot_character.dart';
 import '../shared/mascot/mascot_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';

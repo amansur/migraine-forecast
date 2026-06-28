@@ -2,7 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/app/theme.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 
 Widget reducedMotion(Widget child) => MediaQuery(

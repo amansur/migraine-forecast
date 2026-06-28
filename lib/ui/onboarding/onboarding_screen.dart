@@ -14,7 +14,7 @@ import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
-import '../shared/mascot/mascot_character.dart';
+import '../../state/mascot_character.dart';
 import '../shared/mascot/mascot_widget.dart';
 
 /// User-facing labels for the multi-select. Each maps to one or more module IDs;

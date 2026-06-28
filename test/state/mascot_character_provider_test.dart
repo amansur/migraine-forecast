@@ -5,7 +5,7 @@ import 'package:migraine_forecast/data/database.dart';
 import 'package:migraine_forecast/data/repos/settings_repo.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 
 void main() {
   late AppDatabase db;

@@ -11,7 +11,7 @@ import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
-import '../shared/mascot/mascot_character.dart';
+import '../../state/mascot_character.dart';
 import '../shared/mascot/mascot_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
 import 'risk_display.dart';

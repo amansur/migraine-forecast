@@ -8,7 +8,7 @@ import 'package:migraine_forecast/data/sources/journal_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
 import 'package:migraine_forecast/ui/settings/settings_screen.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 
 class _MemFlagsRepo implements UserTriggerFlagsRepo {

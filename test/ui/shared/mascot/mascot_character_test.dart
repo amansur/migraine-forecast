@@ -1,6 +1,6 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 
 void main() {
   test('asset path is character_band.svg under assets/mascots', () {

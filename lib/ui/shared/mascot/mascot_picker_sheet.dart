@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../app/theme.dart';
 import '../../../state/settings_provider.dart';
-import 'mascot_character.dart';
+import '../../../state/mascot_character.dart';
 
 class MascotPickerSheet extends ConsumerWidget {
   const MascotPickerSheet({super.key});

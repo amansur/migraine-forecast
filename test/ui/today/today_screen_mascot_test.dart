@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migraine_forecast/state/risk_assessment_provider.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
-import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
+import 'package:migraine_forecast/state/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 import 'package:migraine_forecast/ui/today/today_screen.dart';
 
