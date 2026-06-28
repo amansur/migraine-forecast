@@ -4,42 +4,6 @@ import 'dart:ui' as ui;
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 
-/// Bezier blob silhouette, described by how far each of the four cardinal
-/// control handles bulges outward (0..1, fraction of the radius).
-class BlobShape {
-  final double topBulge;
-  final double rightBulge;
-  final double bottomBulge;
-  final double leftBulge;
-
-  const BlobShape({
-    required this.topBulge,
-    required this.rightBulge,
-    required this.bottomBulge,
-    required this.leftBulge,
-  });
-
-  static BlobShape forBand(RiskBand band) {
-    switch (band) {
-      case RiskBand.low:
-        return const BlobShape(topBulge: 0.92, rightBulge: 0.95, bottomBulge: 0.98, leftBulge: 0.95);
-      case RiskBand.moderate:
-        return const BlobShape(topBulge: 0.90, rightBulge: 0.92, bottomBulge: 0.94, leftBulge: 0.92);
-      case RiskBand.high:
-        return const BlobShape(topBulge: 0.86, rightBulge: 0.88, bottomBulge: 0.90, leftBulge: 0.88);
-      case RiskBand.veryHigh:
-        return const BlobShape(topBulge: 0.82, rightBulge: 0.96, bottomBulge: 0.84, leftBulge: 0.96);
-    }
-  }
-
-  static BlobShape lerp(BlobShape a, BlobShape b, double t) => BlobShape(
-        topBulge: ui.lerpDouble(a.topBulge, b.topBulge, t)!,
-        rightBulge: ui.lerpDouble(a.rightBulge, b.rightBulge, t)!,
-        bottomBulge: ui.lerpDouble(a.bottomBulge, b.bottomBulge, t)!,
-        leftBulge: ui.lerpDouble(a.leftBulge, b.leftBulge, t)!,
-      );
-}
-
 /// Facial expression parameters, all 0..1 so they interpolate cleanly.
 class MascotFace {
   /// 0 = flat happy brow, 1 = steep worried brow.
@@ -82,74 +46,32 @@ class MascotFace {
       );
 }
 
-/// Paints the soft blob body + face. Accessories are painted separately by
-/// [MascotAccessoriesPainter] so they can animate independently.
-class BlobPainter extends CustomPainter {
-  final BlobShape shape;
-  final Color color;
+/// Paints just the kawaii face (eyes, brow, blush, mouth, sweat) centred in the
+/// given [Size]. The body is now an SVG drawn beneath this painter, so this
+/// painter no longer draws a blob or applies a body tint.
+class MascotFacePainter extends CustomPainter {
   final MascotFace face;
-
-  /// Vertical squish for the happy wiggle: 0 = round, positive = squashed.
-  final double squish;
 
   /// Eye openness for blink: 1 = fully open, 0 = closed line.
   final double eyeOpen;
 
-  BlobPainter({
-    required this.shape,
-    required this.color,
-    required this.face,
-    this.squish = 0.0,
-    this.eyeOpen = 1.0,
-  });
+  MascotFacePainter({required this.face, this.eyeOpen = 1.0});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
+    final c = Offset(size.width / 2, size.height / 2);
     final r = math.min(size.width, size.height) / 2;
+    final rx = r;
+    final ry = r;
 
-    // Squish: widen horizontally, shorten vertically, keep area-ish constant.
-    final rx = r * (1 + squish * 0.5);
-    final ry = r * (1 - squish * 0.5);
+    final eyeDx = rx * 0.28;
+    final eyeY = c.dy - ry * 0.10;
+    final eyeR = rx * 0.14;
+    const eyeColor = Color(0xFF2E3A2E);
 
-    final top = Offset(cx, cy - ry * shape.topBulge);
-    final right = Offset(cx + rx * shape.rightBulge, cy);
-    final bottom = Offset(cx, cy + ry * shape.bottomBulge);
-    final left = Offset(cx - rx * shape.leftBulge, cy);
-
-    // Control handle length — ~0.55 of radius gives a smooth near-circle.
-    const handle = 0.55;
-    final hx = rx * handle;
-    final hy = ry * handle;
-
-    final path = Path()
-      ..moveTo(top.dx, top.dy)
-      ..cubicTo(top.dx + hx, top.dy, right.dx, right.dy - hy, right.dx, right.dy)
-      ..cubicTo(right.dx, right.dy + hy, bottom.dx + hx, bottom.dy, bottom.dx, bottom.dy)
-      ..cubicTo(bottom.dx - hx, bottom.dy, left.dx, left.dy + hy, left.dx, left.dy)
-      ..cubicTo(left.dx, left.dy - hy, top.dx - hx, top.dy, top.dx, top.dy)
-      ..close();
-
-    final bodyPaint = Paint()
-      ..color = color.withValues(alpha: 0.6)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(path, bodyPaint);
-
-    _paintFace(canvas, Offset(cx, cy), rx, ry);
-  }
-
-  void _paintFace(Canvas canvas, Offset c, double rx, double ry) {
-    final eyeDx = rx * 0.32;
-    final eyeY = c.dy - ry * 0.08;
-    final eyeR = rx * 0.11;
-    const eyeColor = Color(0xFF2E3A2E); // BrandColors.ink
-
-    final eyePaint = Paint()..color = eyeColor;
     for (final sign in [-1.0, 1.0]) {
       final center = Offset(c.dx + sign * eyeDx, eyeY);
       if (eyeOpen <= 0.05) {
-        // Closed: short horizontal line.
         final p = Paint()
           ..color = eyeColor
           ..strokeWidth = eyeR * 0.8
@@ -161,13 +83,21 @@ class BlobPainter extends CustomPainter {
         );
       } else {
         canvas.drawOval(
-          Rect.fromCenter(center: center, width: eyeR * 2, height: eyeR * 2 * eyeOpen),
-          eyePaint,
+          Rect.fromCenter(
+            center: center,
+            width: eyeR * 2,
+            height: eyeR * 2.2 * eyeOpen,
+          ),
+          Paint()..color = eyeColor,
+        );
+        canvas.drawCircle(
+          Offset(center.dx + eyeR * 0.32, center.dy - eyeR * 0.38),
+          eyeR * 0.38,
+          Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.9),
         );
       }
     }
 
-    // Brow: tilts inward/up as browAngle grows.
     if (face.browAngle > 0.05) {
       final browPaint = Paint()
         ..color = eyeColor
@@ -182,7 +112,6 @@ class BlobPainter extends CustomPainter {
       }
     }
 
-    // Cheeks / blush.
     if (face.blush > 0.05) {
       final blushPaint = Paint()..color = const Color(0xFFD89B7A).withValues(alpha: 0.5 * face.blush);
       for (final sign in [-1.0, 1.0]) {
@@ -197,7 +126,6 @@ class BlobPainter extends CustomPainter {
       }
     }
 
-    // Mouth: small smile or open "o".
     final mouthY = c.dy + ry * 0.28;
     final mouthPaint = Paint()
       ..color = eyeColor
@@ -216,7 +144,6 @@ class BlobPainter extends CustomPainter {
       canvas.drawPath(mouth, mouthPaint);
     }
 
-    // Sweat drop near the right brow.
     if (face.sweat) {
       final dropPaint = Paint()..color = const Color(0xFF6FA8DC).withValues(alpha: 0.8);
       final dropCenter = Offset(c.dx + eyeDx * 1.6, eyeY - ry * 0.05);
@@ -230,16 +157,10 @@ class BlobPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant BlobPainter old) =>
-      old.shape.topBulge != shape.topBulge ||
-      old.shape.rightBulge != shape.rightBulge ||
-      old.shape.bottomBulge != shape.bottomBulge ||
-      old.shape.leftBulge != shape.leftBulge ||
-      old.color != color ||
+  bool shouldRepaint(covariant MascotFacePainter old) =>
       old.face.browAngle != face.browAngle ||
       old.face.mouthOpen != face.mouthOpen ||
       old.face.blush != face.blush ||
       old.face.sweat != face.sweat ||
-      old.squish != squish ||
       old.eyeOpen != eyeOpen;
 }
