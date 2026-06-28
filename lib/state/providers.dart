@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:drift/drift.dart';
 
 import '../data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment;
 import '../data/repos/assessment_repository.dart';
