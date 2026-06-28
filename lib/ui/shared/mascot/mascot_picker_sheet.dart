@@ -13,6 +13,7 @@ class MascotPickerSheet extends ConsumerWidget {
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => const MascotPickerSheet(),
     );
