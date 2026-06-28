@@ -37,6 +37,7 @@ void main() {
         WeatherSample(at: now, pressureMsl: 1008, temperatureC: 19, humidityPct: 55),
       ]),
       health: HealthMetrics(
+        source: DataSource.manual,
         recentSleep: [
           SleepRecord(
             night: lastNight,

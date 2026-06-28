@@ -16,7 +16,7 @@ void main() {
     EvaluationContext withSleep(List<SleepRecord> recent, {Duration? baseline}) => EvaluationContext(
           now: now,
           targetDate: target,
-          health: HealthMetrics(recentSleep: recent),
+          health: HealthMetrics(source: DataSource.manual, recentSleep: recent),
           baselines: BaselineSnapshot(sleepMedian7d: baseline),
         );
 

@@ -15,7 +15,7 @@ void main() {
     EvaluationContext withHrv(List<HrvSample> recent, {double? baseline}) => EvaluationContext(
           now: now,
           targetDate: target,
-          health: HealthMetrics(recentHrv: recent),
+          health: HealthMetrics(source: DataSource.manual, recentHrv: recent),
           baselines: BaselineSnapshot(hrvRmssdBaseline14d: baseline),
         );
 

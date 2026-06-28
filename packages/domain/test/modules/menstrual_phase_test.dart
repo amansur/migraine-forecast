@@ -14,7 +14,7 @@ void main() {
     EvaluationContext withCycles(List<MenstrualEvent> history) => EvaluationContext(
           now: target,
           targetDate: target,
-          health: HealthMetrics(menstrualHistory: history),
+          health: HealthMetrics(source: DataSource.manual, menstrualHistory: history),
           baselines: BaselineSnapshot.empty,
         );
 
