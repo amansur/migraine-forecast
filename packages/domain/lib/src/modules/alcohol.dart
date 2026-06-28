@@ -66,7 +66,7 @@ class AlcoholModule implements TriggerModule {
       moduleId: id,
       weight: weight,
       confidence: 1.0,
-      explanation: '${totalUnits.toStringAsFixed(1)} units in last ${lookback.inHours}h',
+      explanation: '${totalUnits.toStringAsFixed(1)} alcohol units in last ${lookback.inHours}h',
     );
   }
 }
