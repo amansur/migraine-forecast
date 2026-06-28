@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migraine_forecast/state/risk_assessment_provider.dart';
+import 'package:migraine_forecast/state/settings_provider.dart';
+import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 import 'package:migraine_forecast/ui/today/today_screen.dart';
 
@@ -46,6 +48,7 @@ void main() {
       overrides: [
         riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
         tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.moderate))),
+        mascotCharacterProvider.overrideWith((ref) async => MascotCharacter.kitty),
       ],
       child: MediaQuery(
         data: const MediaQueryData(disableAnimations: true),
@@ -57,5 +60,16 @@ void main() {
     expect(find.byType(MascotWidget), findsOneWidget);
     final mascot = tester.widget<MascotWidget>(find.byType(MascotWidget));
     expect(mascot.band, RiskBand.high);
+    expect(mascot.character, MascotCharacter.kitty);
+
+    // Tapping the mascot opens the picker.
+    // Use a taller viewport so the MascotPickerSheet GridView does not overflow.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.tap(find.byKey(const Key('mascot-tap-target')));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose your companion'), findsOneWidget);
   });
 }

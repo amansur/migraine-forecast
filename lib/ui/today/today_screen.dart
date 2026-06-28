@@ -11,6 +11,8 @@ import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
+import '../shared/mascot/mascot_character.dart';
+import '../shared/mascot/mascot_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
@@ -52,6 +54,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
   Widget build(BuildContext context) {
     final ass = ref.watch(riskAssessmentProvider);
     final mode = ref.watch(riskDisplayModeProvider).asData?.value ?? RiskDisplayMode.gauge;
+    final character = ref.watch(mascotCharacterProvider).asData?.value ?? MascotCharacter.kitty;
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(
@@ -107,7 +110,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: MascotWidget(band: a.band, size: 160),
+                        child: InkWell(
+                          key: const Key('mascot-tap-target'),
+                          borderRadius: BorderRadius.circular(80),
+                          onTap: () => MascotPickerSheet.show(context),
+                          child: MascotWidget(
+                            band: a.band,
+                            character: character,
+                            size: 160,
+                          ),
+                        ),
                       ),
                     ),
                     Center(

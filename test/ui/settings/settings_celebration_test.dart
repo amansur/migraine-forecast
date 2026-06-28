@@ -8,6 +8,7 @@ import 'package:migraine_forecast/data/sources/journal_source.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
 import 'package:migraine_forecast/ui/settings/settings_screen.dart';
+import 'package:migraine_forecast/ui/shared/mascot/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 
 class _MemFlagsRepo implements UserTriggerFlagsRepo {
@@ -39,12 +40,19 @@ class _FakeJournal implements JournalSource {
 
 void main() {
   testWidgets('toggling a trigger flag celebrates (mascot present, no crash)', (tester) async {
+    // Use a tall viewport so the settings list items don't overflow off-screen.
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(ProviderScope(
       overrides: [
         flagsRepoProvider.overrideWithValue(_MemFlagsRepo()),
         journalSourceProvider.overrideWithValue(_FakeJournal()),
         riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.gauge),
         notificationsEnabledProvider.overrideWith((ref) async => false),
+        mascotCharacterProvider.overrideWith((ref) async => MascotCharacter.kitty),
       ],
       child: MediaQuery(
         data: const MediaQueryData(disableAnimations: true),
