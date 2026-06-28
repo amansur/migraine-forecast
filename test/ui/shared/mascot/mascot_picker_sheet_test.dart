@@ -12,6 +12,7 @@ void main() {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     MascotCharacter? saved;
     await tester.pumpWidget(ProviderScope(
