@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g fill="#DCEAF5" fill-opacity="0.75" stroke="#9DB6C7" stroke-width="1.5">
+    <ellipse cx="20" cy="48" rx="13" ry="18" transform="rotate(-12 20 48)"/>
+    <ellipse cx="80" cy="48" rx="13" ry="18" transform="rotate(12 80 48)"/>
+  </g>
+  <ellipse cx="50" cy="56" rx="28" ry="30" fill="#F5C842"/>
+  <clipPath id="bee-mod"><ellipse cx="50" cy="56" rx="28" ry="30"/></clipPath>
+  <g clip-path="url(#bee-mod)" fill="#2C2C2C">
+    <rect x="15" y="72" width="70" height="7"/>
+    <rect x="15" y="84" width="70" height="7"/>
+  </g>
+  <g fill="none" stroke="#2C2C2C" stroke-width="2.4" stroke-linecap="round">
+    <path d="M42 30 Q36 18 42 12"/>
+    <path d="M58 30 Q64 18 58 12"/>
+  </g>
+  <circle cx="42" cy="12" r="3.2" fill="#2C2C2C"/>
+  <circle cx="58" cy="12" r="3.2" fill="#2C2C2C"/>
+</svg>
