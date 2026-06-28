@@ -1,4 +1,5 @@
 import 'package:domain/domain.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/app/app.dart';
@@ -31,6 +32,7 @@ class _MemFlagsRepo implements UserTriggerFlagsRepo {
 void main() {
   testWidgets('launches into onboarding when not completed', (tester) async {
     final db = AppDatabase.memory();
+    addTearDown(db.close);
     final loc = ManualLocationSource();
     await loc.set(lat: 40.7, lon: -74.0);
 
@@ -44,11 +46,22 @@ void main() {
           locationSourceProvider.overrideWithValue(loc),
           flagsRepoProvider.overrideWithValue(_MemFlagsRepo()),
         ],
-        child: const MigraineForecastApp(),
+        // MediaQuery is placed here (between ProviderScope and MigraineForecastApp)
+        // so that MaterialApp.router, created inside MigraineForecastApp.build(),
+        // inherits disableAnimations: true and the mascot idle loop doesn't block
+        // pumpAndSettle.
+        child: const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MigraineForecastApp(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     expect(find.text('Welcome to Migraine Forecast'), findsOneWidget);
-    addTearDown(db.close);
+    // Replace the app with an empty widget to trigger ProviderScope disposal,
+    // then pump once to flush the zero-duration timer Drift schedules when
+    // stream subscriptions are cancelled during cleanup.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 }

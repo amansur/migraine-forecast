@@ -53,6 +53,7 @@ EvaluationContext _ctxFromJson(Map<String, Object?> json) {
   if (json['health'] is Map) {
     final h = json['health'] as Map<String, Object?>;
     health = HealthMetrics(
+      source: DataSource.manual,
       recentSleep: ((h['sleep'] as List?) ?? [])
           .map((e) {
             final m = e as Map<String, Object?>;
