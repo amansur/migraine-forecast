@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'app/app.dart';
 import 'services/background_scheduler.dart';
 import 'services/notification_service.dart';
+import 'ui/shared/mascot/mascot_widget.dart';
 
 bool get _supportsLocalNotifications =>
     !kIsWeb && (Platform.isIOS || Platform.isAndroid || Platform.isMacOS);
@@ -31,6 +32,11 @@ Future<void> _exportRulesConfigToDocs() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await precacheMascots();
+  } catch (_) {
+    // Asset/codec unavailable in this environment — first frame may flash; fine.
+  }
   await _exportRulesConfigToDocs();
   if (_supportsLocalNotifications) {
     try {

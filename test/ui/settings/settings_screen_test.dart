@@ -98,6 +98,8 @@ void main() {
     await tester.pumpWidget(_wrap(fake: fake));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.byKey(const Key('settings-period-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('settings-period-button')));
     await tester.pumpAndSettle();
     expect(find.text('Baseline severity'), findsOneWidget);

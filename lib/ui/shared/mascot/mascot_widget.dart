@@ -1,11 +1,20 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../app/theme.dart';
-import 'blob_painter.dart';
-import 'mascot_accessories.dart';
+import '../../../state/mascot_character.dart';
+import 'mascot_face_painter.dart';
 
 enum MascotAction { wiggle, wave, blink }
+
+/// Pre-caches all 16 mascot SVGs into the flutter_svg picture cache so the first
+/// render does not flash. Call once from `main()` after binding init.
+Future<void> precacheMascots() async {
+  for (final path in allMascotAssetPaths()) {
+    final loader = SvgAssetLoader(path);
+    await svg.cache.putIfAbsent(loader.cacheKey(null), () => loader.loadBytes(null));
+  }
+}
 
 /// Drives one-shot mascot animations from outside the widget tree.
 /// Hosts (TodayScreen, log sheets, onboarding, settings) call [wiggle],
@@ -29,6 +38,7 @@ class MascotController extends ChangeNotifier {
 
 class MascotWidget extends StatefulWidget {
   final RiskBand band;
+  final MascotCharacter character;
   final double size;
   final MascotController? controller;
   final VoidCallback? onWiggle;
@@ -36,6 +46,7 @@ class MascotWidget extends StatefulWidget {
   const MascotWidget({
     super.key,
     required this.band,
+    this.character = kDefaultMascotCharacter,
     this.size = 160,
     this.controller,
     this.onWiggle,
@@ -51,15 +62,12 @@ class _MascotWidgetState extends State<MascotWidget>
   late final AnimationController _action; // wiggle / wave / blink one-shots
   MascotAction _activeAction = MascotAction.wiggle;
 
-  // Morph target — band-change detection lives here, not in RiskDisplay.
-  late BlobShape _targetShape;
   late MascotFace _targetFace;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _targetShape = BlobShape.forBand(widget.band);
     _targetFace = MascotFace.forBand(widget.band);
 
     _idle = AnimationController(
@@ -69,8 +77,9 @@ class _MascotWidgetState extends State<MascotWidget>
     _action = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
-    )..addListener(() => setState(() {}))
-     ..addStatusListener((status) {
+    )
+      ..addListener(() => setState(() {}))
+      ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           if (_activeAction == MascotAction.wiggle) widget.onWiggle?.call();
           widget.controller?.ackConsumed();
@@ -78,7 +87,6 @@ class _MascotWidgetState extends State<MascotWidget>
       });
 
     widget.controller?.addListener(_onControllerAction);
-    // Start the idle loop unless reduced motion is on (decided in build()).
     _idle.repeat(reverse: true);
   }
 
@@ -90,9 +98,6 @@ class _MascotWidgetState extends State<MascotWidget>
       widget.controller?.addListener(_onControllerAction);
     }
     if (old.band != widget.band) {
-      // Band changed: update morph targets (TweenAnimationBuilder animates),
-      // and auto-wiggle when risk improves.
-      _targetShape = BlobShape.forBand(widget.band);
       _targetFace = MascotFace.forBand(widget.band);
       if (widget.band.index < old.band.index) {
         _playAction(MascotAction.wiggle);
@@ -135,86 +140,84 @@ class _MascotWidgetState extends State<MascotWidget>
   @override
   Widget build(BuildContext context) {
     final reduce = MediaQuery.of(context).disableAnimations;
-    final color = colorForBand(widget.band.name);
 
     if (reduce && _idle.isAnimating) {
-      // Don't run the infinite loop under reduced motion.
       _idle.stop();
     }
 
-    // One-shot action math (instant under reduced motion → t jumps to 1).
+    // One-shot action math (instant under reduced motion -> t jumps to 1).
     final t = reduce ? 1.0 : _action.value;
-    double squish = 0;
+    double squish = 0; // wiggle: scaleX up, scaleY down
     double eyeOpen = 1;
-    double sway = 0;
-    double quiver = widget.band == RiskBand.veryHigh ? 0.4 : 0;
-    if (_action.isAnimating || (!reduce && _action.value > 0 && _action.value < 1)) {
+    double sway = 0; // wave: gentle rotation
+    final playing = _action.isAnimating || (!reduce && _action.value > 0 && _action.value < 1);
+    if (playing) {
       switch (_activeAction) {
         case MascotAction.wiggle:
-          squish = 0.18 * (1 - (2 * t - 1).abs()); // up then back
+          squish = 0.18 * (1 - (2 * t - 1).abs());
         case MascotAction.wave:
-          sway = (1 - (2 * t - 1).abs()); // swing out and back
+          sway = (1 - (2 * t - 1).abs());
         case MascotAction.blink:
-          eyeOpen = (2 * t - 1).abs(); // 1 → 0 → 1
+          eyeOpen = (2 * t - 1).abs();
       }
     }
+
+    final assetPath = mascotAssetPath(widget.character, widget.band);
 
     return AnimatedBuilder(
       animation: _idle,
       builder: (context, _) {
-        // Idle float (vertical translate) + breathe (scale).
         final phase = reduce ? 0.0 : _idle.value;
         final floatY = reduce ? 0.0 : (-3.0 + 6.0 * phase);
         final breathe = reduce ? 1.0 : (1.0 + 0.015 * (phase - 0.5).abs() * 2);
 
+        // Wave = gentle rotation (+/-5deg). Wiggle = horizontal squish.
+        final rotation = sway * 0.0873; // ~5 degrees in radians
+        final scaleX = breathe * (1 + squish * 0.5);
+        final scaleY = breathe * (1 - squish * 0.5);
+
         return Transform.translate(
           offset: Offset(0, floatY),
-          child: Transform.scale(
-            scale: breathe,
-            child: TweenAnimationBuilder<BlobShape>(
-              tween: _BlobShapeTween(end: _targetShape),
-              duration: reduce ? Duration.zero : const Duration(milliseconds: 600),
-              curve: Curves.easeInOut,
-              builder: (context, shape, __) {
-                return TweenAnimationBuilder<MascotFace>(
-                  tween: _MascotFaceTween(end: _targetFace),
-                  duration: reduce ? Duration.zero : const Duration(milliseconds: 600),
-                  curve: Curves.easeInOut,
-                  builder: (context, face, ___) {
-                    return SizedBox(
-                      width: widget.size,
-                      height: widget.size,
-                      child: CustomPaint(
-                        painter: BlobPainter(
-                          shape: shape,
-                          color: color,
-                          face: face,
-                          squish: squish,
-                          eyeOpen: eyeOpen,
+          child: Transform.rotate(
+            angle: rotation,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.diagonal3Values(scaleX, scaleY, 1),
+              child: TweenAnimationBuilder<MascotFace>(
+                tween: _MascotFaceTween(end: _targetFace),
+                duration: reduce ? Duration.zero : const Duration(milliseconds: 600),
+                curve: Curves.easeInOut,
+                builder: (context, face, __) {
+                  return SizedBox(
+                    width: widget.size,
+                    height: widget.size,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AnimatedSwitcher(
+                          duration: reduce ? Duration.zero : const Duration(milliseconds: 200),
+                          child: SvgPicture.asset(
+                            assetPath,
+                            key: ValueKey(assetPath),
+                            width: widget.size,
+                            height: widget.size,
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                        foregroundPainter: MascotAccessoriesPainter(
-                          band: widget.band,
-                          color: color,
-                          sway: sway,
-                          quiver: reduce ? 0 : quiver,
+                        CustomPaint(
+                          painter: MascotFacePainter(face: face, eyeOpen: eyeOpen),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         );
       },
     );
   }
-}
-
-class _BlobShapeTween extends Tween<BlobShape> {
-  _BlobShapeTween({required BlobShape end}) : super(end: end);
-  @override
-  BlobShape lerp(double t) => BlobShape.lerp(begin ?? end!, end!, t);
 }
 
 class _MascotFaceTween extends Tween<MascotFace> {

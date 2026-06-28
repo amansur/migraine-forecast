@@ -62,6 +62,7 @@ void main() {
     // then pump once to flush the zero-duration timer Drift schedules when
     // stream subscriptions are cancelled during cleanup.
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+    await tester.pump(); // fire the zero-duration Drift timer
+    await tester.pump(); // drain any timers scheduled by that callback
   });
 }

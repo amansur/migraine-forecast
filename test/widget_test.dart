@@ -28,6 +28,7 @@ void main() {
     // stream subscriptions are cancelled. Without this the Flutter test
     // framework reports a "pending timer" invariant failure.
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
+    await tester.pump(); // fire the zero-duration Drift timer
+    await tester.pump(); // drain any timers scheduled by that callback
   });
 }

@@ -23,6 +23,8 @@ import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../shared/animations/celebration_overlay.dart';
+import '../../state/mascot_character.dart';
+import '../shared/mascot/mascot_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';
 import 'oura_settings_card.dart';
@@ -80,9 +82,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Center(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: MascotWidget(band: RiskBand.low, size: 80, controller: _mascot),
+              child: MascotWidget(
+                band: RiskBand.low,
+                size: 80,
+                controller: _mascot,
+                character: ref.watch(mascotCharacterProvider).asData?.value ?? MascotCharacter.kitty,
+              ),
             ),
           ),
+          Text('Appearance', style: Theme.of(context).textTheme.titleSmall),
+          ref.watch(mascotCharacterProvider).when(
+            loading: () => const ListTile(title: Text('Mascot')),
+            error: (e, _) => ListTile(title: const Text('Mascot'), subtitle: Text('Error: $e')),
+            data: (character) => ListTile(
+              key: const Key('settings-mascot-row'),
+              title: const Text('Mascot'),
+              subtitle: Text(_mascotLabel(character)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => MascotPickerSheet.show(context),
+            ),
+          ),
+          const Divider(),
           Text('Display', style: Theme.of(context).textTheme.titleSmall),
           modeAsync.when(
             loading: () => const ListTile(
@@ -484,6 +504,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         onPick: (result) => ref.read(setManualLocationProvider)(result.lat, result.lon),
       ),
     );
+  }
+
+  String _mascotLabel(MascotCharacter c) {
+    switch (c) {
+      case MascotCharacter.flower: return 'Flower';
+      case MascotCharacter.kitty: return 'Kitty';
+      case MascotCharacter.bunny: return 'Bunny';
+      case MascotCharacter.bee: return 'Bee';
+    }
   }
 
   String _modeLabel(RiskDisplayMode m) {
