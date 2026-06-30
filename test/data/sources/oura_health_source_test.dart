@@ -16,43 +16,54 @@ class MockOuraApiClient extends Mock implements OuraApiClient {}
 // Helpers to build stubbed API responses
 // ---------------------------------------------------------------------------
 
+/// Returns a date string (yyyy-MM-dd) for [daysAgo] days before today so
+/// that stub data always falls within any reasonable recent-metrics window.
+String _recentDay([int daysAgo = 1]) {
+  final d = DateTime.now().toUtc().subtract(Duration(days: daysAgo));
+  final mm = d.month.toString().padLeft(2, '0');
+  final dd = d.day.toString().padLeft(2, '0');
+  return '${d.year}-$mm-$dd';
+}
+
+String _recentTs([int daysAgo = 1]) => '${_recentDay(daysAgo)}T06:00:00Z';
+
 OuraSleepData _sleepData() => OuraSleepData(records: [
       OuraSleepRecord(
         id: 'sleep-001',
-        day: '2026-06-13',
+        day: _recentDay(),
         lowestHeartRate: 45,
         restlessPeriods: 2,
         averageHeartRate: 52.5,
         averageHrv: 35,
-        timestamp: '2026-06-13T06:00:00Z',
+        timestamp: _recentTs(),
       ),
     ]);
 
 OuraDailySleepData _dailySleepData() => OuraDailySleepData(records: [
       OuraDailySleepRecord(
         id: 'daily-sleep-001',
-        day: '2026-06-13',
+        day: _recentDay(),
         score: 85,
-        timestamp: '2026-06-13T06:00:00Z',
+        timestamp: _recentTs(),
       ),
     ]);
 
 OuraActivityData _activityData() => OuraActivityData(records: [
       OuraActivityRecord(
         id: 'activity-001',
-        day: '2026-06-13',
+        day: _recentDay(),
         score: 75,
-        timestamp: '2026-06-13T06:00:00Z',
+        timestamp: _recentTs(),
       ),
     ]);
 
 OuraReadinessData _readinessData() => OuraReadinessData(records: [
       OuraReadinessRecord(
         id: 'readiness-001',
-        day: '2026-06-13',
+        day: _recentDay(),
         score: 88,
         temperatureDeviation: 0.2,
-        timestamp: '2026-06-13T06:00:00Z',
+        timestamp: _recentTs(),
       ),
     ]);
 

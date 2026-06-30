@@ -77,12 +77,15 @@ Widget _wrap(_FakeJournal fake) {
       tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrow(_ass())),
       riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.numeric),
     ],
-    child: MaterialApp.router(
-      routerConfig: GoRouter(routes: [
-        GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
-        GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
-        GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
-      ]),
+    child: MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: MaterialApp.router(
+        routerConfig: GoRouter(routes: [
+          GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+          GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
+          GoRoute(path: '/settings', builder: (_, __) => const SizedBox()),
+        ]),
+      ),
     ),
   );
 }
@@ -98,11 +101,14 @@ void main() {
         riskDisplayModeProvider.overrideWith((ref) async => RiskDisplayMode.numeric),
         cycleTrackingEnabledProvider.overrideWith((ref) async => false),
       ],
-      child: MaterialApp.router(
-        routerConfig: GoRouter(routes: [
-          GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
-          GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
-        ]),
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+            GoRoute(path: '/log', builder: (_, __) => const SizedBox()),
+          ]),
+        ),
       ),
     ));
     await tester.pumpAndSettle();
