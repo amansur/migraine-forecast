@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,6 +43,6 @@ void main() {
         find.byType(RepaintBoundary).first,
         matchesGoldenFile('goldens/mascot_${band.name}.png'),
       );
-    });
+    }, skip: !Platform.isLinux); // goldens are Linux-canonical (see CI)
   }
 }

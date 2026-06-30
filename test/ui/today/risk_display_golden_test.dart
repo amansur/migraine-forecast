@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +37,6 @@ void main() {
         find.byType(RiskDisplay),
         matchesGoldenFile('goldens/gauge_${entry.key}.png'),
       );
-    });
+    }, skip: !Platform.isLinux); // goldens are Linux-canonical (see CI)
   }
 }
