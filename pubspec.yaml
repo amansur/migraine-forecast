@@ -77,6 +77,23 @@ dev_dependencies:
   drift_dev: ^2.18.0
   build_runner: ^2.4.0
   mocktail: ^1.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true
+  android: true
+  adaptive_icon_background: "#FAF7F0"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  ios: true
+  macos:
+    generate: true
+    image_path: "assets/icon/icon.png"
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#FAF7F0"
+    theme_color: "#7A9B7A"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

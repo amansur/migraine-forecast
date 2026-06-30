@@ -2,6 +2,8 @@
 
 > Renamed from "Migraine Weatherr" on 2026-06-13.
 
+**🌐 Live web app: [migraine-forecast.pages.dev](https://migraine-forecast.pages.dev)**
+
 A Flutter app that predicts daily migraine risk from evidence-backed triggers (barometric pressure, sleep, HRV, hormones, hydration, alcohol, stress, etc.). Local-first — all data stays on the device.
 
 ## Status
@@ -44,7 +46,7 @@ flutter run
 
 ### Web
 
-`flutter build web` works and serves the app. SQLite runs via WASM (the `sqlite3.wasm` + drift worker are bundled in `web/`). Limitations: the `health` plugin has no web implementation; geolocator on web requires HTTPS + browser permission; background notifications go through the browser's Push API which we don't wire in v1.
+The web build is deployed live at **[migraine-forecast.pages.dev](https://migraine-forecast.pages.dev)** (Cloudflare Pages). Locally, `flutter build web` works and serves the app. SQLite runs via WASM (the `sqlite3.wasm` + drift worker are bundled in `web/`). Limitations: the `health` plugin has no web implementation; geolocator on web requires HTTPS + browser permission; background notifications go through the browser's Push API which we don't wire in v1.
 
 ## Oura Ring integration
 
