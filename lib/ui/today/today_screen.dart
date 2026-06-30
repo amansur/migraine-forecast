@@ -25,7 +25,8 @@ class TodayScreen extends ConsumerStatefulWidget {
   ConsumerState<TodayScreen> createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingObserver {
+class _TodayScreenState extends ConsumerState<TodayScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -53,8 +54,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     final ass = ref.watch(riskAssessmentProvider);
-    final mode = ref.watch(riskDisplayModeProvider).asData?.value ?? RiskDisplayMode.gauge;
-    final character = ref.watch(mascotCharacterProvider).asData?.value ?? MascotCharacter.kitty;
+    final mode =
+        ref.watch(riskDisplayModeProvider).asData?.value ??
+        RiskDisplayMode.gauge;
+    final character =
+        ref.watch(mascotCharacterProvider).asData?.value ??
+        MascotCharacter.kitty;
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(
@@ -66,14 +71,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
           ],
         ),
         actions: [
-          Consumer(builder: (context, ref, _) {
-            final eligible = ref.watch(insightsEligibleProvider).asData?.value ?? false;
-            if (!eligible) return const SizedBox.shrink();
-            return IconButton(
-              onPressed: () => context.push('/insights'),
-              icon: const Icon(Icons.insights_outlined),
-            );
-          }),
+          Consumer(
+            builder: (context, ref, _) {
+              final eligible =
+                  ref.watch(insightsEligibleProvider).asData?.value ?? false;
+              if (!eligible) return const SizedBox.shrink();
+              return IconButton(
+                onPressed: () => context.push('/insights'),
+                icon: const Icon(Icons.insights_outlined),
+              );
+            },
+          ),
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings_outlined),
@@ -96,11 +104,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
               ),
               data: (a) {
                 if (a.isOnboarding) {
-                  final granted = ref.read(permissionServiceProvider).locationGranted;
+                  final granted = ref
+                      .read(permissionServiceProvider)
+                      .locationGranted;
                   if (!granted) {
-                    return _OnboardingCard(onSetup: () => context.push('/settings'));
+                    return _OnboardingCard(
+                      onSetup: () => context.push('/settings'),
+                    );
                   } else {
-                    return _NoDataCard(onSetup: () => context.push('/settings'));
+                    return _NoDataCard(
+                      onSetup: () => context.push('/settings'),
+                    );
                   }
                 }
                 final hasChips = a.contributors.any((c) => c.contribution > 0);
@@ -109,23 +123,42 @@ class _TodayScreenState extends ConsumerState<TodayScreen> with WidgetsBindingOb
                   children: [
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: InkWell(
-                          key: const Key('mascot-tap-target'),
-                          borderRadius: BorderRadius.circular(80),
-                          onTap: () => MascotPickerSheet.show(context),
-                          child: MascotWidget(
-                            band: a.band,
-                            character: character,
-                            size: 160,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Symmetric padding keeps the gauge truly centered
+                              // while widening the Stack so the mascot lives fully
+                              // inside its bounds (otherwise the mascot's tap area
+                              // gets clipped by hit-testing).
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 60,
+                                ),
+                                child: RiskDisplay(assessment: a, mode: mode),
+                              ),
+                              // Mascot hops casually just off the gauge's right
+                              // edge. Tap to switch characters.
+                              Positioned(
+                                right: 0,
+                                bottom: 8,
+                                child: InkWell(
+                                  key: const Key('mascot-tap-target'),
+                                  borderRadius: BorderRadius.circular(44),
+                                  onTap: () => MascotPickerSheet.show(context),
+                                  child: MascotWidget(
+                                    band: a.band,
+                                    character: character,
+                                    size: 84,
+                                    idle: MascotIdle.hop,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: RiskDisplay(assessment: a, mode: mode),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -166,7 +199,8 @@ class _PeriodButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enabled = ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
+    final enabled =
+        ref.watch(cycleTrackingEnabledProvider).asData?.value ?? true;
     if (!enabled) return const SizedBox.shrink();
     final current = ref.watch(currentPeriodProvider);
     final inProgress = current != null;
@@ -187,10 +221,12 @@ class _PeriodButton extends ConsumerWidget {
           }
           final severity = await BaselineSeverityDialog.show(context);
           if (severity == null) return;
-          await journal.addPeriod(PeriodEvent(
-            startedAt: DateTime.now().toUtc(),
-            baselineSeverity: severity,
-          ));
+          await journal.addPeriod(
+            PeriodEvent(
+              startedAt: DateTime.now().toUtc(),
+              baselineSeverity: severity,
+            ),
+          );
         },
       ),
     );
@@ -233,12 +269,19 @@ class _OnboardingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Set up your personal risk profile',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Set up your personal risk profile',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            const Text('Grant location and Health permissions to start seeing risk predictions.'),
+            const Text(
+              'Grant location and Health permissions to start seeing risk predictions.',
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onSetup, child: const Text('Open Settings')),
+            FilledButton(
+              onPressed: onSetup,
+              child: const Text('Open Settings'),
+            ),
           ],
         ),
       ),
@@ -258,12 +301,19 @@ class _NoDataCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Data unavailable',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Data unavailable',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
-            const Text('We could not fetch data for your triggers. Please check your network connection or set a manual location in Settings.'),
+            const Text(
+              'We could not fetch data for your triggers. Please check your network connection or set a manual location in Settings.',
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onSetup, child: const Text('Open Settings')),
+            FilledButton(
+              onPressed: onSetup,
+              child: const Text('Open Settings'),
+            ),
           ],
         ),
       ),

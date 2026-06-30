@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,6 +8,11 @@ import '../../../state/mascot_character.dart';
 import 'mascot_face_painter.dart';
 
 enum MascotAction { wiggle, wave, blink }
+
+/// How the mascot idles when nothing else is happening.
+/// [float] is a calm vertical drift; [hop] is a livelier bounce with a little
+/// squash on landing — for casual, off-to-the-side placements.
+enum MascotIdle { float, hop }
 
 /// Pre-caches all 16 mascot SVGs into the flutter_svg picture cache so the first
 /// render does not flash. Call once from `main()` after binding init.
@@ -42,6 +49,7 @@ class MascotWidget extends StatefulWidget {
   final double size;
   final MascotController? controller;
   final VoidCallback? onWiggle;
+  final MascotIdle idle;
 
   const MascotWidget({
     super.key,
@@ -50,6 +58,7 @@ class MascotWidget extends StatefulWidget {
     this.size = 160,
     this.controller,
     this.onWiggle,
+    this.idle = MascotIdle.float,
   });
 
   @override
@@ -168,13 +177,24 @@ class _MascotWidgetState extends State<MascotWidget>
       animation: _idle,
       builder: (context, _) {
         final phase = reduce ? 0.0 : _idle.value;
-        final floatY = reduce ? 0.0 : (-3.0 + 6.0 * phase);
+        double floatY;
+        double idleSquish = 0;
+        if (widget.idle == MascotIdle.hop) {
+          // sin(phase*pi) traces a single 0->1->0 arc per half-cycle: a leap
+          // up and a landing. Squash a touch when near the ground.
+          final hop = reduce ? 0.0 : math.sin(phase * math.pi);
+          floatY = -16.0 * hop;
+          idleSquish = 0.10 * (1 - hop);
+        } else {
+          floatY = reduce ? 0.0 : (-3.0 + 6.0 * phase);
+        }
         final breathe = reduce ? 1.0 : (1.0 + 0.015 * (phase - 0.5).abs() * 2);
 
         // Wave = gentle rotation (+/-5deg). Wiggle = horizontal squish.
         final rotation = sway * 0.0873; // ~5 degrees in radians
-        final scaleX = breathe * (1 + squish * 0.5);
-        final scaleY = breathe * (1 - squish * 0.5);
+        final totalSquish = squish + idleSquish;
+        final scaleX = breathe * (1 + totalSquish * 0.5);
+        final scaleY = breathe * (1 - totalSquish * 0.5);
 
         return Transform.translate(
           offset: Offset(0, floatY),
