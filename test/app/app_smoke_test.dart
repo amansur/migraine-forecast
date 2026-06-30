@@ -58,11 +58,13 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Welcome to Migraine Forecast'), findsOneWidget);
-    // Replace the app with an empty widget to trigger ProviderScope disposal,
-    // then pump once to flush the zero-duration timer Drift schedules when
-    // stream subscriptions are cancelled during cleanup.
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(); // fire the zero-duration Drift timer
-    await tester.pump(); // drain any timers scheduled by that callback
+    // Replace the app with an empty widget to trigger ProviderScope disposal.
+    // Drift schedules a zero-duration timer when stream subscriptions are
+    // cancelled; running the disposal inside runAsync lets that timer fire on
+    // the real event loop, avoiding the framework's "pending timer" failure.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await Future<void>.delayed(Duration.zero);
+    });
   });
 }

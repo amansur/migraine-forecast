@@ -23,12 +23,13 @@ void main() {
     );
     // No assertion needed — if the pump throws, the test fails.
     //
-    // Replace the app with an empty widget to trigger ProviderScope disposal,
-    // then pump once to flush the zero-duration timer that Drift schedules when
-    // stream subscriptions are cancelled. Without this the Flutter test
-    // framework reports a "pending timer" invariant failure.
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(); // fire the zero-duration Drift timer
-    await tester.pump(); // drain any timers scheduled by that callback
+    // Replace the app with an empty widget to trigger ProviderScope disposal.
+    // Drift schedules a zero-duration timer when stream subscriptions are
+    // cancelled; running the disposal inside runAsync lets that timer fire on
+    // the real event loop, avoiding the framework's "pending timer" failure.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await Future<void>.delayed(Duration.zero);
+    });
   });
 }
