@@ -59,7 +59,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
         RiskDisplayMode.gauge;
     final character =
         ref.watch(mascotCharacterProvider).asData?.value ??
-        MascotCharacter.kitty;
+        kDefaultMascotCharacter;
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(

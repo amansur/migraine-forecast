@@ -86,7 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 band: RiskBand.low,
                 size: 80,
                 controller: _mascot,
-                character: ref.watch(mascotCharacterProvider).asData?.value ?? MascotCharacter.kitty,
+                character: ref.watch(mascotCharacterProvider).asData?.value ?? kDefaultMascotCharacter,
               ),
             ),
           ),

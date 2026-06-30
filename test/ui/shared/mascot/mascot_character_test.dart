@@ -21,7 +21,7 @@ void main() {
     expect(paths, contains('assets/mascots/kitty_moderate.svg'));
   });
 
-  test('default character is kitty', () {
-    expect(kDefaultMascotCharacter, MascotCharacter.kitty);
+  test('default character is bee', () {
+    expect(kDefaultMascotCharacter, MascotCharacter.bee);
   });
 }

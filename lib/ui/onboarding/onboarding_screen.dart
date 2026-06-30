@@ -72,7 +72,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   band: RiskBand.low,
                   size: 80,
                   controller: _mascot,
-                  character: ref.watch(mascotCharacterProvider).asData?.value ?? MascotCharacter.kitty,
+                  character: ref.watch(mascotCharacterProvider).asData?.value ?? kDefaultMascotCharacter,
                 ),
               ),
               if (kIsWeb)

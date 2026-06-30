@@ -5,7 +5,7 @@ import 'package:domain/domain.dart';
 enum MascotCharacter { flower, kitty, bunny, bee }
 
 /// Default mascot on a fresh install.
-const MascotCharacter kDefaultMascotCharacter = MascotCharacter.kitty;
+const MascotCharacter kDefaultMascotCharacter = MascotCharacter.bee;
 
 /// Resolves the SVG asset path for a given character + risk band.
 String mascotAssetPath(MascotCharacter character, RiskBand band) =>

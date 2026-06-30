@@ -23,9 +23,9 @@ void main() {
     await db.close();
   });
 
-  test('defaults to kitty when unset', () async {
+  test('defaults to bee when unset', () async {
     final c = await container.read(mascotCharacterProvider.future);
-    expect(c, MascotCharacter.kitty);
+    expect(c, MascotCharacter.bee);
   });
 
   test('setter persists and re-reads as the chosen character', () async {
