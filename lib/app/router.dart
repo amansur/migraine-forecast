@@ -1,4 +1,5 @@
 import 'package:domain/domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,9 +12,13 @@ import '../ui/settings/settings_screen.dart';
 import '../ui/today/today_screen.dart';
 import '../ui/today/tomorrow_detail_screen.dart';
 
-GoRouter buildRouter(WidgetRef ref) {
+GoRouter buildRouter(WidgetRef ref, {Listenable? refreshListenable}) {
   return GoRouter(
     initialLocation: '/today',
+    // Re-runs `redirect` when onboarding state resolves. The router is built
+    // once (in app state) and no longer recreated on rebuild, so without this a
+    // returning user could stay stranded on the loading-state redirect target.
+    refreshListenable: refreshListenable,
     redirect: (context, state) {
       final completed = ref.read(onboardingCompletedProvider).asData?.value ?? false;
       final goingToOnboarding = state.matchedLocation == '/onboarding';
