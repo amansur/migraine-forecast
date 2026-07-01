@@ -6,7 +6,7 @@ import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/state/settings_provider.dart';
 
 void main() {
-  test('darkPaletteProvider defaults to classic on fresh install', () async {
+  test('darkPaletteProvider defaults to midnight sage on fresh install', () async {
     final db = AppDatabase.memory();
     addTearDown(db.close);
     final container = ProviderContainer(overrides: [
@@ -15,7 +15,7 @@ void main() {
     addTearDown(container.dispose);
 
     final choice = await container.read(darkPaletteProvider.future);
-    expect(choice, DarkPaletteChoice.classic);
+    expect(choice, DarkPaletteChoice.midnightSage);
   });
 
   test('darkPaletteProvider returns the persisted choice', () async {

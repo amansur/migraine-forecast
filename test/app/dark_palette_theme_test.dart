@@ -11,20 +11,20 @@ void main() {
     expect(theme.scaffoldBackgroundColor, kDeepPlumPalette.background);
   });
 
-  test('classic palette preserves the legacy comfort background', () {
-    expect(kClassicPalette.background, const Color(0xFF232120));
-    expect(kClassicPalette.surface, const Color(0xFF2E2C2B));
+  test('midnight sage palette preserves the legacy comfort background', () {
+    expect(kMidnightSagePalette.background, const Color(0xFF232120));
+    expect(kMidnightSagePalette.surface, const Color(0xFF2E2C2B));
   });
 
-  test('classic theme reproduces the legacy scaffoldUnder-derived colors', () {
-    final theme = buildComfortTheme(kClassicPalette);
+  test('midnight sage theme reproduces the legacy scaffoldUnder-derived colors', () {
+    final theme = buildComfortTheme(kMidnightSagePalette);
     expect(theme.colorScheme.onPrimary, const Color(0xFF1C1A19));
     expect(theme.colorScheme.onError, const Color(0xFF1C1A19));
   });
 
   test('all five palettes are distinct', () {
     final backgrounds = {
-      kClassicPalette.background,
+      kMidnightSagePalette.background,
       kDeepForestPalette.background,
       kMossPalette.background,
       kCharcoalPalette.background,

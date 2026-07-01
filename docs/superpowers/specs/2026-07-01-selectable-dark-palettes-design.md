@@ -15,13 +15,13 @@ Five selectable dark palettes, each defined by a small value object:
 
 | Palette              | Background | Surface   | onSurface (text) | Accent/primary |
 |----------------------|-----------|-----------|------------------|----------------|
-| Classic (default)    | `#232120` | `#2E2C2B` | `#DFD9D0`        | `#8B9D88`      |
+| Midnight Sage (default) | `#232120` | `#2E2C2B` | `#DFD9D0`        | `#8B9D88`      |
 | Deep Forest & Parchment | `#2C362F` | `#38423B` | `#E5DFD1`        | `#8B9D88`      |
 | Moss & Warmgray      | `#364236` | `#4F545C` | `#DFD9D0`        | `#8B9D88`      |
 | Charcoal & Eucalyptus | `#333333` | `#3D3D3D` | `#DFD9D0`        | `#889D84`      |
 | Deep Plum & Lilac    | `#2A2438` | `#352E47` | `#E0DAF0`        | `#9B8ADB`      |
 
-Classic reproduces the app's pre-existing `buildComfortTheme()` colors and is
+Midnight Sage reproduces the app's pre-existing `buildComfortTheme()` colors and is
 the default, so existing comfort-mode users see no visible change. The four
 palettes from the design image (Deep Forest, Moss, Charcoal, Deep Plum) are
 opt-in. (The image's own light palette, Sage & Ivory, is already the light
@@ -48,16 +48,16 @@ selected by a state-layer `DarkPaletteChoice` enum.
 
 Mirror the existing `comfortModeProvider` / `setComfortModeProvider` pair:
 
-- `enum DarkPaletteChoice { classic, deepForest, moss, charcoal, deepPlum }`
+- `enum DarkPaletteChoice { midnightSage, deepForest, moss, charcoal, deepPlum }`
 - `darkPaletteProvider` — `FutureProvider<DarkPaletteChoice>` reading string
   key `'dark_palette'` from `settingsRepoProvider`, defaulting to
-  `DarkPaletteChoice.classic` when unset or unrecognized.
+  `DarkPaletteChoice.midnightSage` when unset or unrecognized.
 - `setDarkPaletteProvider` — `Provider<Future<void> Function(DarkPaletteChoice)>`
   that writes the key and invalidates `darkPaletteProvider`.
 
 ### App wiring (`lib/app/app.dart`)
 
-Watch `darkPaletteProvider` (defaulting to `classic` while loading) alongside the
+Watch `darkPaletteProvider` (defaulting to `midnightSage` while loading) alongside the
 existing comfort-mode logic. When `comfort` is true, build the comfort theme
 from the chosen palette: `buildComfortTheme(paletteFor(choice))`. The
 auto/always/off decision is unchanged.
@@ -85,7 +85,7 @@ by the other settings rows.
 
 ## Error Handling
 
-- Unknown/missing stored value → default to `classic` (same defensive pattern as
+- Unknown/missing stored value → default to `midnightSage` (same defensive pattern as
   `comfortModeProvider`).
 - Provider `error`/`loading` states in the settings UI render nothing / the
   default, consistent with existing rows.
@@ -95,7 +95,7 @@ by the other settings rows.
 - **Theme unit test:** `buildComfortTheme(palette)` produces the expected
   `colorScheme.surface` / `primary` / scaffold background for each palette.
 - **Provider test:** `darkPaletteProvider` returns the stored choice, and
-  defaults to `classic` when the key is absent or invalid; `setDarkPaletteProvider`
+  defaults to `midnightSage` when the key is absent or invalid; `setDarkPaletteProvider`
   persists the value.
 - **Widget test:** tapping a swatch card updates the selected indicator and
   triggers the setter.

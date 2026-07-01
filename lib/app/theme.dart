@@ -58,7 +58,7 @@ class DarkPalette {
   final String label;
 
   /// The darkest shade, used for text/icons drawn on the accent color. When
-  /// null it is derived from [background]; Classic overrides it to reproduce
+  /// null it is derived from [background]; Midnight Sage overrides it to reproduce
   /// the legacy comfort theme byte-for-byte.
   final Color? scaffoldUnder;
 
@@ -74,12 +74,12 @@ class DarkPalette {
 
 /// The app's original comfort theme — warm near-black. Default palette so
 /// existing comfort-mode users see no change.
-const kClassicPalette = DarkPalette(
+const kMidnightSagePalette = DarkPalette(
   background: Color(0xFF232120),
   surface: Color(0xFF2E2C2B),
   onSurface: Color(0xFFDFD9D0),
   primary: Color(0xFF8B9D88),
-  label: 'Classic',
+  label: 'Midnight Sage',
   scaffoldUnder: Color(0xFF1C1A19),
 );
 
