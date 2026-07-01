@@ -99,10 +99,12 @@ final setComfortModeProvider = Provider<Future<void> Function(ComfortMode)>((ref
   };
 });
 
-enum DarkPaletteChoice { deepForest, moss, charcoal, deepPlum }
+enum DarkPaletteChoice { classic, deepForest, moss, charcoal, deepPlum }
 
 DarkPalette paletteFor(DarkPaletteChoice choice) {
   switch (choice) {
+    case DarkPaletteChoice.classic:
+      return kClassicPalette;
     case DarkPaletteChoice.deepForest:
       return kDeepForestPalette;
     case DarkPaletteChoice.moss:
@@ -118,7 +120,7 @@ final darkPaletteProvider = FutureProvider<DarkPaletteChoice>((ref) async {
   final raw = await ref.watch(settingsRepoProvider).getString('dark_palette');
   return DarkPaletteChoice.values.firstWhere(
     (c) => c.name == raw,
-    orElse: () => DarkPaletteChoice.moss,
+    orElse: () => DarkPaletteChoice.classic,
   );
 });
 

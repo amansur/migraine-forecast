@@ -66,6 +66,16 @@ class DarkPalette {
   });
 }
 
+/// The app's original comfort theme — warm near-black. Default palette so
+/// existing comfort-mode users see no change.
+const kClassicPalette = DarkPalette(
+  background: Color(0xFF232120),
+  surface: Color(0xFF2E2C2B),
+  onSurface: Color(0xFFDFD9D0),
+  primary: Color(0xFF8B9D88),
+  label: 'Classic',
+);
+
 const kDeepForestPalette = DarkPalette(
   background: Color(0xFF2C362F),
   surface: Color(0xFF38423B),

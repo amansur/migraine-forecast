@@ -11,17 +11,19 @@ void main() {
     expect(theme.scaffoldBackgroundColor, kDeepPlumPalette.background);
   });
 
-  test('moss palette matches the legacy comfort background', () {
-    expect(kMossPalette.background, const Color(0xFF364236));
+  test('classic palette preserves the legacy comfort background', () {
+    expect(kClassicPalette.background, const Color(0xFF232120));
+    expect(kClassicPalette.surface, const Color(0xFF2E2C2B));
   });
 
-  test('all four palettes are distinct', () {
+  test('all five palettes are distinct', () {
     final backgrounds = {
+      kClassicPalette.background,
       kDeepForestPalette.background,
       kMossPalette.background,
       kCharcoalPalette.background,
       kDeepPlumPalette.background,
     };
-    expect(backgrounds.length, 4);
+    expect(backgrounds.length, 5);
   });
 }

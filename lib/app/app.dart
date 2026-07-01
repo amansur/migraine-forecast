@@ -45,7 +45,7 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
     final hasActiveAttack = ref.watch(activeAttackProvider).asData?.value ?? false;
     final mode = ref.watch(comfortModeProvider).asData?.value ?? ComfortMode.auto;
     final paletteChoice =
-        ref.watch(darkPaletteProvider).asData?.value ?? DarkPaletteChoice.moss;
+        ref.watch(darkPaletteProvider).asData?.value ?? DarkPaletteChoice.classic;
     final comfort = mode == ComfortMode.always || (mode == ComfortMode.auto && hasActiveAttack);
     final activeTheme =
         comfort ? buildComfortTheme(paletteFor(paletteChoice)) : buildLightTheme();
