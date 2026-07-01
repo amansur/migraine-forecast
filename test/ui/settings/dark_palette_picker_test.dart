@@ -10,6 +10,13 @@ import 'package:migraine_forecast/ui/settings/settings_screen.dart';
 
 void main() {
   testWidgets('tapping a palette card persists the choice', (tester) async {
+    // Make the viewport tall enough so the palette section is on-screen without
+    // requiring scrolling, avoiding hit-test issues with clipped offstage widgets.
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final db = AppDatabase.memory();
     addTearDown(db.close);
     final container = ProviderContainer(overrides: [
@@ -37,11 +44,13 @@ void main() {
     final deepPlumCard = find.byKey(const Key('palette-card-deepPlum'), skipOffstage: false);
     expect(deepPlumCard, findsOneWidget);
 
-    await tester.ensureVisible(deepPlumCard);
-    // Drift writes don't complete in fake_async; call the setter directly via
-    // runAsync so the DB write + provider invalidation flush before we read.
-    await tester.runAsync(() => container.read(setDarkPaletteProvider)(DarkPaletteChoice.deepPlum));
-    await tester.pumpAndSettle();
+    // Drift writes don't complete in fake_async; use runAsync so the real event
+    // loop processes the DB write triggered by onTap.
+    await tester.runAsync(() async {
+      await tester.tap(deepPlumCard);
+      await Future.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
 
     final choice = await container.read(darkPaletteProvider.future);
     expect(choice, DarkPaletteChoice.deepPlum);
