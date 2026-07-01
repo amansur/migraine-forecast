@@ -190,6 +190,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ),
+          ref.watch(darkPaletteProvider).when(
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => Text('Error: $e'),
+            data: (selected) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Dark palette'),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Colors used when comfort mode is on',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      for (final choice in DarkPaletteChoice.values)
+                        _PaletteCard(
+                          choice: choice,
+                          selected: choice == selected,
+                          onTap: () => ref.read(setDarkPaletteProvider)(choice),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
           const Divider(),
           Text('Notifications', style: Theme.of(context).textTheme.titleSmall),
           notifAsync.when(
@@ -761,4 +792,69 @@ class _ExportDataDialogState extends State<_ExportDataDialog> {
             ],
     );
   }
+}
+
+class _PaletteCard extends StatelessWidget {
+  const _PaletteCard({
+    required this.choice,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final DarkPaletteChoice choice;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = paletteFor(choice);
+    return InkWell(
+      key: Key('palette-card-${choice.name}'),
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: palette.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? palette.primary
+                : palette.onSurface.withAlpha(40),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _swatch(palette.surface),
+                const SizedBox(width: 6),
+                _swatch(palette.primary),
+                const Spacer(),
+                if (selected)
+                  Icon(Icons.check_circle, size: 18, color: palette.primary),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              palette.label,
+              style: TextStyle(color: palette.onSurface, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _swatch(Color color) => Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+      );
 }

@@ -44,8 +44,11 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
     final router = buildRouter(ref);
     final hasActiveAttack = ref.watch(activeAttackProvider).asData?.value ?? false;
     final mode = ref.watch(comfortModeProvider).asData?.value ?? ComfortMode.auto;
+    final paletteChoice =
+        ref.watch(darkPaletteProvider).asData?.value ?? DarkPaletteChoice.classic;
     final comfort = mode == ComfortMode.always || (mode == ComfortMode.auto && hasActiveAttack);
-    final activeTheme = comfort ? buildComfortTheme() : buildLightTheme();
+    final activeTheme =
+        comfort ? buildComfortTheme(paletteFor(paletteChoice)) : buildLightTheme();
     return MaterialApp.router(
       title: 'Migraine Forecast',
       theme: activeTheme,

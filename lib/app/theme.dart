@@ -49,20 +49,87 @@ ThemeData buildLightTheme() {
   );
 }
 
-ThemeData buildComfortTheme() {
-  const background = Color(0xFF232120);
-  const surface = Color(0xFF2E2C2B);
-  const onSurface = Color(0xFFDFD9D0);
-  const primary = Color(0xFF8B9D88);
-  const scaffoldUnder = Color(0xFF1C1A19);
+/// A dark theme palette: background, card surface, text, and accent.
+class DarkPalette {
+  final Color background;
+  final Color surface;
+  final Color onSurface;
+  final Color primary;
+  final String label;
 
-  const scheme = ColorScheme(
+  /// The darkest shade, used for text/icons drawn on the accent color. When
+  /// null it is derived from [background]; Classic overrides it to reproduce
+  /// the legacy comfort theme byte-for-byte.
+  final Color? scaffoldUnder;
+
+  const DarkPalette({
+    required this.background,
+    required this.surface,
+    required this.onSurface,
+    required this.primary,
+    required this.label,
+    this.scaffoldUnder,
+  });
+}
+
+/// The app's original comfort theme — warm near-black. Default palette so
+/// existing comfort-mode users see no change.
+const kClassicPalette = DarkPalette(
+  background: Color(0xFF232120),
+  surface: Color(0xFF2E2C2B),
+  onSurface: Color(0xFFDFD9D0),
+  primary: Color(0xFF8B9D88),
+  label: 'Classic',
+  scaffoldUnder: Color(0xFF1C1A19),
+);
+
+const kDeepForestPalette = DarkPalette(
+  background: Color(0xFF2C362F),
+  surface: Color(0xFF38423B),
+  onSurface: Color(0xFFE5DFD1),
+  primary: Color(0xFF8B9D88),
+  label: 'Deep Forest',
+);
+
+const kMossPalette = DarkPalette(
+  background: Color(0xFF364236),
+  surface: Color(0xFF4F545C),
+  onSurface: Color(0xFFDFD9D0),
+  primary: Color(0xFF8B9D88),
+  label: 'Moss',
+);
+
+const kCharcoalPalette = DarkPalette(
+  background: Color(0xFF333333),
+  surface: Color(0xFF3D3D3D),
+  onSurface: Color(0xFFDFD9D0),
+  primary: Color(0xFF889D84),
+  label: 'Charcoal',
+);
+
+const kDeepPlumPalette = DarkPalette(
+  background: Color(0xFF2A2438),
+  surface: Color(0xFF352E47),
+  onSurface: Color(0xFFE0DAF0),
+  primary: Color(0xFF9B8ADB),
+  label: 'Deep Plum',
+);
+
+ThemeData buildComfortTheme(DarkPalette palette) {
+  final background = palette.background;
+  final surface = palette.surface;
+  final onSurface = palette.onSurface;
+  final primary = palette.primary;
+  final scaffoldUnder = palette.scaffoldUnder ??
+      Color.alphaBlend(Colors.black.withAlpha(60), background);
+
+  final scheme = ColorScheme(
     brightness: Brightness.dark,
     primary: primary,
     onPrimary: scaffoldUnder,
     secondary: primary,
     onSecondary: scaffoldUnder,
-    error: Color(0xFFCF6679),
+    error: const Color(0xFFCF6679),
     onError: scaffoldUnder,
     surface: surface,
     onSurface: onSurface,
@@ -84,7 +151,7 @@ ThemeData buildComfortTheme() {
         side: BorderSide(color: onSurface.withAlpha(30)),
       ),
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       centerTitle: true,
       backgroundColor: background,
       foregroundColor: onSurface,

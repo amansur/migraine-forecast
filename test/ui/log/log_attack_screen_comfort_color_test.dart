@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          theme: buildComfortTheme(),
+          theme: buildComfortTheme(kMossPalette),
           home: const LogAttackScreen(),
         ),
       ),
