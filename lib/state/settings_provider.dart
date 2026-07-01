@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/theme.dart';
 import '../data/sources/location_source.dart';
 import 'mascot_character.dart';
 import '../ui/shared/unit_formatter.dart';
@@ -95,6 +96,37 @@ final setComfortModeProvider = Provider<Future<void> Function(ComfortMode)>((ref
   return (mode) async {
     await ref.read(settingsRepoProvider).setString('comfort_mode', mode.name);
     ref.invalidate(comfortModeProvider);
+  };
+});
+
+enum DarkPaletteChoice { deepForest, moss, charcoal, deepPlum }
+
+DarkPalette paletteFor(DarkPaletteChoice choice) {
+  switch (choice) {
+    case DarkPaletteChoice.deepForest:
+      return kDeepForestPalette;
+    case DarkPaletteChoice.moss:
+      return kMossPalette;
+    case DarkPaletteChoice.charcoal:
+      return kCharcoalPalette;
+    case DarkPaletteChoice.deepPlum:
+      return kDeepPlumPalette;
+  }
+}
+
+final darkPaletteProvider = FutureProvider<DarkPaletteChoice>((ref) async {
+  final raw = await ref.watch(settingsRepoProvider).getString('dark_palette');
+  return DarkPaletteChoice.values.firstWhere(
+    (c) => c.name == raw,
+    orElse: () => DarkPaletteChoice.moss,
+  );
+});
+
+final setDarkPaletteProvider =
+    Provider<Future<void> Function(DarkPaletteChoice)>((ref) {
+  return (choice) async {
+    await ref.read(settingsRepoProvider).setString('dark_palette', choice.name);
+    ref.invalidate(darkPaletteProvider);
   };
 });
 
