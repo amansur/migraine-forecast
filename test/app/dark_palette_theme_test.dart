@@ -16,6 +16,12 @@ void main() {
     expect(kClassicPalette.surface, const Color(0xFF2E2C2B));
   });
 
+  test('classic theme reproduces the legacy scaffoldUnder-derived colors', () {
+    final theme = buildComfortTheme(kClassicPalette);
+    expect(theme.colorScheme.onPrimary, const Color(0xFF1C1A19));
+    expect(theme.colorScheme.onError, const Color(0xFF1C1A19));
+  });
+
   test('all five palettes are distinct', () {
     final backgrounds = {
       kClassicPalette.background,

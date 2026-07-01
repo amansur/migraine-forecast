@@ -57,12 +57,18 @@ class DarkPalette {
   final Color primary;
   final String label;
 
+  /// The darkest shade, used for text/icons drawn on the accent color. When
+  /// null it is derived from [background]; Classic overrides it to reproduce
+  /// the legacy comfort theme byte-for-byte.
+  final Color? scaffoldUnder;
+
   const DarkPalette({
     required this.background,
     required this.surface,
     required this.onSurface,
     required this.primary,
     required this.label,
+    this.scaffoldUnder,
   });
 }
 
@@ -74,6 +80,7 @@ const kClassicPalette = DarkPalette(
   onSurface: Color(0xFFDFD9D0),
   primary: Color(0xFF8B9D88),
   label: 'Classic',
+  scaffoldUnder: Color(0xFF1C1A19),
 );
 
 const kDeepForestPalette = DarkPalette(
@@ -113,7 +120,8 @@ ThemeData buildComfortTheme(DarkPalette palette) {
   final surface = palette.surface;
   final onSurface = palette.onSurface;
   final primary = palette.primary;
-  final scaffoldUnder = Color.alphaBlend(Colors.black.withAlpha(60), background);
+  final scaffoldUnder = palette.scaffoldUnder ??
+      Color.alphaBlend(Colors.black.withAlpha(60), background);
 
   final scheme = ColorScheme(
     brightness: Brightness.dark,
