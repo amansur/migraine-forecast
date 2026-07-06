@@ -36,7 +36,7 @@
 
 - [ ] **Step 1: Write the slicing script**
 
-`assets/icons.png` is 2048×2048, blue art on black. Alpha comes from brightness; components are found by connected labeling on a downscaled mask, then boxes within `GAP` px are merged (teacup+steam, notebook+pencil, berry pot+berries must merge; big star must NOT merge with the small stars — tune `GAP` if the montage in Step 3 looks wrong).
+`assets/icons.png` is 2048×2048, blue art on black. **The icons themselves contain black outlines and facial features that are the same color as the background**, so a global brightness threshold would erase the linework (verified experimentally on the sun icon). Background is instead identified by flood-fill: BFS from the image border over dark pixels — dark pixels *enclosed by* an icon (outlines, eyes, mouths) are unreachable from the border and stay opaque. Components are found by connected labeling, then boxes within `GAP` px are merged (teacup+steam, notebook+pencil, berry pot+berries must merge; big star must NOT merge with the small stars — tune `GAP` if the montage in Step 3 looks wrong).
 
 ```python
 #!/usr/bin/env python3
@@ -44,10 +44,11 @@
 from PIL import Image
 import numpy as np
 import os
+from collections import deque
 
 SRC = "assets/icons.png"
 OUT = "assets/mascots"
-THRESH = 40      # brightness below this = background
+THRESH = 40      # brightness below this = "dark" (candidate background)
 GAP = 36         # merge boxes closer than this many px (at full res)
 PAD = 0.06       # padding around each crop, fraction of box size
 MIN_AREA = 3000  # drop specks/sparkles smaller than this (px^2)
@@ -55,10 +56,30 @@ MIN_AREA = 3000  # drop specks/sparkles smaller than this (px^2)
 im = Image.open(SRC).convert("RGB")
 a = np.asarray(im).astype(int)
 bright = a.max(axis=2)
-mask = bright > THRESH
+dark = bright <= THRESH
+H, W = dark.shape
 
-# alpha = scaled brightness so soft watercolor edges stay soft
-alpha = np.clip((bright - THRESH) * 255 // (255 - THRESH), 0, 255).astype(np.uint8)
+# Background = dark pixels reachable from the border (flood fill).
+# Dark pixels enclosed by an icon (outlines, eyes) are NOT background.
+bg = np.zeros_like(dark)
+q = deque()
+for x in range(W):
+    for y in (0, H - 1):
+        if dark[y, x] and not bg[y, x]:
+            bg[y, x] = True; q.append((y, x))
+for y in range(H):
+    for x in (0, W - 1):
+        if dark[y, x] and not bg[y, x]:
+            bg[y, x] = True; q.append((y, x))
+while q:
+    y, x = q.popleft()
+    for ny, nx in ((y-1,x),(y+1,x),(y,x-1),(y,x+1)):
+        if 0 <= ny < H and 0 <= nx < W and dark[ny, nx] and not bg[ny, nx]:
+            bg[ny, nx] = True
+            q.append((ny, nx))
+
+mask = ~bg  # icon pixels (including their black linework)
+alpha = np.where(bg, 0, 255).astype(np.uint8)
 rgba = np.dstack([a.astype(np.uint8), alpha])
 
 # connected components (4-neighbour) on the mask, iterative flood fill
@@ -732,3 +753,46 @@ git commit -m "test: adapt suites to pooled PNG mascots"
 - [ ] **Step 5: Manual review handoff**
 
 Tell the user the mapping chosen in Task 1 (icon → band, with any deviations from baseline) and ask them to run the app to review the mascots in-app, per the spec's manual-review requirement.
+
+---
+
+## Extension (not scheduled): Two-layer potrace SVG mascots
+
+Approved direction for a follow-up, validated experimentally on the sun icon
+(see `mascot_vector_experiment.png`, 2026-07-06). Produces flat "kawaii
+stamp" SVGs (~13 KB each): a body silhouette in one fill color plus a dark
+linework/face layer stacked on top. Loses the watercolor wash but is
+**runtime-tintable** — the body fill can be swapped to match the active
+palette (Midnight Sage etc.). Do NOT start this without user say-so; PNG is
+the shipping format for now.
+
+**Pipeline** (per sliced PNG from Task 1; requires `brew install potrace`,
+already installed 2026-07-06):
+
+```bash
+# 1. Body mask: every opaque pixel -> black, transparent -> white
+magick sun.png -alpha extract -threshold 50% -negate body.pbm
+# 2. Linework mask: opaque AND dark pixels -> black
+magick sun.png \( +clone -alpha extract -threshold 50% \) \
+  \( sun.png -alpha off -colorspace gray -threshold 35% -negate \) \
+  -delete 0 -compose multiply -composite -negate lines.pbm
+# 3. Trace both layers
+potrace body.pbm  -s --color '#4A7FB5' -o body.svg
+potrace lines.pbm -s --color '#1a1a1a' -o lines.svg
+```
+
+Then merge: take `body.svg`, insert `lines.svg`'s `<g>…</g>` before
+`</svg>` (both share the source pixel coordinate system, so they align).
+Script this as `tool/vectorize_mascots.py` over all pooled PNGs.
+
+**App integration sketch:**
+- Re-add `flutter_svg`; render via `SvgPicture.asset` in `MascotWidget`.
+- Tinting: emit the body path with `fill="currentColor"` instead of a
+  hard-coded hex, and pass `theme.colorScheme.primary` (or a dedicated
+  mascot color per palette) via flutter_svg's `ColorMapper`/theme `currentColor`.
+- Keep `mascot_pool.dart` unchanged except `.png` → `.svg` paths; revert
+  `precacheMascots` to the flutter_svg picture cache (see git history of
+  `mascot_widget.dart` for the original implementation).
+- Verify each traced SVG visually (contact sheet, as in Task 1 Step 3) —
+  fine features like the snail's spiral and butterfly wing hearts are the
+  likely casualties of `-threshold 35%`; tune per icon if needed.
