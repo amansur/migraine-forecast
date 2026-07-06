@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../services/lifecycle_observer.dart';
 import '../state/onboarding_provider.dart';
+import '../ui/shared/mascot/mascot_widget.dart';
 import '../state/providers.dart';
 import '../state/risk_assessment_provider.dart';
 import '../state/settings_provider.dart';
@@ -30,6 +31,9 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
     // create a fresh GoRouter and reset navigation to initialLocation, kicking
     // the user off whatever screen they were on (e.g. Settings).
     _router = buildRouter(ref, refreshListenable: _routerRefresh);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      precacheMascots(context);
+    });
     _observer = AppLifecycleObserver(
       staleAfter: const Duration(hours: 6),
       lastRefreshAt: () async {

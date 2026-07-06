@@ -12,9 +12,7 @@ import '../../state/backfill_provider.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
-import '../../state/settings_provider.dart';
 import '../../state/trigger_flags_provider.dart';
-import '../../state/mascot_character.dart';
 import '../shared/mascot/mascot_widget.dart';
 
 /// User-facing labels for the multi-select. Each maps to one or more module IDs;
@@ -72,7 +70,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   band: RiskBand.low,
                   size: 80,
                   controller: _mascot,
-                  character: ref.watch(mascotCharacterProvider).asData?.value ?? kDefaultMascotCharacter,
                 ),
               ),
               if (kIsWeb)

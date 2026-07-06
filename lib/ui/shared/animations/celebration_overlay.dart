@@ -17,9 +17,9 @@ class CelebrationOverlay {
     _insert(context, checkmark: false);
   }
 
-  /// Settings-style celebration: mascot blink + a small checkmark particle.
+  /// Settings-style celebration: mascot wiggle + a small checkmark particle.
   static void showCheckmark(BuildContext context, {required MascotController controller}) {
-    controller.blink();
+    controller.wiggle();
     if (MediaQuery.of(context).disableAnimations) return;
     _insert(context, checkmark: true);
   }

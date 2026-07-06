@@ -11,8 +11,6 @@ import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
-import '../../state/mascot_character.dart';
-import '../shared/mascot/mascot_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
@@ -27,6 +25,8 @@ class TodayScreen extends ConsumerStatefulWidget {
 
 class _TodayScreenState extends ConsumerState<TodayScreen>
     with WidgetsBindingObserver {
+  final _mascot = MascotController();
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +35,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
 
   @override
   void dispose() {
+    _mascot.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -57,9 +58,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
     final mode =
         ref.watch(riskDisplayModeProvider).asData?.value ??
         RiskDisplayMode.gauge;
-    final character =
-        ref.watch(mascotCharacterProvider).asData?.value ??
-        kDefaultMascotCharacter;
     final dateStr = DateFormat('EEE, MMM d').format(DateTime.now());
 
     return Scaffold(
@@ -140,18 +138,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                                 child: RiskDisplay(assessment: a, mode: mode),
                               ),
                               // Mascot hops casually just off the gauge's right
-                              // edge. Tap to switch characters.
+                              // edge. Tap for a wiggle.
                               Positioned(
                                 right: 0,
                                 bottom: 8,
                                 child: InkWell(
                                   key: const Key('mascot-tap-target'),
                                   borderRadius: BorderRadius.circular(44),
-                                  onTap: () => MascotPickerSheet.show(context),
+                                  onTap: () => _mascot.wiggle(),
                                   child: MascotWidget(
                                     band: a.band,
-                                    character: character,
                                     size: 84,
+                                    controller: _mascot,
                                     idle: MascotIdle.hop,
                                   ),
                                 ),
