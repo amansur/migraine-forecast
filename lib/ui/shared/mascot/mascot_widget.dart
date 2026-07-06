@@ -2,37 +2,34 @@ import 'dart:math' as math;
 
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../state/mascot_character.dart';
-import 'mascot_face_painter.dart';
+import '../../../state/mascot_pool.dart';
 
-enum MascotAction { wiggle, wave, blink }
+enum MascotAction { wiggle, wave }
 
 /// How the mascot idles when nothing else is happening.
 /// [float] is a calm vertical drift; [hop] is a livelier bounce with a little
 /// squash on landing — for casual, off-to-the-side placements.
 enum MascotIdle { float, hop }
 
-/// Pre-caches all 16 mascot SVGs into the flutter_svg picture cache so the first
-/// render does not flash. Call once from `main()` after binding init.
-Future<void> precacheMascots() async {
+/// Pre-caches all pooled mascot PNGs so the first render does not flash.
+/// Call once from the first frame with a mounted context.
+Future<void> precacheMascots(BuildContext context) async {
   for (final path in allMascotAssetPaths()) {
-    final loader = SvgAssetLoader(path);
-    await svg.cache.putIfAbsent(loader.cacheKey(null), () => loader.loadBytes(null));
+    if (!context.mounted) return;
+    await precacheImage(AssetImage(path), context);
   }
 }
 
 /// Drives one-shot mascot animations from outside the widget tree.
-/// Hosts (TodayScreen, log sheets, onboarding, settings) call [wiggle],
-/// [wave], or [blink]; a listening [MascotWidget] plays the matching action.
+/// Hosts (TodayScreen, log sheets, onboarding, settings) call [wiggle] or
+/// [wave]; a listening [MascotWidget] plays the matching action.
 class MascotController extends ChangeNotifier {
   MascotAction? _pending;
   MascotAction? get pending => _pending;
 
   void wiggle() => _emit(MascotAction.wiggle);
   void wave() => _emit(MascotAction.wave);
-  void blink() => _emit(MascotAction.blink);
 
   void _emit(MascotAction action) {
     _pending = action;
@@ -45,7 +42,6 @@ class MascotController extends ChangeNotifier {
 
 class MascotWidget extends StatefulWidget {
   final RiskBand band;
-  final MascotCharacter character;
   final double size;
   final MascotController? controller;
   final VoidCallback? onWiggle;
@@ -54,7 +50,6 @@ class MascotWidget extends StatefulWidget {
   const MascotWidget({
     super.key,
     required this.band,
-    this.character = kDefaultMascotCharacter,
     this.size = 160,
     this.controller,
     this.onWiggle,
@@ -68,16 +63,13 @@ class MascotWidget extends StatefulWidget {
 class _MascotWidgetState extends State<MascotWidget>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _idle;
-  late final AnimationController _action; // wiggle / wave / blink one-shots
+  late final AnimationController _action; // wiggle / wave one-shots
   MascotAction _activeAction = MascotAction.wiggle;
-
-  late MascotFace _targetFace;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _targetFace = MascotFace.forBand(widget.band);
 
     _idle = AnimationController(
       vsync: this,
@@ -106,11 +98,8 @@ class _MascotWidgetState extends State<MascotWidget>
       old.controller?.removeListener(_onControllerAction);
       widget.controller?.addListener(_onControllerAction);
     }
-    if (old.band != widget.band) {
-      _targetFace = MascotFace.forBand(widget.band);
-      if (widget.band.index < old.band.index) {
-        _playAction(MascotAction.wiggle);
-      }
+    if (old.band != widget.band && widget.band.index < old.band.index) {
+      _playAction(MascotAction.wiggle);
     }
   }
 
@@ -157,21 +146,19 @@ class _MascotWidgetState extends State<MascotWidget>
     // One-shot action math (instant under reduced motion -> t jumps to 1).
     final t = reduce ? 1.0 : _action.value;
     double squish = 0; // wiggle: scaleX up, scaleY down
-    double eyeOpen = 1;
     double sway = 0; // wave: gentle rotation
-    final playing = _action.isAnimating || (!reduce && _action.value > 0 && _action.value < 1);
+    final playing =
+        _action.isAnimating || (!reduce && _action.value > 0 && _action.value < 1);
     if (playing) {
       switch (_activeAction) {
         case MascotAction.wiggle:
           squish = 0.18 * (1 - (2 * t - 1).abs());
         case MascotAction.wave:
           sway = (1 - (2 * t - 1).abs());
-        case MascotAction.blink:
-          eyeOpen = (2 * t - 1).abs();
       }
     }
 
-    final assetPath = mascotAssetPath(widget.character, widget.band);
+    final assetPath = mascotAssetFor(widget.band);
 
     return AnimatedBuilder(
       animation: _idle,
@@ -203,34 +190,15 @@ class _MascotWidgetState extends State<MascotWidget>
             child: Transform(
               alignment: Alignment.center,
               transform: Matrix4.diagonal3Values(scaleX, scaleY, 1),
-              child: TweenAnimationBuilder<MascotFace>(
-                tween: _MascotFaceTween(end: _targetFace),
-                duration: reduce ? Duration.zero : const Duration(milliseconds: 600),
-                curve: Curves.easeInOut,
-                builder: (context, face, __) {
-                  return SizedBox(
-                    width: widget.size,
-                    height: widget.size,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: reduce ? Duration.zero : const Duration(milliseconds: 200),
-                          child: SvgPicture.asset(
-                            assetPath,
-                            key: ValueKey(assetPath),
-                            width: widget.size,
-                            height: widget.size,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        CustomPaint(
-                          painter: MascotFacePainter(face: face, eyeOpen: eyeOpen),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              child: SizedBox(
+                width: widget.size,
+                height: widget.size,
+                child: Image.asset(
+                  assetPath,
+                  width: widget.size,
+                  height: widget.size,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -238,10 +206,4 @@ class _MascotWidgetState extends State<MascotWidget>
       },
     );
   }
-}
-
-class _MascotFaceTween extends Tween<MascotFace> {
-  _MascotFaceTween({required MascotFace end}) : super(end: end);
-  @override
-  MascotFace lerp(double t) => MascotFace.lerp(begin ?? end!, end!, t);
 }

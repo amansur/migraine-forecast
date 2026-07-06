@@ -1,73 +1,56 @@
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/app/theme.dart';
-import 'package:migraine_forecast/state/mascot_character.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 
-Widget reducedMotion(Widget child) => MediaQuery(
-      data: const MediaQueryData(disableAnimations: true),
-      child: child,
-    );
-
-Widget host(RiskBand band, {MascotController? controller, MascotCharacter character = MascotCharacter.kitty}) {
-  return MaterialApp(
-    theme: buildLightTheme(),
-    home: Scaffold(
-      body: Center(
-        child: reducedMotion(MascotWidget(band: band, controller: controller, character: character)),
-      ),
-    ),
-  );
-}
+Widget _host(Widget child) => MaterialApp(home: Scaffold(body: Center(child: child)));
 
 void main() {
-  testWidgets('renders the SVG body + face for each band', (tester) async {
+  testWidgets('renders an Image for every band', (tester) async {
     for (final band in RiskBand.values) {
-      await tester.pumpWidget(host(band));
+      await tester.pumpWidget(_host(MascotWidget(band: band, size: 80)));
       await tester.pump();
-      expect(find.byType(MascotWidget), findsOneWidget);
-      expect(find.byType(CustomPaint), findsWidgets); // face painter present
+      expect(find.byType(Image), findsOneWidget, reason: '$band');
     }
   });
 
-  testWidgets('exposes band, size and character', (tester) async {
-    await tester.pumpWidget(host(RiskBand.high, character: MascotCharacter.bee));
-    final w = tester.widget<MascotWidget>(find.byType(MascotWidget));
-    expect(w.band, RiskBand.high);
-    expect(w.character, MascotCharacter.bee);
-    expect(w.size, 160);
-  });
-
-  testWidgets('idle loop does not hang pumpAndSettle under reduced motion', (tester) async {
-    await tester.pumpWidget(host(RiskBand.low));
-    await tester.pumpAndSettle();
-    expect(find.byType(MascotWidget), findsOneWidget);
-  });
-
-  testWidgets('controller.blink runs and acks', (tester) async {
+  testWidgets('wiggle action fires onWiggle', (tester) async {
     final controller = MascotController();
-    await tester.pumpWidget(host(RiskBand.low, controller: controller));
-    controller.blink();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(controller.pending, isNull);
-  });
-
-  testWidgets('onWiggle fires when wiggle completes', (tester) async {
     var wiggled = false;
-    final controller = MascotController();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: reducedMotion(MascotWidget(
-          band: RiskBand.low,
-          controller: controller,
-          onWiggle: () => wiggled = true,
-        )),
-      ),
-    ));
+    await tester.pumpWidget(_host(MascotWidget(
+      band: RiskBand.low,
+      size: 80,
+      controller: controller,
+      onWiggle: () => wiggled = true,
+    )));
     controller.wiggle();
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(wiggled, isTrue);
+    controller.dispose();
+  });
+
+  testWidgets('wave action completes without error', (tester) async {
+    final controller = MascotController();
+    await tester.pumpWidget(_host(MascotWidget(
+      band: RiskBand.moderate,
+      size: 80,
+      controller: controller,
+    )));
+    controller.wave();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('dropping to a lower band plays a wiggle', (tester) async {
+    var wiggled = false;
+    Widget build(RiskBand b) => _host(MascotWidget(
+        band: b, size: 80, onWiggle: () => wiggled = true));
+    await tester.pumpWidget(build(RiskBand.high));
+    await tester.pump();
+    await tester.pumpWidget(build(RiskBand.low));
     await tester.pump(const Duration(milliseconds: 600));
     expect(wiggled, isTrue);
   });
