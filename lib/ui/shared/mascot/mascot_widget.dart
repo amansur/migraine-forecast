@@ -46,6 +46,8 @@ class MascotWidget extends StatefulWidget {
   final MascotController? controller;
   final VoidCallback? onWiggle;
   final MascotIdle idle;
+  /// Tap-to-cycle offset within the band pool; 0 = the daily seeded pick.
+  final int cycleOffset;
 
   const MascotWidget({
     super.key,
@@ -54,6 +56,7 @@ class MascotWidget extends StatefulWidget {
     this.controller,
     this.onWiggle,
     this.idle = MascotIdle.float,
+    this.cycleOffset = 0,
   });
 
   @override
@@ -108,8 +111,15 @@ class _MascotWidgetState extends State<MascotWidget>
     if (pending != null) _playAction(pending);
   }
 
+  String get _assetPath =>
+      mascotAssetFor(widget.band, offset: widget.cycleOffset);
+
   void _playAction(MascotAction action) {
     _activeAction = action;
+    _action.duration = (action == MascotAction.wiggle &&
+            wiggleStyleFor(_assetPath) == WiggleStyle.stretch)
+        ? const Duration(milliseconds: 650)
+        : const Duration(milliseconds: 500);
     _action
       ..reset()
       ..forward();
@@ -144,21 +154,38 @@ class _MascotWidgetState extends State<MascotWidget>
     }
 
     // One-shot action math (instant under reduced motion -> t jumps to 1).
+    // pulse traces 0 -> 1 -> 0 over the action; every style resolves to the
+    // identity transform at t = 0 and t = 1.
     final t = reduce ? 1.0 : _action.value;
-    double squish = 0; // wiggle: scaleX up, scaleY down
+    final pulse = 1 - (2 * t - 1).abs();
+    double squish = 0; // horizontal squish (squish/bob styles)
+    double stretch = 0; // vertical stretch (stretch style)
     double sway = 0; // wave: gentle rotation
+    double flick = 0; // flutter: fast damped rotation
+    double bobY = 0; // bob: downward dip in px
     final playing =
         _action.isAnimating || (!reduce && _action.value > 0 && _action.value < 1);
     if (playing) {
       switch (_activeAction) {
         case MascotAction.wiggle:
-          squish = 0.18 * (1 - (2 * t - 1).abs());
+          switch (wiggleStyleFor(_assetPath)) {
+            case WiggleStyle.squish:
+              squish = 0.18 * pulse;
+            case WiggleStyle.flutter:
+              // ~3 oscillations of +/-4deg (0.07 rad), damped to zero.
+              flick = math.sin(t * math.pi * 6) * 0.07 * (1 - t);
+            case WiggleStyle.stretch:
+              stretch = 0.15 * pulse;
+            case WiggleStyle.bob:
+              bobY = 6.0 * pulse;
+              squish = 0.08 * pulse;
+          }
         case MascotAction.wave:
-          sway = (1 - (2 * t - 1).abs());
+          sway = pulse;
       }
     }
 
-    final assetPath = mascotAssetFor(widget.band);
+    final assetPath = _assetPath;
 
     return AnimatedBuilder(
       animation: _idle,
@@ -177,14 +204,14 @@ class _MascotWidgetState extends State<MascotWidget>
         }
         final breathe = reduce ? 1.0 : (1.0 + 0.015 * (phase - 0.5).abs() * 2);
 
-        // Wave = gentle rotation (+/-5deg). Wiggle = horizontal squish.
-        final rotation = sway * 0.0873; // ~5 degrees in radians
-        final totalSquish = squish + idleSquish;
-        final scaleX = breathe * (1 + totalSquish * 0.5);
-        final scaleY = breathe * (1 - totalSquish * 0.5);
+        // Wave = gentle rotation (+/-5deg); flutter adds its own flicks.
+        final rotation = sway * 0.0873 + flick;
+        final netSquish = squish + idleSquish - stretch;
+        final scaleX = breathe * (1 + netSquish * 0.5);
+        final scaleY = breathe * (1 - netSquish * 0.5);
 
         return Transform.translate(
-          offset: Offset(0, floatY),
+          offset: Offset(0, floatY + bobY),
           child: Transform.rotate(
             angle: rotation,
             child: Transform(
