@@ -51,8 +51,8 @@ void main() {
     expect(find.byType(IgnorePointer).evaluate().length, countBefore);
   });
 
-  testWidgets('showCheckmark triggers blink', (tester) async {
-    // skip particle, assert blink only
+  testWidgets('showCheckmark triggers wiggle', (tester) async {
+    // skip particle, assert wiggle only
     final controller = MascotController();
     MascotAction? seen;
     controller.addListener(() => seen = controller.pending);

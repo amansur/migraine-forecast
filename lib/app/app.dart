@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../services/lifecycle_observer.dart';
 import '../state/onboarding_provider.dart';
-import '../ui/shared/mascot/mascot_widget.dart';
 import '../state/providers.dart';
 import '../state/risk_assessment_provider.dart';
 import '../state/settings_provider.dart';
+import '../ui/shared/mascot/mascot_widget.dart';
 import 'router.dart';
 import 'theme.dart';
 
