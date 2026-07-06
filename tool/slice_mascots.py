@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """Slice assets/icons.png into individual transparent-PNG mascots.
 
-Strategy: flood-fill identifies true background (dark pixels reachable
-from the image border).  Each icon's bounding region is specified
-manually.  Pixels that fall inside multiple icons' padded crops are
-assigned to whichever icon seed centroid is nearer (Voronoi-like), so
-closely-packed icons don't contaminate each other.
+Strategy: the source PNG is RGBA where alpha==0 marks true background.
+Each icon's bounding region is specified manually.  Pixels that fall
+inside multiple icons' padded crops are assigned to whichever icon seed
+centroid is nearer (Voronoi-like), so closely-packed icons don't
+contaminate each other.
 """
 from PIL import Image
 import numpy as np
 import os
-from collections import deque
 
 SRC = "assets/icons.png"
 OUT = "assets/mascots"
-THRESH = 40   # brightness <= this → candidate dark pixel
 PAD   = 0.06  # fractional padding around each tight crop
 
 # ── Manual icon regions (x1,y1,x2,y2 in 2048×2048 coords) ──────────────
@@ -75,33 +73,14 @@ def nearest_seed(px_x, px_y):
     dists = dx*dx + dy*dy
     return seed_names[int(np.argmin(dists))]
 
-im = Image.open(SRC).convert("RGB")
-a  = np.asarray(im).astype(int)
-bright = a.max(axis=2)
-dark   = bright <= THRESH
-H, W   = dark.shape
+im = Image.open(SRC).convert("RGBA")
+a  = np.asarray(im)          # shape (H, W, 4), dtype uint8
+H, W = a.shape[:2]
 
-# ── Flood-fill background ────────────────────────────────────────────────
-bg = np.zeros_like(dark)
-q  = deque()
-for x in range(W):
-    for y in (0, H - 1):
-        if dark[y, x] and not bg[y, x]:
-            bg[y, x] = True; q.append((y, x))
-for y in range(H):
-    for x in (0, W - 1):
-        if dark[y, x] and not bg[y, x]:
-            bg[y, x] = True; q.append((y, x))
-while q:
-    y, x = q.popleft()
-    for ny, nx in ((y-1,x),(y+1,x),(y,x-1),(y,x+1)):
-        if 0 <= ny < H and 0 <= nx < W and dark[ny, nx] and not bg[ny, nx]:
-            bg[ny, nx] = True
-            q.append((ny, nx))
-
-alpha_full = np.where(bg, 0, 255).astype(np.uint8)
-rgba_full  = np.dstack([a.astype(np.uint8), alpha_full])
-mask       = ~bg   # True where icon pixels live
+# Background is wherever the source alpha channel is 0.
+bg        = (a[:, :, 3] == 0)
+rgba_full = a.copy()
+mask      = ~bg              # True where icon pixels live
 
 # ── Voronoi ownership map (vectorised) ──────────────────────────────────
 # For every pixel, find which seed is nearest.  We only need this for
@@ -121,6 +100,8 @@ print("Done.", flush=True)
 # ── Crop each region ────────────────────────────────────────────────────
 os.makedirs(OUT, exist_ok=True)
 for name, (rx1, ry1, rx2, ry2) in REGIONS.items():
+    if name.endswith("_DEL"):
+        continue
     my_seed_idx = seed_names.index(name)
     # Find icon pixels within the region that belong to THIS icon (Voronoi)
     sub_own = ownership[ry1:ry2, rx1:rx2]
@@ -144,7 +125,7 @@ for name, (rx1, ry1, rx2, ry2) in REGIONS.items():
     own_crop = ownership[cy1:cy2, cx1:cx2]
     # Zero alpha for any pixel not owned by this icon
     crop[own_crop != my_seed_idx, 3] = 0
-    safe = name.replace("_DEL", "")
-    Image.fromarray(crop, "RGBA").save(f"{OUT}/slice_{safe}.png")
+    Image.fromarray(crop, "RGBA").save(f"{OUT}/{name}.png")
     print(f"{name:24s}  tight=({fx1},{fy1},{fx2},{fy2}) size={fx2-fx1}x{fy2-fy1}")
-print(f"Done – {len(REGIONS)} slices written.")
+kept = sum(1 for n in REGIONS if not n.endswith("_DEL"))
+print(f"Done – {kept} slices written.")
