@@ -193,11 +193,15 @@ class _MascotWidgetState extends State<MascotWidget>
               child: SizedBox(
                 width: widget.size,
                 height: widget.size,
-                child: Image.asset(
-                  assetPath,
-                  width: widget.size,
-                  height: widget.size,
-                  fit: BoxFit.contain,
+                child: AnimatedSwitcher(
+                  duration: reduce ? Duration.zero : const Duration(milliseconds: 200),
+                  child: Image.asset(
+                    assetPath,
+                    key: ValueKey(assetPath),
+                    width: widget.size,
+                    height: widget.size,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),

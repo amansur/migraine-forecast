@@ -10,6 +10,7 @@ void main() {
     for (final band in RiskBand.values) {
       await tester.pumpWidget(_host(MascotWidget(band: band, size: 80)));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
       expect(find.byType(Image), findsOneWidget, reason: '$band');
     }
   });
@@ -51,6 +52,7 @@ void main() {
     await tester.pumpWidget(build(RiskBand.high));
     await tester.pump();
     await tester.pumpWidget(build(RiskBand.low));
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pump(const Duration(milliseconds: 600));
     expect(wiggled, isTrue);
   });
