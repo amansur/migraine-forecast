@@ -70,6 +70,6 @@ void main() {
 
     CelebrationOverlay.showCheckmark(ctx, controller: controller);
     await tester.pump();
-    expect(seen, MascotAction.blink);
+    expect(seen, MascotAction.wiggle);
   });
 }
