@@ -52,4 +52,43 @@ void main() {
       }
     }
   });
+
+  test('offset cycles within the band pool and wraps', () {
+    final d = DateTime(2026, 7, 6);
+    for (final band in RiskBand.values) {
+      final pool = kMascotPool[band]!;
+      final seen = <String>{
+        for (var i = 0; i < pool.length; i++)
+          mascotAssetFor(band, date: d, offset: i),
+      };
+      expect(seen.length, pool.length, reason: '$band: offsets must cover pool');
+      expect(
+        mascotAssetFor(band, date: d, offset: pool.length),
+        mascotAssetFor(band, date: d),
+        reason: '$band: offset == pool.length wraps to offset 0',
+      );
+    }
+  });
+
+  test('offset 0 matches the parameterless pick', () {
+    final d = DateTime(2026, 7, 6);
+    for (final band in RiskBand.values) {
+      expect(mascotAssetFor(band, date: d, offset: 0),
+          mascotAssetFor(band, date: d));
+    }
+  });
+
+  test('wiggleStyleFor maps icons and defaults to squish', () {
+    expect(wiggleStyleFor('assets/mascots/butterfly.png'), WiggleStyle.flutter);
+    expect(wiggleStyleFor('assets/mascots/snail.png'), WiggleStyle.stretch);
+    expect(wiggleStyleFor('assets/mascots/teacup.png'), WiggleStyle.bob);
+    expect(wiggleStyleFor('assets/mascots/sun.png'), WiggleStyle.squish);
+    expect(wiggleStyleFor('assets/mascots/unknown_thing.png'), WiggleStyle.squish);
+  });
+
+  test('every pooled icon resolves to a wiggle style without throwing', () {
+    for (final p in allMascotAssetPaths()) {
+      expect(() => wiggleStyleFor(p), returnsNormally);
+    }
+  });
 }
