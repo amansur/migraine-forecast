@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:domain/domain.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import '../../data/repos/import_repo.dart';
 import '../../data/sources/location_source.dart';
 import '../common/location_search_dialog.dart';
 import '../../state/cycle_provider.dart';
+import '../../state/mascot_overrides.dart';
 import '../../state/onboarding_provider.dart';
 import '../../state/backfill_provider.dart';
 import '../../state/providers.dart';
@@ -387,10 +389,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const Divider(),
           const OuraSettingsCard(),
+          if (kDebugMode) ...[
+            const Divider(),
+            Text('Developer', style: Theme.of(context).textTheme.titleSmall),
+            ListTile(
+              key: const Key('debug-band-override-row'),
+              title: const Text('Risk band override'),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('Auto'),
+                      selected: ref.watch(debugBandOverrideProvider) == null,
+                      onSelected: (_) => ref
+                          .read(debugBandOverrideProvider.notifier)
+                          .state = null,
+                    ),
+                    for (final b in RiskBand.values)
+                      ChoiceChip(
+                        label: Text(_bandLabel(b)),
+                        selected: ref.watch(debugBandOverrideProvider) == b,
+                        onSelected: (_) => ref
+                            .read(debugBandOverrideProvider.notifier)
+                            .state = b,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+
+  String _bandLabel(RiskBand b) => switch (b) {
+        RiskBand.low => 'Low',
+        RiskBand.moderate => 'Moderate',
+        RiskBand.high => 'High',
+        RiskBand.veryHigh => 'Very High',
+      };
 
   Future<void> _showExportDialog(BuildContext context, WidgetRef ref) async {
     await showDialog<void>(
