@@ -68,6 +68,8 @@ class _MascotWidgetState extends State<MascotWidget>
   late final AnimationController _idle;
   late final AnimationController _action; // wiggle / wave one-shots
   MascotAction _activeAction = MascotAction.wiggle;
+  // Resolved once in _playAction so a mid-flight cycle-tap can't switch style.
+  WiggleStyle _activeStyle = WiggleStyle.squish;
 
   @override
   void initState() {
@@ -116,8 +118,12 @@ class _MascotWidgetState extends State<MascotWidget>
 
   void _playAction(MascotAction action) {
     _activeAction = action;
-    _action.duration = (action == MascotAction.wiggle &&
-            wiggleStyleFor(_assetPath) == WiggleStyle.stretch)
+    // Resolve the style once here so the in-flight animation is pinned to the
+    // mascot that was showing when the action started.
+    _activeStyle = (action == MascotAction.wiggle)
+        ? wiggleStyleFor(_assetPath)
+        : WiggleStyle.squish;
+    _action.duration = (_activeStyle == WiggleStyle.stretch)
         ? const Duration(milliseconds: 650)
         : const Duration(milliseconds: 500);
     _action
@@ -168,7 +174,7 @@ class _MascotWidgetState extends State<MascotWidget>
     if (playing) {
       switch (_activeAction) {
         case MascotAction.wiggle:
-          switch (wiggleStyleFor(_assetPath)) {
+          switch (_activeStyle) {
             case WiggleStyle.squish:
               squish = 0.18 * pulse;
             case WiggleStyle.flutter:

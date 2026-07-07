@@ -118,6 +118,21 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                 }
                 final debugBand = ref.watch(debugBandOverrideProvider);
                 final band = debugBand ?? a.band;
+                // Presentation-only override: feed RiskDisplay an assessment
+                // whose band matches the debug override so gauge and mascot
+                // stay in sync. Never persisted.
+                final displayAssessment = (debugBand != null && debugBand != a.band)
+                    ? RiskAssessment(
+                        score: a.score,
+                        band: debugBand,
+                        contributors: a.contributors,
+                        computedAt: a.computedAt,
+                        configVersion: a.configVersion,
+                        targetDate: a.targetDate,
+                        horizon: a.horizon,
+                        backfilled: a.backfilled,
+                      )
+                    : a;
                 final cycle = ref.watch(mascotCycleProvider);
                 final todayKey = mascotDateKey(DateTime.now());
                 final cycleOffset =
@@ -144,7 +159,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 60,
                                 ),
-                                child: RiskDisplay(assessment: a, mode: mode),
+                                child: RiskDisplay(assessment: displayAssessment, mode: mode),
                               ),
                               // Mascot hops casually just off the gauge's right
                               // edge. Tap to cycle today's mascot (with a wiggle).

@@ -105,6 +105,69 @@ void main() {
     expect(asset(), isNot(second), reason: 'second tap advances again');
   });
 
+  testWidgets('stale cycle (yesterday key) is inert — mascot uses offset 0', (tester) async {
+    final band = RiskBand.high;
+    final today = _ass(band);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+    ]);
+    // A cycle entry keyed to yesterday is stale and must be ignored.
+    final staleEntry = (
+      dateKey: mascotDateKey(DateTime.now().subtract(const Duration(days: 1))),
+      band: band,
+      offset: 2,
+    );
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
+        tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.low))),
+        mascotCycleProvider.overrideWith((_) => staleEntry),
+      ],
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    ));
+    await tester.pump();
+
+    final img = tester.widget<Image>(find.descendant(
+        of: find.byType(MascotWidget), matching: find.byType(Image)));
+    final renderedAsset = (img.image as AssetImage).assetName;
+    // Stale entry → offset 0 → daily seeded pick, same as mascotAssetFor(band).
+    expect(renderedAsset, mascotAssetFor(band));
+  });
+
+  testWidgets('band-mismatched cycle entry is inert — mascot uses offset 0', (tester) async {
+    final band = RiskBand.moderate;
+    final today = _ass(band);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+    ]);
+    // A cycle entry with a different band is stale for this rendering context.
+    final mismatchedEntry = (
+      dateKey: mascotDateKey(DateTime.now()),
+      band: RiskBand.high, // does not match rendered band
+      offset: 2,
+    );
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
+        tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.low))),
+        mascotCycleProvider.overrideWith((_) => mismatchedEntry),
+      ],
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    ));
+    await tester.pump();
+
+    final img = tester.widget<Image>(find.descendant(
+        of: find.byType(MascotWidget), matching: find.byType(Image)));
+    final renderedAsset = (img.image as AssetImage).assetName;
+    expect(renderedAsset, mascotAssetFor(band));
+  });
+
   testWidgets('debug band override changes the mascot band', (tester) async {
     final today = _ass(RiskBand.low);
     final router = GoRouter(routes: [
