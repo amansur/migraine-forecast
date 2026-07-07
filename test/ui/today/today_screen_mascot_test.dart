@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migraine_forecast/state/mascot_overrides.dart';
+import 'package:migraine_forecast/state/mascot_pool.dart';
 import 'package:migraine_forecast/state/risk_assessment_provider.dart';
 import 'package:migraine_forecast/ui/shared/mascot/mascot_widget.dart';
 import 'package:migraine_forecast/ui/today/today_screen.dart';
@@ -62,5 +64,66 @@ void main() {
     await tester.tap(find.byKey(const Key('mascot-tap-target')));
     await tester.pumpAndSettle();
     expect(find.text('Choose your companion'), findsNothing);
+  });
+
+  testWidgets('tapping the mascot cycles to another pool member of the same band',
+      (tester) async {
+    final today = _ass(RiskBand.moderate);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
+        tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.low))),
+      ],
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    ));
+    await tester.pump();
+
+    String asset() {
+      final img = tester.widget<Image>(find.descendant(
+          of: find.byType(MascotWidget), matching: find.byType(Image)));
+      return (img.image as AssetImage).assetName;
+    }
+
+    final pool = kMascotPool[RiskBand.moderate]!;
+    final first = asset();
+    expect(pool, contains(first));
+
+    await tester.tap(find.byKey(const Key('mascot-tap-target')));
+    await tester.pumpAndSettle();
+    final second = asset();
+    expect(pool, contains(second));
+    expect(second, isNot(first), reason: 'tap advances within the pool');
+
+    await tester.tap(find.byKey(const Key('mascot-tap-target')));
+    await tester.pumpAndSettle();
+    expect(asset(), isNot(second), reason: 'second tap advances again');
+  });
+
+  testWidgets('debug band override changes the mascot band', (tester) async {
+    final today = _ass(RiskBand.low);
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const TodayScreen()),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        riskAssessmentProvider.overrideWith(() => _FakeNotifier(today)),
+        tomorrowRiskAssessmentProvider.overrideWith(() => _FakeTomorrowNotifier(_ass(RiskBand.low))),
+        debugBandOverrideProvider.overrideWith((_) => RiskBand.veryHigh),
+      ],
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    ));
+    await tester.pump();
+
+    final mascot = tester.widget<MascotWidget>(find.byType(MascotWidget));
+    expect(mascot.band, RiskBand.veryHigh);
   });
 }

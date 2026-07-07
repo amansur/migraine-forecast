@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../state/cycle_provider.dart';
+import '../../state/mascot_overrides.dart';
 import '../../state/insights_eligibility_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
@@ -115,6 +116,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                     );
                   }
                 }
+                final debugBand = ref.watch(debugBandOverrideProvider);
+                final band = debugBand ?? a.band;
+                final cycle = ref.watch(mascotCycleProvider);
+                final todayKey = mascotDateKey(DateTime.now());
+                final cycleOffset =
+                    (cycle != null && cycle.dateKey == todayKey && cycle.band == band)
+                        ? cycle.offset
+                        : 0;
                 final hasChips = a.contributors.any((c) => c.contribution > 0);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,19 +147,31 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                                 child: RiskDisplay(assessment: a, mode: mode),
                               ),
                               // Mascot hops casually just off the gauge's right
-                              // edge. Tap for a wiggle.
+                              // edge. Tap to cycle today's mascot (with a wiggle).
                               Positioned(
                                 right: 0,
                                 bottom: 8,
                                 child: InkWell(
                                   key: const Key('mascot-tap-target'),
                                   borderRadius: BorderRadius.circular(44),
-                                  onTap: () => _mascot.wiggle(),
+                                  onTap: () {
+                                    final prev = ref.read(mascotCycleProvider);
+                                    final key = mascotDateKey(DateTime.now());
+                                    final next = (prev != null &&
+                                            prev.dateKey == key &&
+                                            prev.band == band)
+                                        ? prev.offset + 1
+                                        : 1;
+                                    ref.read(mascotCycleProvider.notifier).state =
+                                        (dateKey: key, band: band, offset: next);
+                                    _mascot.wiggle();
+                                  },
                                   child: MascotWidget(
-                                    band: a.band,
+                                    band: band,
                                     size: 84,
                                     controller: _mascot,
                                     idle: MascotIdle.hop,
+                                    cycleOffset: cycleOffset,
                                   ),
                                 ),
                               ),
