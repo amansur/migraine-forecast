@@ -165,6 +165,80 @@ void main() {
     return m;
   }
 
+  group('ambient wiggle', () {
+    tearDown(() => MascotWidget.debugAmbientInterval = null);
+
+    testWidgets('fires after the interval and does not call onWiggle',
+        (tester) async {
+      MascotWidget.debugAmbientInterval = const Duration(milliseconds: 100);
+      var wiggled = false;
+      await tester.pumpWidget(_host(MascotWidget(
+        band: RiskBand.low,
+        size: 80,
+        onWiggle: () => wiggled = true,
+      )));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150)); // timer fires
+      await tester.pump(const Duration(milliseconds: 250)); // mid-action
+      // The action controller is animating: net transform differs from the
+      // pure-idle transform channel (one-shot styles add squish/rotation),
+      // and crucially onWiggle stays false for ambient wiggles.
+      expect(wiggled, isFalse);
+      await tester.pump(const Duration(milliseconds: 800)); // completes
+      expect(wiggled, isFalse);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox()); // dispose cancels the timer
+    });
+
+    testWidgets('suppressed under reduced motion', (tester) async {
+      MascotWidget.debugAmbientInterval = const Duration(milliseconds: 100);
+      await tester.pumpWidget(MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: Center(child: MascotWidget(band: RiskBand.low, size: 80)),
+          ),
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(tester.takeException(), isNull);
+      // Under reduced motion nothing may move: identity transform.
+      final m = netTransform(tester);
+      expect(m.isIdentity(), isTrue);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('does not restart an in-flight tap wiggle', (tester) async {
+      MascotWidget.debugAmbientInterval = const Duration(milliseconds: 200);
+      final controller = MascotController();
+      var wiggles = 0;
+      await tester.pumpWidget(_host(MascotWidget(
+        band: RiskBand.low,
+        size: 80,
+        controller: controller,
+        onWiggle: () => wiggles++,
+      )));
+      await tester.pump();
+      controller.wiggle(); // tap wiggle also reschedules the ambient timer
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250)); // ambient due mid-flight
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(wiggles, 1, reason: 'tap wiggle completed exactly once');
+      expect(tester.takeException(), isNull);
+      controller.dispose();
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('timer is cancelled on dispose (no pending-timer failure)',
+        (tester) async {
+      MascotWidget.debugAmbientInterval = const Duration(seconds: 30);
+      await tester.pumpWidget(_host(MascotWidget(band: RiskBand.low, size: 80)));
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox());
+      // flutter_test fails the test automatically if a Timer is left pending.
+    });
+  });
+
   group('per-mascot idle styles', () {
     Future<void> pumpMascot(WidgetTester tester, String stem,
         {bool reduce = false, int pumpDuration = 1300}) async {

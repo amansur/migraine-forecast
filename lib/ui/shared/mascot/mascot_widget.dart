@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:domain/domain.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 
 import '../../../state/mascot_pool.dart';
@@ -43,6 +45,11 @@ class MascotWidget extends StatefulWidget {
   /// Tap-to-cycle offset within the band pool; 0 = the daily seeded pick.
   final int cycleOffset;
 
+  /// Test-only override for the ambient wiggle interval (normally random
+  /// 6–12 s). Null in production.
+  @visibleForTesting
+  static Duration? debugAmbientInterval;
+
   const MascotWidget({
     super.key,
     required this.band,
@@ -64,6 +71,13 @@ class _MascotWidgetState extends State<MascotWidget>
   // Resolved once in _playAction so a mid-flight cycle-tap can't switch style.
   WiggleStyle _activeStyle = WiggleStyle.squish;
 
+  Timer? _ambient;
+  final math.Random _rand = math.Random();
+  bool _resumed = true;
+  // 1.0 for tap/host actions, 0.6 for ambient wiggles.
+  double _actionAmplitude = 1.0;
+  bool _ambientInFlight = false;
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +93,7 @@ class _MascotWidgetState extends State<MascotWidget>
     )
       ..addListener(() => setState(() {}))
       ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
+        if (status == AnimationStatus.completed && !_ambientInFlight) {
           if (_activeAction == MascotAction.wiggle) widget.onWiggle?.call();
           widget.controller?.ackConsumed();
         }
@@ -87,6 +101,7 @@ class _MascotWidgetState extends State<MascotWidget>
 
     widget.controller?.addListener(_onControllerAction);
     _idle.repeat(reverse: true);
+    _scheduleAmbient();
   }
 
   @override
@@ -117,11 +132,31 @@ class _MascotWidgetState extends State<MascotWidget>
     if (pending != null) _playAction(pending);
   }
 
+  void _scheduleAmbient() {
+    _ambient?.cancel();
+    final interval = MascotWidget.debugAmbientInterval ??
+        Duration(milliseconds: 6000 + _rand.nextInt(6000));
+    _ambient = Timer(interval, _onAmbientTimer);
+  }
+
+  void _onAmbientTimer() {
+    if (!mounted) return;
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (!reduce && _resumed && !_action.isAnimating) {
+      _playAction(MascotAction.wiggle, ambient: true);
+    }
+    _scheduleAmbient();
+  }
+
   String get _assetPath =>
       mascotAssetFor(widget.band, offset: widget.cycleOffset);
 
-  void _playAction(MascotAction action) {
+  void _playAction(MascotAction action, {bool ambient = false}) {
     _activeAction = action;
+    _ambientInFlight = ambient;
+    _actionAmplitude = ambient ? 0.6 : 1.0;
+    // A user/host action resets the ambient clock so they don't stack.
+    if (!ambient) _scheduleAmbient();
     // Resolve the style once here so the in-flight animation is pinned to the
     // mascot that was showing when the action started.
     _activeStyle = (action == MascotAction.wiggle)
@@ -138,11 +173,15 @@ class _MascotWidgetState extends State<MascotWidget>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _resumed = true;
       if (!_idle.isAnimating) _idle.repeat(reverse: true);
+      _scheduleAmbient();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden) {
+      _resumed = false;
       _idle.stop();
+      _ambient?.cancel();
     }
   }
 
@@ -150,6 +189,7 @@ class _MascotWidgetState extends State<MascotWidget>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     widget.controller?.removeListener(_onControllerAction);
+    _ambient?.cancel();
     _idle.dispose();
     _action.dispose();
     super.dispose();
@@ -180,15 +220,15 @@ class _MascotWidgetState extends State<MascotWidget>
         case MascotAction.wiggle:
           switch (_activeStyle) {
             case WiggleStyle.squish:
-              squish = 0.22 * pulse;
+              squish = 0.22 * _actionAmplitude * pulse;
             case WiggleStyle.flutter:
               // ~3 oscillations of ±12° (0.21 rad), damped to zero.
-              flick = math.sin(t * math.pi * 6) * 0.21 * (1 - t);
+              flick = math.sin(t * math.pi * 6) * 0.21 * _actionAmplitude * (1 - t);
             case WiggleStyle.stretch:
-              stretch = 0.30 * pulse;
+              stretch = 0.30 * _actionAmplitude * pulse;
             case WiggleStyle.bob:
-              bobY = 14.0 * pulse;
-              squish = 0.12 * pulse;
+              bobY = 14.0 * _actionAmplitude * pulse;
+              squish = 0.12 * _actionAmplitude * pulse;
           }
         case MascotAction.wave:
           sway = pulse;
