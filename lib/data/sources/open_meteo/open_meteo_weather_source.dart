@@ -11,12 +11,14 @@ class OpenMeteoWeatherSource implements WeatherSource {
   final http.Client client;
   final AppDatabase db;
   final Duration freshness;
+  final DateTime Function() _clock;
 
   OpenMeteoWeatherSource({
     required this.client,
     required this.db,
     this.freshness = const Duration(hours: 1),
-  });
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
 
   @override
   Future<WeatherSnapshot> fetch({
@@ -29,7 +31,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
     final nowUtc = now.toUtc();
     final requestedDay = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
 
-    final today = DateTime.now().toUtc();
+    final today = _clock().toUtc();
     final todayStart = DateTime.utc(today.year, today.month, today.day);
 
     final cached = await _cachedForDay(lat, lon, requestedDay);
@@ -142,7 +144,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
 
     await db.into(db.weatherSnapshots).insert(
           WeatherSnapshotsCompanion.insert(
-            fetchedAt: DateTime.now().toUtc(),
+            fetchedAt: _clock().toUtc(),
             lat: lat,
             lon: lon,
             forecastJson: forecastRes.body,

@@ -74,7 +74,7 @@ void main() {
       return http.Response(await fx('air_quality_typical.json'), 200);
     });
     final seedSource =
-        OpenMeteoWeatherSource(client: seedClient, db: db, freshness: const Duration(hours: 1));
+        OpenMeteoWeatherSource(client: seedClient, db: db, freshness: const Duration(hours: 1), clock: () => today);
     await seedSource.fetch(lat: 40.7, lon: -74.0, now: today);
     expect(calls, 2);
 
@@ -88,7 +88,7 @@ void main() {
       return http.Response(await fx('air_quality_typical.json'), 200);
     });
     final source =
-        OpenMeteoWeatherSource(client: pastClient, db: db, freshness: const Duration(hours: 1));
+        OpenMeteoWeatherSource(client: pastClient, db: db, freshness: const Duration(hours: 1), clock: () => today);
     final snapshot = await source.fetch(lat: 40.7, lon: -74.0, now: fiveDaysAgo);
 
     expect(hitUrl, isNotNull, reason: 'past-day fetch must hit the network');
@@ -112,7 +112,7 @@ void main() {
       return http.Response(await fx('air_quality_typical.json'), 200);
     });
     final source =
-        OpenMeteoWeatherSource(client: client, db: db, freshness: const Duration(hours: 1));
+        OpenMeteoWeatherSource(client: client, db: db, freshness: const Duration(hours: 1), clock: () => DateTime.utc(2026, 6, 11, 12));
 
     await source.fetch(lat: 40.7, lon: -74.0, now: pastDay);
     expect(calls, 2);
@@ -143,12 +143,11 @@ void main() {
       }
       return http.Response('{"hourly":{"time":[],"pressure_msl":[],"temperature_2m":[],"relative_humidity_2m":[]}}', 200);
     });
-    final source = OpenMeteoWeatherSource(client: client, db: db);
+    final fixedToday = DateTime.utc(2026, 6, 11, 12);
+    final source = OpenMeteoWeatherSource(client: client, db: db, clock: () => fixedToday);
 
-    // 60 days ago relative to current real "today"
-    final realToday = DateTime.now().toUtc();
-    final old = DateTime.utc(realToday.year, realToday.month, realToday.day)
-        .subtract(const Duration(days: 60));
+    // 60 days ago relative to fixed "today" (2026-06-11)
+    final old = DateTime.utc(2026, 6, 11).subtract(const Duration(days: 60));
 
     await source.fetch(lat: 0, lon: 0, now: old, forceRefresh: true);
 
