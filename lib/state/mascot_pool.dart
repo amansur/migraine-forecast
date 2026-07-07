@@ -60,3 +60,29 @@ WiggleStyle wiggleStyleFor(String assetPath) {
   final stem = assetPath.split('/').last.replaceAll('.png', '');
   return kMascotWiggle[stem] ?? WiggleStyle.squish;
 }
+
+/// How a mascot idles when nothing else is happening. Motion math lives in
+/// MascotWidget; the mapping lives here, next to the roster.
+enum MascotIdleStyle { hover, drift, sway, still, bounce }
+
+/// Keyed by icon name (asset filename stem). Unmapped icons → bounce.
+const Map<String, MascotIdleStyle> kMascotIdle = {
+  'butterfly': MascotIdleStyle.hover,
+  'big_star': MascotIdleStyle.hover,
+  'sleepy_cloud': MascotIdleStyle.drift,
+  'raining_cloud': MascotIdleStyle.drift,
+  'small_flower': MascotIdleStyle.sway,
+  'sad_flower': MascotIdleStyle.sway,
+  'sprout': MascotIdleStyle.sway,
+  'potted_plant': MascotIdleStyle.sway,
+  'berry_pot': MascotIdleStyle.sway,
+  'snail': MascotIdleStyle.still,
+  'teacup': MascotIdleStyle.still,
+  // bounce (default): sun, fish, cat, notebook
+};
+
+/// Resolves the idle style for a pooled asset path.
+MascotIdleStyle idleStyleFor(String assetPath) {
+  final stem = assetPath.split('/').last.replaceAll('.png', '');
+  return kMascotIdle[stem] ?? MascotIdleStyle.bounce;
+}

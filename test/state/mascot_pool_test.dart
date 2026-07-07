@@ -91,4 +91,33 @@ void main() {
       expect(() => wiggleStyleFor(p), returnsNormally);
     }
   });
+
+  group('idle styles', () {
+    test('idleStyleFor maps known icons', () {
+      expect(idleStyleFor('assets/mascots/butterfly.png'), MascotIdleStyle.hover);
+      expect(idleStyleFor('assets/mascots/big_star.png'), MascotIdleStyle.hover);
+      expect(idleStyleFor('assets/mascots/sleepy_cloud.png'), MascotIdleStyle.drift);
+      expect(idleStyleFor('assets/mascots/raining_cloud.png'), MascotIdleStyle.drift);
+      expect(idleStyleFor('assets/mascots/small_flower.png'), MascotIdleStyle.sway);
+      expect(idleStyleFor('assets/mascots/sad_flower.png'), MascotIdleStyle.sway);
+      expect(idleStyleFor('assets/mascots/sprout.png'), MascotIdleStyle.sway);
+      expect(idleStyleFor('assets/mascots/potted_plant.png'), MascotIdleStyle.sway);
+      expect(idleStyleFor('assets/mascots/berry_pot.png'), MascotIdleStyle.sway);
+      expect(idleStyleFor('assets/mascots/snail.png'), MascotIdleStyle.still);
+      expect(idleStyleFor('assets/mascots/teacup.png'), MascotIdleStyle.still);
+    });
+
+    test('unmapped icons default to bounce', () {
+      expect(idleStyleFor('assets/mascots/sun.png'), MascotIdleStyle.bounce);
+      expect(idleStyleFor('assets/mascots/fish.png'), MascotIdleStyle.bounce);
+      expect(idleStyleFor('assets/mascots/cat.png'), MascotIdleStyle.bounce);
+      expect(idleStyleFor('assets/mascots/notebook.png'), MascotIdleStyle.bounce);
+    });
+
+    test('every pooled asset resolves to some idle style', () {
+      for (final path in allMascotAssetPaths()) {
+        expect(() => idleStyleFor(path), returnsNormally, reason: path);
+      }
+    });
+  });
 }
