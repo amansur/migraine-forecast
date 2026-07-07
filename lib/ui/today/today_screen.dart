@@ -185,7 +185,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                                     band: band,
                                     size: 84,
                                     controller: _mascot,
-                                    idle: MascotIdle.hop,
                                     cycleOffset: cycleOffset,
                                   ),
                                 ),
