@@ -192,9 +192,9 @@ void main() {
 
     testWidgets('suppressed under reduced motion', (tester) async {
       MascotWidget.debugAmbientInterval = const Duration(milliseconds: 100);
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(const MaterialApp(
         home: MediaQuery(
-          data: const MediaQueryData(disableAnimations: true),
+          data: MediaQueryData(disableAnimations: true),
           child: Scaffold(
             body: Center(child: MascotWidget(band: RiskBand.low, size: 80)),
           ),
@@ -232,7 +232,7 @@ void main() {
     testWidgets('timer is cancelled on dispose (no pending-timer failure)',
         (tester) async {
       MascotWidget.debugAmbientInterval = const Duration(seconds: 30);
-      await tester.pumpWidget(_host(MascotWidget(band: RiskBand.low, size: 80)));
+      await tester.pumpWidget(_host(const MascotWidget(band: RiskBand.low, size: 80)));
       await tester.pump();
       await tester.pumpWidget(const SizedBox());
       // flutter_test fails the test automatically if a Timer is left pending.
