@@ -106,6 +106,17 @@ class _MascotWidgetState extends State<MascotWidget>
     if (old.band != widget.band && widget.band.index < old.band.index) {
       _playAction(MascotAction.wiggle);
     }
+    // Part 1 fix: if a wiggle is in flight when the displayed mascot changes
+    // (cycle tap or band change), re-pin the style to the new asset so the
+    // outgoing mascot's style doesn't bleed into the incoming mascot's action.
+    if ((old.cycleOffset != widget.cycleOffset || old.band != widget.band) &&
+        _action.isAnimating &&
+        _activeAction == MascotAction.wiggle) {
+      _activeStyle = wiggleStyleFor(_assetPath);
+      _action.duration = (_activeStyle == WiggleStyle.stretch)
+          ? const Duration(milliseconds: 700)
+          : const Duration(milliseconds: 500);
+    }
   }
 
   void _onControllerAction() {
@@ -124,7 +135,7 @@ class _MascotWidgetState extends State<MascotWidget>
         ? wiggleStyleFor(_assetPath)
         : WiggleStyle.squish;
     _action.duration = (_activeStyle == WiggleStyle.stretch)
-        ? const Duration(milliseconds: 650)
+        ? const Duration(milliseconds: 700)
         : const Duration(milliseconds: 500);
     _action
       ..reset()
@@ -176,15 +187,15 @@ class _MascotWidgetState extends State<MascotWidget>
         case MascotAction.wiggle:
           switch (_activeStyle) {
             case WiggleStyle.squish:
-              squish = 0.18 * pulse;
+              squish = 0.22 * pulse;
             case WiggleStyle.flutter:
-              // ~3 oscillations of +/-4deg (0.07 rad), damped to zero.
-              flick = math.sin(t * math.pi * 6) * 0.07 * (1 - t);
+              // ~3 oscillations of ±12° (0.21 rad), damped to zero.
+              flick = math.sin(t * math.pi * 6) * 0.21 * (1 - t);
             case WiggleStyle.stretch:
-              stretch = 0.15 * pulse;
+              stretch = 0.30 * pulse;
             case WiggleStyle.bob:
-              bobY = 6.0 * pulse;
-              squish = 0.08 * pulse;
+              bobY = 14.0 * pulse;
+              squish = 0.12 * pulse;
           }
         case MascotAction.wave:
           sway = pulse;
@@ -199,14 +210,17 @@ class _MascotWidgetState extends State<MascotWidget>
         final phase = reduce ? 0.0 : _idle.value;
         double floatY;
         double idleSquish = 0;
+        // Mute idle motion while an action is playing so the action reads
+        // clearly. pulse is 0 at action start/end → no jump at boundaries.
+        final idleMute = playing ? (1.0 - pulse) : 1.0;
         if (widget.idle == MascotIdle.hop) {
           // sin(phase*pi) traces a single 0->1->0 arc per half-cycle: a leap
           // up and a landing. Squash a touch when near the ground.
           final hop = reduce ? 0.0 : math.sin(phase * math.pi);
-          floatY = -16.0 * hop;
-          idleSquish = 0.10 * (1 - hop);
+          floatY = -16.0 * hop * idleMute;
+          idleSquish = 0.10 * (1 - hop) * idleMute;
         } else {
-          floatY = reduce ? 0.0 : (-3.0 + 6.0 * phase);
+          floatY = reduce ? 0.0 : (-3.0 + 6.0 * phase) * idleMute;
         }
         final breathe = reduce ? 1.0 : (1.0 + 0.015 * (phase - 0.5).abs() * 2);
 

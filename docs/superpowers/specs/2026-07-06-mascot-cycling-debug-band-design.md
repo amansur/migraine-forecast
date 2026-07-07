@@ -69,10 +69,10 @@ WiggleStyle wiggleStyleFor(String assetPath); // stem lookup, default squish
 
 `MascotWidget` resolves the style from the asset it is currently rendering when a wiggle one-shot plays, and switches the transform math:
 
-- **squish** — current behavior: horizontal squish (scaleX up / scaleY down), amplitude 0.18, single pulse.
-- **flutter** — fast small rotation flicks: ~3 sine oscillations of ±4° over the action, no squish.
-- **stretch** — vertical stretch-and-settle: scaleY up / scaleX down (inverse of squish), amplitude ~0.15, action duration ~650ms instead of 500ms.
-- **bob** — vertical dip: translate down ~6px and back with a slight squash (~0.08), no rotation.
+- **squish** — horizontal squish (scaleX up / scaleY down), amplitude 0.22, single pulse.
+- **flutter** — fast damped rotation flicks: ~3 sine oscillations of ±12° (0.21 rad) over the action, damped to zero, no squish.
+- **stretch** — vertical stretch-and-settle: scaleY up / scaleX down (inverse of squish), amplitude 0.30, action duration 700ms instead of 500ms.
+- **bob** — vertical dip: translate down ~14px and back with a slight squash (0.12), no rotation.
 
 All are parameter/curve changes inside the existing one-shot `_action` controller — no new controllers. Wave is unchanged and shared. Reduced motion continues to skip to the end state (t = 1 ⇒ all styles resolve to identity). `onWiggle` still fires on completion regardless of style.
 

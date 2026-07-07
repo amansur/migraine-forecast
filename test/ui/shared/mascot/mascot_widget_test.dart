@@ -76,6 +76,45 @@ void main() {
         reason: 'each offset shows a different pool member');
   });
 
+  testWidgets(
+      're-pin wiggle style on cycle: rebuild with new cycleOffset mid-flight '
+      'completes without error and fires onWiggle', (tester) async {
+    final controller = MascotController();
+    var wiggled = false;
+
+    Widget build(int offset) => _host(MascotWidget(
+          band: RiskBand.low,
+          size: 80,
+          cycleOffset: offset,
+          controller: controller,
+          onWiggle: () => wiggled = true,
+        ));
+
+    // Initial render with offset 0.
+    await tester.pumpWidget(build(0));
+    await tester.pump();
+
+    // Start a wiggle.
+    controller.wiggle();
+    await tester.pump(); // kick animation
+
+    // Advance partway so the wiggle is in flight.
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Rebuild with a new cycleOffset while wiggle is still in flight — this
+    // exercises the didUpdateWidget re-pin path.
+    await tester.pumpWidget(build(1));
+    await tester.pump();
+
+    // Let the animation complete.
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(tester.takeException(), isNull,
+        reason: 'no exception after mid-flight cycleOffset change');
+    expect(wiggled, isTrue, reason: 'onWiggle fires after re-pin');
+    controller.dispose();
+  });
+
   testWidgets('every wiggle style plays to completion and fires onWiggle',
       (tester) async {
     // Sweep every band x offset: collectively covers all pooled icons and
@@ -94,7 +133,7 @@ void main() {
         )));
         controller.wiggle();
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 700));
+        await tester.pump(const Duration(milliseconds: 800));
         expect(tester.takeException(), isNull, reason: '$band offset $i');
         expect(wiggled, isTrue, reason: '$band offset $i');
         controller.dispose();
