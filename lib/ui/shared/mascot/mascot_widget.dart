@@ -219,8 +219,7 @@ class _MascotWidgetState extends State<MascotWidget>
               idleDx = (-6.0 + 12.0 * phase) * idleMute;
               floatY = -2.0 * math.sin(phase * math.pi) * idleMute;
             case MascotIdleStyle.sway:
-              // sin(phase*pi) peaks at mid-phase (pendulum peaks at midswing).
-              idleRot = math.sin(phase * math.pi) * 0.035 * idleMute;
+              idleRot = (-1.0 + 2.0 * phase) * 0.035 * idleMute;
             case MascotIdleStyle.still:
               break;
             case MascotIdleStyle.bounce:

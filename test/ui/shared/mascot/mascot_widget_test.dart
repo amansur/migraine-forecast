@@ -167,7 +167,7 @@ void main() {
 
   group('per-mascot idle styles', () {
     Future<void> pumpMascot(WidgetTester tester, String stem,
-        {bool reduce = false}) async {
+        {bool reduce = false, int pumpDuration = 1300}) async {
       final (band, offset) = bandOffsetFor(stem);
       await tester.pumpWidget(MaterialApp(
         home: MediaQuery(
@@ -180,8 +180,8 @@ void main() {
         ),
       ));
       await tester.pump();
-      // Mid idle phase (idle period is 2600 ms).
-      await tester.pump(const Duration(milliseconds: 1300));
+      // Idle period is 2600 ms; pumpDuration defaults to 1300 (phase 0.5).
+      await tester.pump(Duration(milliseconds: pumpDuration));
     }
 
     testWidgets('hover translates the mascot', (tester) async {
@@ -198,7 +198,7 @@ void main() {
     });
 
     testWidgets('sway rotates the mascot', (tester) async {
-      await pumpMascot(tester, 'sprout');
+      await pumpMascot(tester, 'sprout', pumpDuration: 650);
       final m = netTransform(tester);
       // Rotation shows up as a nonzero off-diagonal term.
       expect(m.entry(0, 1).abs() + m.entry(1, 0).abs(), greaterThan(0.001));
