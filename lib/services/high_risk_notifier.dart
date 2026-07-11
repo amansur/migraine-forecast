@@ -14,6 +14,9 @@ class HighRiskNotifier {
   }) : clock = clock ?? DateTime.now;
 
   Future<void> maybeNotify(RiskAssessment ass, {required bool enabled}) async {
+    assert(ass.horizon != RiskHorizon.outlook,
+        'Outlook assessments never notify — only today/tomorrow computes do.');
+    if (ass.horizon == RiskHorizon.outlook) return;
     if (!enabled) return;
     if (ass.band != RiskBand.high && ass.band != RiskBand.veryHigh) return;
     final already = await dedup.hasNotifiedFor(

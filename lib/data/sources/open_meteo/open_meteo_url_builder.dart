@@ -8,7 +8,7 @@ class OpenMeteoUrlBuilder {
         'latitude': lat.toString(),
         'longitude': lon.toString(),
         'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m',
-        'forecast_days': '3',
+        'forecast_days': '7',
         'past_days': pastDays.toString(),
         'timezone': 'UTC',
       });
@@ -40,7 +40,7 @@ class OpenMeteoUrlBuilder {
         'latitude': lat.toString(),
         'longitude': lon.toString(),
         'hourly': 'pm2_5',
-        'forecast_days': '2',
+        'forecast_days': '7',
         'past_days': pastDays.toString(),
         'timezone': 'UTC',
       });

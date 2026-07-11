@@ -12,7 +12,7 @@ void main() {
     expect(hourly, contains('pressure_msl'));
     expect(hourly, contains('temperature_2m'));
     expect(hourly, contains('relative_humidity_2m'));
-    expect(uri.queryParameters['forecast_days'], '3');
+    expect(uri.queryParameters['forecast_days'], '7');
     expect(uri.queryParameters['past_days'], '1');
     expect(uri.queryParameters['timezone'], 'UTC');
   });
@@ -41,6 +41,6 @@ void main() {
     expect(uri.host, 'air-quality-api.open-meteo.com');
     expect(uri.path, '/v1/air-quality');
     expect(uri.queryParameters['hourly'], contains('pm2_5'));
-    expect(uri.queryParameters['forecast_days'], '2');
+    expect(uri.queryParameters['forecast_days'], '7');
   });
 }

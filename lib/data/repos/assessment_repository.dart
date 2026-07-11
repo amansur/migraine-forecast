@@ -10,6 +10,11 @@ class AssessmentRepository {
   AssessmentRepository(this._db);
 
   Future<int> save(RiskAssessment ass) async {
+    if (ass.horizon == RiskHorizon.outlook) {
+      throw ArgumentError(
+          'Outlook assessments are on-demand only — persisting them would '
+          'pollute the correlation/calibration timelines.');
+    }
     final d = ass.targetDate.toUtc();
     final utcTarget = DateTime.utc(d.year, d.month, d.day);
     final companion = RiskAssessmentsCompanion.insert(
