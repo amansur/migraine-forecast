@@ -40,6 +40,7 @@ class ImportRepo {
         count += await _importRiskAssessments(map['risk_assessments'] as List?, mode);
         count += await _importPeriods(map['periods'] as List?, mode);
         count += await _importDayCheckins(map['day_checkins'] as List?, mode);
+        count += await _importMedicationDoses(map['medication_doses'] as List?, mode);
         count += await _importPeriodDaySeverities(
             map['period_day_severities'] as List?, mode);
         count += await _importManualSleepRecords(
@@ -128,6 +129,21 @@ class ImportRepo {
             )).toList();
     await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
         mode: InsertMode.insertOrReplace));
+    return companions.length;
+  }
+
+  Future<int> _importMedicationDoses(List? rows, ImportMode mode) async {
+    if (rows == null || rows.isEmpty) return 0;
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.medicationDoses).go();
+    final companions = rows.cast<Map<String, dynamic>>().map((r) => MedicationDosesCompanion(
+          id: Value(r['id'] as int),
+          at: Value(DateTime.parse(r['at'] as String).toUtc()),
+          name: Value(r['name'] as String),
+          medClass: Value(r['med_class'] as String),
+          reliefRating: Value(r['relief_rating'] as int?),
+        )).toList();
+    await _db.batch((b) =>
+        b.insertAll(_db.medicationDoses, companions, mode: InsertMode.insertOrIgnore));
     return companions.length;
   }
 

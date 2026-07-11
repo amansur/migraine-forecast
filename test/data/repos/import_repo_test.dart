@@ -82,6 +82,30 @@ void main() {
       expect(periods, hasLength(1));
     });
 
+    test('medication_doses round-trips through full export and replace-all import',
+        () async {
+      final sourceDb = AppDatabase.memory();
+      await sourceDb.into(sourceDb.medicationDoses).insert(
+            MedicationDosesCompanion.insert(
+              at: DateTime.utc(2026, 7, 9, 21),
+              name: 'Sumatriptan',
+              medClass: 'triptan',
+              reliefRating: const Value(2),
+            ),
+          );
+      final json =
+          await ExportRepo(sourceDb).buildJsonFull(appVersionOverride: '2.0.0');
+      await sourceDb.close();
+
+      await importRepo.importJson(json, ImportMode.replaceAll);
+
+      final rows = await db.select(db.medicationDoses).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.name, 'Sumatriptan');
+      expect(rows.single.medClass, 'triptan');
+      expect(rows.single.reliefRating, 2);
+    });
+
     test('day_checkins round-trips through full export and replace-all import',
         () async {
       final sourceDb = AppDatabase.memory();

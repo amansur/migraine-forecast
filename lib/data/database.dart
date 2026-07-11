@@ -142,6 +142,14 @@ class DayCheckins extends Table {
   Set<Column> get primaryKey => {day};
 }
 
+class MedicationDoses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get name => text()();
+  TextColumn get medClass => text()(); // MedClass.name
+  IntColumn get reliefRating => integer().nullable()(); // 0 no, 1 some, 2 yes
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -156,6 +164,7 @@ class DayCheckins extends Table {
   ManualSleepRecords,
   DayLocationOverrides,
   DayCheckins,
+  MedicationDoses,
   OuraSleep,
   OuraDailySleep,
   OuraActivity,
@@ -166,7 +175,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -295,6 +304,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 13) {
             await m.createTable(dayCheckins);
+          }
+          if (from < 14) {
+            await m.createTable(medicationDoses);
           }
         },
       );
