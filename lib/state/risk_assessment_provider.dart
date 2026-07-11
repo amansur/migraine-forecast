@@ -119,6 +119,22 @@ class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     await ref.read(assessmentRepoProvider).save(ass);
     final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');
     await ref.read(highRiskNotifierProvider).maybeNotify(ass, enabled: enabled);
+    if (enabled && (ass.band == RiskBand.high || ass.band == RiskBand.veryHigh)) {
+      try {
+        // Next-morning check-in: stable id per day so recomputes replace
+        // rather than stack. Fires the prompt the CheckinCard also shows.
+        await ref.read(notificationServiceProvider).scheduleCheckIn(
+              notificationId:
+                  Object.hash('checkin', today.millisecondsSinceEpoch) & 0x7fffffff,
+              fireAtLocal: DateTime(now.year, now.month, now.day + 1, 9),
+              title: 'How did yesterday go?',
+              body: 'Yesterday was high risk — log whether you got a migraine.',
+            );
+      } catch (_) {
+        // Notifications unsupported on this platform (e.g. web) — the
+        // in-app CheckinCard still covers the flow.
+      }
+    }
     return ass;
   }
 }

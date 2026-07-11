@@ -13,6 +13,8 @@ class _FakeNotifications implements NotificationService {
   Future<void> showHighRisk({required int notificationId, required String title, required String body}) async {
     calls.add(_Call(id: notificationId, title: title, body: body));
   }
+  @override
+  Future<void> scheduleCheckIn({required int notificationId, required DateTime fireAtLocal, required String title, required String body}) async {}
 }
 
 class _Call {
