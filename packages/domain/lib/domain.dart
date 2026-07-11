@@ -30,3 +30,4 @@ export 'src/correlation/correlation_analyzer.dart';
 export 'src/correlation/day_record.dart';
 export 'src/correlation/exposure.dart';
 export 'src/correlation/calibration.dart';
+export 'src/correlation/attack_patterns.dart';
