@@ -13,6 +13,7 @@ import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
+import '../insights/medication_card.dart';
 import 'checkin_card.dart';
 import 'outlook_strip.dart';
 import 'risk_display.dart';
@@ -198,6 +199,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                     ),
                     const SizedBox(height: 8),
                     const CheckinCard(),
+                    const MohBanner(),
                     const TomorrowTile(),
                     const SizedBox(height: 8),
                     const OutlookStrip(),

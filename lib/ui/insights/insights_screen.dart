@@ -24,6 +24,7 @@ import 'calendar_heatmap.dart';
 import 'calibration_card.dart';
 import 'correlation_card.dart';
 import 'interaction_card.dart';
+import 'medication_card.dart';
 import 'patterns_card.dart';
 import 'weekday_card.dart';
 import 'phase_ribbon.dart';
@@ -181,6 +182,8 @@ class _Body extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: 24),
+        const MedicationCard(),
         const SizedBox(height: 24),
         const PatternsCard(),
         const SizedBox(height: 24),
