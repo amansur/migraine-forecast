@@ -36,19 +36,35 @@ void main() {
     expect(analyzeInteractions(days, ['a', 'b']), isEmpty);
   });
 
-  test('caps results at maxResults ordered by pair lift', () {
-    // Three modules that all fire together on high-attack days, generating
-    // three qualifying pairs; maxResults 2 keeps the strongest two.
+  test('caps results at maxResults, keeping the strongest pair', () {
+    // Two disjoint blocks, each shaped like the first test: (a,b) overlap has
+    // 13/20 attack days (stronger), (c,d) overlap has 10/20 (weaker). Both
+    // pairs qualify; maxResults 1 must keep only the stronger a+b.
     final days = <DayRecord>[];
-    for (var i = 0; i < 60; i++) {
-      final together = i < 15;
+    for (var i = 0; i < 80; i++) {
+      final a = i < 40;
+      final b = i >= 20 && i < 60;
+      final attack = (a && b && i % 3 != 0) || i == 0 || i == 45 || i == 70;
       days.add(DayRecord(
-        day: DateTime.utc(2026, 4, 1).add(Duration(days: i)),
-        firedModuleIds: together ? {'x', 'y', 'z'} : {},
-        hadAttack: together && i % 3 != 0,
+        day: DateTime.utc(2026, 3, 1).add(Duration(days: i)),
+        firedModuleIds: {if (a) 'a', if (b) 'b'},
+        hadAttack: attack,
       ));
     }
-    final out = analyzeInteractions(days, ['x', 'y', 'z'], maxResults: 2);
-    expect(out, hasLength(2));
+    for (var i = 0; i < 80; i++) {
+      final c = i < 40;
+      final d = i >= 20 && i < 60;
+      final attack = (c && d && i % 2 == 0) || i == 0 || i == 45 || i == 70;
+      days.add(DayRecord(
+        day: DateTime.utc(2026, 5, 20).add(Duration(days: i)),
+        firedModuleIds: {if (c) 'c', if (d) 'd'},
+        hadAttack: attack,
+      ));
+    }
+    final all = analyzeInteractions(days, ['a', 'b', 'c', 'd']);
+    expect(all, hasLength(2)); // both pairs qualify before capping
+
+    final capped = analyzeInteractions(days, ['a', 'b', 'c', 'd'], maxResults: 1);
+    expect(capped.single.pair.exposureId, 'a+b');
   });
 }

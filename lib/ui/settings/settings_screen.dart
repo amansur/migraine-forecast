@@ -27,20 +27,14 @@ import '../shared/animations/celebration_overlay.dart';
 import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';
 import 'oura_settings_card.dart';
+import '../shared/module_labels.dart';
 
-const _moduleLabels = <String, String>{
-  'pressure_drop': 'Pressure changes',
-  'humidity': 'Humidity',
-  'temp_swing': 'Temp swing',
-  'air_quality': 'Air quality',
-  'sleep_deficit': 'Sleep',
-  'hrv_letdown': 'HRV / stress let-down',
-  'menstrual_phase': 'Menstrual cycle',
-  'alcohol': 'Alcohol',
-  'caffeine': 'Caffeine',
-  'stress': 'Stress',
-  'hydration': 'Hydration',
-};
+// User-flaggable triggers: excludes 'refractory' (internal post-attack
+// damping, not a lifestyle trigger) and 'intraday_pressure_swing' (flagged
+// together with pressure_drop).
+final _moduleLabels = <String, String>{...moduleLabels}
+  ..remove('refractory')
+  ..remove('intraday_pressure_swing');
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});

@@ -56,6 +56,13 @@ final weekdayResultsProvider = FutureProvider<List<CorrelationResult>>((ref) asy
   ];
 });
 
+/// Conservative pairwise trigger-interaction scan over the shared timeline.
+/// Display-only — never feed these into the SuggestionEngine.
+final interactionResultsProvider = FutureProvider<List<InteractionResult>>((ref) async {
+  final timeline = await ref.watch(dayTimelineProvider.future);
+  return analyzeInteractions(timeline, _moduleIds);
+});
+
 final correlationResultsProvider = FutureProvider<List<CorrelationResult>>((ref) async {
   // Watch recentAttacksProvider to re-run when attacks change
   ref.watch(recentAttacksProvider);
