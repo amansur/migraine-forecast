@@ -57,13 +57,14 @@ void main() {
     for (var i = 0; i < 5; i++) {
       final day = DateTime.utc(2026, 6, 1 + i);
       await insertAssessment(targetDate: day, contributions: {'pressure_drop': 10.0});
-      if (i < 3) await insertAttack(day.add(const Duration(hours: 6)));
+      // Local noon: attacks bin by local calendar day (matching assessment keys).
+      if (i < 3) await insertAttack(DateTime(2026, 6, 1 + i, 12));
     }
     // 10 days where pressure_drop did NOT fire, 1 of which had an attack.
     for (var i = 0; i < 10; i++) {
       final day = DateTime.utc(2026, 6, 6 + i);
       await insertAssessment(targetDate: day, contributions: {'sleep_deficit': 5.0});
-      if (i == 0) await insertAttack(day.add(const Duration(hours: 6)));
+      if (i == 0) await insertAttack(DateTime(2026, 6, 6 + i, 12));
     }
 
     final cohorts = await repo.buildCohorts(

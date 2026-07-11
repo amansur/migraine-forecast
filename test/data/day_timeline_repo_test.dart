@@ -38,8 +38,9 @@ void main() {
         computedAt: d2,
         configVersion: 2,
         contributorsJson: contributors([])));
+    // Local noon so the attack bins onto d1's local-day key on any machine TZ.
     await db.into(db.attacks).insert(AttacksCompanion.insert(
-        startedAt: d1.add(const Duration(hours: 9)), severity: 5));
+        startedAt: DateTime(2026, 7, 1, 12), severity: 5));
 
     final tl = await DayTimelineRepo(db).buildTimeline(
         windowStart: DateTime.utc(2026, 6, 30), windowEnd: DateTime.utc(2026, 7, 3));

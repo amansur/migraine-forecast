@@ -29,9 +29,12 @@ void main() {
     await tester.pumpWidget(host((report: report, usedBackfilled: false)));
     await tester.pumpAndSettle();
     expect(find.text('Forecast accuracy'), findsOneWidget);
-    expect(find.textContaining('40%'), findsOneWidget); // high-band observed rate
-    expect(find.textContaining('5%'), findsOneWidget); // low-band observed rate
+    expect(find.textContaining('40% ('), findsOneWidget); // high-band rate + CI
+    expect(find.textContaining('· 10d'), findsOneWidget);
+    expect(find.textContaining('5% ('), findsOneWidget); // low-band rate + CI
+    expect(find.textContaining('· 20d'), findsOneWidget);
     expect(find.textContaining('30 days'), findsOneWidget);
+    expect(find.textContaining('Brier score 0.12'), findsOneWidget);
   });
 
   testWidgets('flags when backfilled days were included', (tester) async {

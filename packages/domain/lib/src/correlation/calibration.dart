@@ -30,6 +30,10 @@ class CalibrationReport extends Equatable {
 /// Prospective forecasts only by default: backfilled assessments were computed
 /// with hindsight data and would flatter the model. Callers must pass completed
 /// days only (trim day >= today — see dayTimelineProvider's note).
+///
+/// Days with a score but a null band (tolerant parse of imported data) are
+/// excluded from both the band table and the Brier score, keeping
+/// [CalibrationReport.scoredDays] consistent across the two.
 CalibrationReport analyzeCalibration(List<DayRecord> days,
     {bool includeBackfilled = false}) {
   final scored = days

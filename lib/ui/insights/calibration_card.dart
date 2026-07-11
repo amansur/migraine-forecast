@@ -42,6 +42,14 @@ class CalibrationCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 for (final b in r.bands) _BandRow(b: b),
+                if (r.brierScore != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Brier score ${r.brierScore!.toStringAsFixed(2)} — lower is better.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
                 if (v.usedBackfilled)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -67,6 +75,8 @@ class _BandRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = (b.attackRate.point * 100).round();
+    final lo = (b.attackRate.low * 100).round();
+    final hi = (b.attackRate.high * 100).round();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
@@ -83,7 +93,10 @@ class _BandRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text('$pct% · ${b.days}d', style: Theme.of(context).textTheme.bodySmall),
+        Flexible(
+          child: Text('$pct% ($lo–$hi%) · ${b.days}d',
+              style: Theme.of(context).textTheme.bodySmall),
+        ),
       ]),
     );
   }

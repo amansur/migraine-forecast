@@ -48,16 +48,22 @@ class DayTimelineRepo {
       }
     }
 
+    // Assessment days are LOCAL calendar days wrapped in UTC-midnight keys
+    // (see RiskAssessmentNotifier._compute and the heatmap binning note in
+    // insights_screen.dart), so attacks must bin the same way or evening
+    // attacks west of UTC land on the wrong day. Widen the query by a day on
+    // each side so timezone offsets can't push a relevant attack outside it.
     final attackRows = await (_db.select(_db.attacks)
           ..where((t) =>
-              t.startedAt.isBiggerOrEqualValue(utcStart) &
-              t.startedAt.isSmallerThanValue(utcEnd)))
+              t.startedAt.isBiggerOrEqualValue(
+                  utcStart.subtract(const Duration(days: 1))) &
+              t.startedAt.isSmallerThanValue(utcEnd.add(const Duration(days: 1)))))
         .get();
-    final attackDays = <DateTime>{
-      for (final a in attackRows)
-        DateTime.utc(a.startedAt.toUtc().year, a.startedAt.toUtc().month,
-            a.startedAt.toUtc().day),
-    };
+    final attackDays = <DateTime>{};
+    for (final a in attackRows) {
+      final local = a.startedAt.toLocal();
+      attackDays.add(DateTime.utc(local.year, local.month, local.day));
+    }
 
     final days = firedByDay.keys.toList()..sort();
     final records = <DayRecord>[];
