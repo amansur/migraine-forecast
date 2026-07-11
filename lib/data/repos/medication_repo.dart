@@ -20,6 +20,25 @@ class MedicationRepo {
       (_db.update(_db.medicationDoses)..where((t) => t.id.equals(id)))
           .write(MedicationDosesCompanion(reliefRating: Value(rating)));
 
+  Future<void> delete(int id) =>
+      (_db.delete(_db.medicationDoses)..where((t) => t.id.equals(id))).go();
+
+  Stream<List<MedicationDose>> watchRecent(
+      {required Duration window, required DateTime now}) {
+    final query = _db.select(_db.medicationDoses)
+      ..where((t) => t.at.isBiggerOrEqualValue(now.subtract(window)))
+      ..orderBy([(t) => OrderingTerm.desc(t.at)]);
+    return query.watch().map((rows) => [
+          for (final r in rows)
+            MedicationDose(
+                id: r.id,
+                at: r.at,
+                name: r.name,
+                medClass: _parseClass(r.medClass),
+                reliefRating: r.reliefRating),
+        ]);
+  }
+
   Future<List<MedicationDose>> recent(
       {required Duration window, required DateTime now}) async {
     final rows = await (_db.select(_db.medicationDoses)
