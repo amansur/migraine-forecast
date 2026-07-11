@@ -6,6 +6,8 @@ export 'src/types/journal.dart';
 export 'src/types/user_flags.dart';
 export 'src/types/evaluation_context.dart';
 export 'src/types/risk_assessment.dart';
+export 'src/types/medication.dart';
+export 'src/analysis/moh_monitor.dart';
 export 'src/config/rules_config.dart';
 export 'src/config/rules_config_loader.dart';
 export 'src/baselines/baseline_store.dart';
