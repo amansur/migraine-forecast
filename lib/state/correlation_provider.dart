@@ -31,6 +31,11 @@ final dayTimelineRepoProvider =
 
 /// Trailing-90-day timeline shared by the correlation-family analyses
 /// (module correlations, calibration, weekday patterns, interactions).
+///
+/// Note: the window deliberately mirrors correlationResultsProvider's, so it
+/// includes today (incomplete) and tomorrow (tomorrow-horizon row only).
+/// Consumers that need completed days only — e.g. calibration — must trim
+/// records with day >= today's UTC midnight themselves.
 final dayTimelineProvider = FutureProvider<List<DayRecord>>((ref) async {
   ref.watch(recentAttacksProvider); // re-run when attacks change
   final now = DateTime.now().toUtc();

@@ -55,6 +55,53 @@ void main() {
     expect(tl.last.band, RiskBand.low);
   });
 
+  test('fired modules union across horizons; score/band come from today row only',
+      () async {
+    final d = DateTime.utc(2026, 7, 6);
+    await db.into(db.riskAssessments).insert(RiskAssessmentsCompanion.insert(
+        targetDate: d,
+        horizon: 'today',
+        score: 40,
+        band: 'moderate',
+        computedAt: d,
+        configVersion: 2,
+        contributorsJson: contributors([('alcohol', 8, 1.0)])));
+    await db.into(db.riskAssessments).insert(RiskAssessmentsCompanion.insert(
+        targetDate: d,
+        horizon: 'tomorrow',
+        score: 70,
+        band: 'high',
+        computedAt: d.subtract(const Duration(days: 1)),
+        configVersion: 2,
+        contributorsJson: contributors([('pressure_drop', 12, 1.0)])));
+
+    final tl = await DayTimelineRepo(db).buildTimeline(
+        windowStart: d, windowEnd: d.add(const Duration(days: 1)));
+
+    expect(tl.single.firedModuleIds, {'alcohol', 'pressure_drop'});
+    expect(tl.single.score, 40);
+    expect(tl.single.band, RiskBand.moderate);
+  });
+
+  test('malformed band string from an imported backup yields null band, not a crash',
+      () async {
+    final d = DateTime.utc(2026, 7, 7);
+    await db.into(db.riskAssessments).insert(RiskAssessmentsCompanion.insert(
+        targetDate: d,
+        horizon: 'today',
+        score: 50,
+        band: 'bogus-band',
+        computedAt: d,
+        configVersion: 2,
+        contributorsJson: contributors([])));
+
+    final tl = await DayTimelineRepo(db).buildTimeline(
+        windowStart: d, windowEnd: d.add(const Duration(days: 1)));
+
+    expect(tl.single.band, isNull);
+    expect(tl.single.score, 50);
+  });
+
   test('tomorrow-horizon rows contribute fired modules but not score', () async {
     final d = DateTime.utc(2026, 7, 5);
     await db.into(db.riskAssessments).insert(RiskAssessmentsCompanion.insert(

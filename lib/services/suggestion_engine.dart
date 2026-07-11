@@ -13,6 +13,9 @@ class WeightSuggestion {
   });
 }
 
+/// Precondition: [suggestionsFor] must only be fed module-fired correlation
+/// results — its exposureIds become weight-override keys. Never pass weekday
+/// or pair-exposure results (e.g. 'weekday_1', 'alcohol+stress') here.
 class SuggestionEngine {
   final Duration dismissalCooldown;
   const SuggestionEngine({this.dismissalCooldown = const Duration(days: 14)});

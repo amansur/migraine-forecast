@@ -60,18 +60,28 @@ class DayTimelineRepo {
     };
 
     final days = firedByDay.keys.toList()..sort();
-    return [
-      for (final day in days)
-        DayRecord(
-          day: day,
-          firedModuleIds: firedByDay[day]!,
-          hadAttack: attackDays.contains(day),
-          score: todayByDay[day]?.score,
-          band: todayByDay[day] == null
-              ? null
-              : RiskBand.values.byName(todayByDay[day]!.band),
-          backfilled: todayByDay[day]?.backfilled ?? false,
-        ),
-    ];
+    final records = <DayRecord>[];
+    for (final day in days) {
+      final today = todayByDay[day];
+      records.add(DayRecord(
+        day: day,
+        firedModuleIds: Set.unmodifiable(firedByDay[day]!),
+        hadAttack: attackDays.contains(day),
+        score: today?.score,
+        band: today == null ? null : _parseBand(today.band),
+        backfilled: today?.backfilled ?? false,
+      ));
+    }
+    return records;
+  }
+
+  /// Tolerant band parse: imported backups can carry arbitrary band strings
+  /// (import_repo writes them unvalidated), and one bad row must not take
+  /// down every correlation-family analysis.
+  static RiskBand? _parseBand(String name) {
+    for (final b in RiskBand.values) {
+      if (b.name == name) return b;
+    }
+    return null;
   }
 }
