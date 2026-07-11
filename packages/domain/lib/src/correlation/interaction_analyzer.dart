@@ -18,9 +18,12 @@ class InteractionResult {
 }
 
 /// Pairwise "A and B fired the same day" exposures. Deliberately conservative:
-/// support floors + the pair must be a personalHit AND beat both single lifts,
-/// and at most [maxResults] are returned — this is pattern-surfacing, not
-/// hypothesis testing across dozens of comparisons.
+/// support floors + the pair must be a personalHit AND its lift CI's lower
+/// bound must clear BOTH single lift points — otherwise "A + B" surfaces
+/// whenever A is a strong trigger and B is noise (the pair being a random
+/// subsample of A's days beats A's point ~half the time). At most
+/// [maxResults] are returned — this is pattern-surfacing, not hypothesis
+/// testing across dozens of comparisons.
 List<InteractionResult> analyzeInteractions(
   List<DayRecord> days,
   List<String> moduleIds, {
@@ -45,7 +48,7 @@ List<InteractionResult> analyzeInteractions(
       if (pair.classification != CorrelationClassification.personalHit) continue;
       final la = singles[ids[i]]!.lift.point;
       final lb = singles[ids[j]]!.lift.point;
-      if (pair.lift.point <= la || pair.lift.point <= lb) continue;
+      if (pair.lift.low <= la || pair.lift.low <= lb) continue;
       out.add(InteractionResult(
           idA: ids[i], idB: ids[j], pair: pair, singleLiftA: la, singleLiftB: lb));
     }

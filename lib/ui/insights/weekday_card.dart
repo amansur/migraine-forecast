@@ -18,8 +18,9 @@ class WeekdayCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (list) {
-        // Not enough history for a weekday view until most weekdays have
-        // a few observations.
+        // Hidden until at least one weekday has 4+ observations (with the
+        // shared 90-day timeline, all weekdays cross that line together
+        // after ~4 weeks of history).
         if (!list.any((r) => r.firedAttackRate.trials >= 4)) {
           return const SizedBox.shrink();
         }

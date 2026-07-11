@@ -33,8 +33,8 @@ class InteractionCard extends ConsumerWidget {
                     child: _InteractionRow(r: r),
                   ),
                 Text(
-                  'Patterns worth watching, not proof — both triggers together '
-                  'preceded attacks more often than either alone.',
+                  'Patterns worth watching, not proof — days when both fired '
+                  'stood out beyond what either trigger\'s own record suggests.',
                   style: theme.textTheme.bodySmall,
                 ),
               ],

@@ -29,20 +29,26 @@ final correlationRepoProvider = Provider<CorrelationRepo>((ref) {
 final dayTimelineRepoProvider =
     Provider<DayTimelineRepo>((ref) => DayTimelineRepo(ref.watch(databaseProvider)));
 
-/// Trailing-90-day timeline shared by the correlation-family analyses
-/// (module correlations, calibration, weekday patterns, interactions).
+/// Trailing-90-day timeline of COMPLETED days, shared by the
+/// correlation-family analyses (calibration, weekday patterns, interactions).
 ///
-/// Note: the window deliberately mirrors correlationResultsProvider's, so it
-/// includes today (incomplete) and tomorrow (tomorrow-horizon row only).
-/// Consumers that need completed days only — e.g. calibration — must trim
-/// records with day >= today's UTC midnight themselves.
+/// Today (still in progress) and tomorrow (forecast-only row) are trimmed
+/// here: an unfinished day always reads hadAttack=false and would deflate
+/// every rate computed downstream. Day keys are local calendar days wrapped
+/// in UTC midnights (see RiskAssessmentNotifier._compute), so "today" is
+/// derived from local wall-clock components.
 final dayTimelineProvider = FutureProvider<List<DayRecord>>((ref) async {
   ref.watch(recentAttacksProvider); // re-run when attacks change
-  final now = DateTime.now().toUtc();
-  return ref.watch(dayTimelineRepoProvider).buildTimeline(
-        windowStart: now.subtract(const Duration(days: 90)),
-        windowEnd: now.add(const Duration(days: 1)),
+  final now = DateTime.now();
+  final todayKey = DateTime.utc(now.year, now.month, now.day);
+  final timeline = await ref.watch(dayTimelineRepoProvider).buildTimeline(
+        windowStart: now.toUtc().subtract(const Duration(days: 90)),
+        windowEnd: now.toUtc().add(const Duration(days: 1)),
       );
+  return [
+    for (final d in timeline)
+      if (d.day.isBefore(todayKey)) d,
+  ];
 });
 
 /// Attack-rate correlation per weekday (Monday-first, exposureId
@@ -58,9 +64,17 @@ final weekdayResultsProvider = FutureProvider<List<CorrelationResult>>((ref) asy
 
 /// Conservative pairwise trigger-interaction scan over the shared timeline.
 /// Display-only — never feed these into the SuggestionEngine.
+///
+/// Excludes 'refractory' (internal post-attack damping, not a lifestyle
+/// trigger) and 'intraday_pressure_swing' (redundantly pairs with
+/// pressure_drop) — same rationale as the settings flag list.
 final interactionResultsProvider = FutureProvider<List<InteractionResult>>((ref) async {
   final timeline = await ref.watch(dayTimelineProvider.future);
-  return analyzeInteractions(timeline, _moduleIds);
+  final ids = [
+    for (final id in _moduleIds)
+      if (id != 'refractory' && id != 'intraday_pressure_swing') id,
+  ];
+  return analyzeInteractions(timeline, ids);
 });
 
 final correlationResultsProvider = FutureProvider<List<CorrelationResult>>((ref) async {

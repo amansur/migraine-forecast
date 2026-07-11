@@ -32,10 +32,13 @@ class PatternsCard extends ConsumerWidget {
         }
         final d = DateTime.now();
         final today = DateTime.utc(d.year, d.month, d.day);
+        // 87 days, not 90: recentAttacksProvider fetches a 90-day window
+        // anchored at now+2d (≈ now-88d onward), so scanning further back
+        // would treat fetched-out attack days as attack-free.
         final streaks = computeStreaks(
             attackDays: attackDays,
             today: today,
-            windowStart: today.subtract(const Duration(days: 90)));
+            windowStart: today.subtract(const Duration(days: 87)));
         final parts = attackStartsByDayPart(
             [for (final a in list) Attack(startedAt: a.startedAt.toLocal(), severity: a.severity)]);
         final maxPart = parts.values.fold(0, (a, b) => a > b ? a : b);
@@ -49,7 +52,7 @@ class PatternsCard extends ConsumerWidget {
                 Text('Patterns', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text('${streaks.currentAttackFreeDays} days attack-free '
-                    '(longest in 90 days: ${streaks.longestAttackFreeDays})'),
+                    '(longest in 3 months: ${streaks.longestAttackFreeDays})'),
                 const SizedBox(height: 12),
                 Text('When attacks start', style: theme.textTheme.bodySmall),
                 const SizedBox(height: 4),
