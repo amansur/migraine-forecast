@@ -5,6 +5,7 @@ import '../data/sources/location_source.dart';
 import '../ui/shared/unit_formatter.dart';
 import 'providers.dart';
 import 'risk_assessment_provider.dart';
+import 'outlook_provider.dart';
 
 enum HealthSourcePreference { oura, appleHealth }
 
@@ -147,6 +148,7 @@ final setManualLocationProvider = Provider<Future<void> Function(double lat, dou
     ref.invalidate(manualLocationProvider);
     ref.invalidate(riskAssessmentProvider);
     ref.invalidate(tomorrowRiskAssessmentProvider);
+    ref.invalidate(outlookProvider);
   };
 });
 
@@ -156,6 +158,7 @@ final clearManualLocationProvider = Provider<Future<void> Function()>((ref) {
     ref.invalidate(manualLocationProvider);
     ref.invalidate(riskAssessmentProvider);
     ref.invalidate(tomorrowRiskAssessmentProvider);
+    ref.invalidate(outlookProvider);
   };
 });
 

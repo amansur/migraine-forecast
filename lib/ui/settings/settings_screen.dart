@@ -28,6 +28,7 @@ import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';
 import 'oura_settings_card.dart';
 import '../shared/module_labels.dart';
+import '../../state/outlook_provider.dart';
 
 // User-flaggable triggers: excludes 'refractory' (internal post-attack
 // damping, not a lifestyle trigger) and 'intraday_pressure_swing' (flagged
@@ -477,6 +478,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ref.invalidate(onboardingCompletedProvider);
                 ref.invalidate(riskAssessmentProvider);
                 ref.invalidate(tomorrowRiskAssessmentProvider);
+                ref.invalidate(outlookProvider);
                 // Wait for the new false value to resolve before navigating
                 await ref.read(onboardingCompletedProvider.future);
                 if (context.mounted) {
@@ -609,6 +611,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ref.invalidate(riskAssessmentProvider);
         ref.invalidate(tomorrowRiskAssessmentProvider);
+        ref.invalidate(outlookProvider);
         ref.invalidate(riskDisplayModeProvider);
         ref.invalidate(notificationsEnabledProvider);
         ref.invalidate(cycleTrackingEnabledProvider);

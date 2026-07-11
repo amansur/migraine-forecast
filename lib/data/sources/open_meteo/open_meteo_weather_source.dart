@@ -37,14 +37,16 @@ class OpenMeteoWeatherSource implements WeatherSource {
     final cached = await _cachedForDay(lat, lon, requestedDay);
     if (cached != null && !forceRefresh) {
       // For past days the data is immutable historical, so a coverage match is
-      // always good enough — skip the freshness check (the cache row was fetched
-      // "after" the requested day, so the diff would be negative and the old
-      // freshness gate would reject it). For today/tomorrow we still require
-      // the cached row to be within [0, freshness] of `now`.
+      // always good enough — skip the freshness check. For today and future
+      // days (tomorrow, outlook d+2..d+6) require the covering row to have
+      // been fetched recently by the REAL wall clock. Measuring against the
+      // `now` anchor instead would reject any row older than the anchor day —
+      // for outlook that meant a fresh 7-day series never served d+3, and
+      // future-stamped rows then poisoned today's lookups.
       if (requestedDay.isBefore(todayStart)) {
         return _toSnapshot(cached, stale: false);
       }
-      final diff = nowUtc.difference(cached.fetchedAt as DateTime);
+      final diff = today.difference(cached.fetchedAt as DateTime);
       if (!diff.isNegative && diff <= freshness) {
         return _toSnapshot(cached, stale: false);
       }
@@ -92,9 +94,13 @@ class OpenMeteoWeatherSource implements WeatherSource {
       final coverageStart = times.isNotEmpty ? times.first : null;
       final coverageEnd = times.isNotEmpty ? times.last : null;
 
+      // Real fetch time, NOT the requested-day anchor: future-stamped rows
+      // would sort above genuinely-newer rows and fail the freshness gate
+      // with a negative diff, killing the cache for today/tomorrow.
+      final fetchedAt = _clock().toUtc();
       await db.into(db.weatherSnapshots).insert(
             WeatherSnapshotsCompanion.insert(
-              fetchedAt: nowUtc,
+              fetchedAt: fetchedAt,
               lat: lat,
               lon: lon,
               forecastJson: forecastRes.body,
@@ -107,7 +113,7 @@ class OpenMeteoWeatherSource implements WeatherSource {
       return WeatherSnapshot(
         weather: OpenMeteoParser.parseForecast(forecastRes.body),
         airQuality: OpenMeteoParser.parseAirQuality(aqRes.body),
-        fetchedAt: nowUtc,
+        fetchedAt: fetchedAt,
         stale: false,
       );
     } catch (_) {

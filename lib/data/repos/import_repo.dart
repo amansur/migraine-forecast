@@ -115,8 +115,12 @@ class ImportRepo {
   Future<int> _importRiskAssessments(List? rows, ImportMode mode) async {
     if (rows == null || rows.isEmpty) return 0;
     if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
-    final companions =
-        rows.cast<Map<String, dynamic>>().map((r) => RiskAssessmentsCompanion(
+    final companions = rows
+        .cast<Map<String, dynamic>>()
+        // Outlook assessments are never persisted (AssessmentRepository.save
+        // rejects them); drop any smuggled in via hand-crafted import files.
+        .where((r) => r['horizon'] != 'outlook')
+        .map((r) => RiskAssessmentsCompanion(
               id: Value(r['id'] as int),
               targetDate: Value(DateTime.parse(r['target_date'] as String).toUtc()),
               horizon: Value(r['horizon'] as String),
