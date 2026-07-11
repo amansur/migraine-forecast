@@ -29,3 +29,4 @@ export 'src/correlation/wilson_interval.dart';
 export 'src/correlation/correlation_analyzer.dart';
 export 'src/correlation/day_record.dart';
 export 'src/correlation/exposure.dart';
+export 'src/correlation/calibration.dart';
