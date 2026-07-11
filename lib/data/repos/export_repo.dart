@@ -60,6 +60,7 @@ class ExportRepo {
     final periodDaySeverities = await _db.select(_db.periodDaySeverities).get();
     final manualSleepRecords = await _db.select(_db.manualSleepRecords).get();
     final dayLocationOverrides = await _db.select(_db.dayLocationOverrides).get();
+    final dayCheckins = await _db.select(_db.dayCheckins).get();
 
     final payload = {
       'schema_version': 2,
@@ -74,6 +75,7 @@ class ExportRepo {
       'period_day_severities': periodDaySeverities.map(_periodDaySeverityToMap).toList(),
       'manual_sleep_records': manualSleepRecords.map(_manualSleepRecordToMap).toList(),
       'day_location_overrides': dayLocationOverrides.map(_dayLocationOverrideToMap).toList(),
+      'day_checkins': dayCheckins.map(_dayCheckinToMap).toList(),
     };
 
     const encoder = JsonEncoder.withIndent('  ');
@@ -176,6 +178,12 @@ class ExportRepo {
         'config_version': row.configVersion,
         'contributors_json': row.contributorsJson,
         'backfilled': row.backfilled,
+      };
+
+  Map<String, Object?> _dayCheckinToMap(DayCheckin row) => {
+        'day': row.day.toUtc().toIso8601String(),
+        'had_attack': row.hadAttack,
+        'answered_at': row.answeredAt.toUtc().toIso8601String(),
       };
 
   Map<String, Object?> _periodToMap(Period row) => {

@@ -39,6 +39,7 @@ class ImportRepo {
       if (version == 2) {
         count += await _importRiskAssessments(map['risk_assessments'] as List?, mode);
         count += await _importPeriods(map['periods'] as List?, mode);
+        count += await _importDayCheckins(map['day_checkins'] as List?, mode);
         count += await _importPeriodDaySeverities(
             map['period_day_severities'] as List?, mode);
         count += await _importManualSleepRecords(
@@ -127,6 +128,19 @@ class ImportRepo {
             )).toList();
     await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
         mode: InsertMode.insertOrReplace));
+    return companions.length;
+  }
+
+  Future<int> _importDayCheckins(List? rows, ImportMode mode) async {
+    if (rows == null || rows.isEmpty) return 0;
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.dayCheckins).go();
+    final companions = rows.cast<Map<String, dynamic>>().map((r) => DayCheckinsCompanion(
+          day: Value(DateTime.parse(r['day'] as String).toUtc()),
+          hadAttack: Value(r['had_attack'] as bool),
+          answeredAt: Value(DateTime.parse(r['answered_at'] as String).toUtc()),
+        )).toList();
+    await _db.batch((b) =>
+        b.insertAll(_db.dayCheckins, companions, mode: InsertMode.insertOrIgnore));
     return companions.length;
   }
 

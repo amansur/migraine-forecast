@@ -131,6 +131,17 @@ class DayLocationOverrides extends Table {
   Set<Column> get primaryKey => {day};
 }
 
+/// Next-morning check-in answers ("did yesterday's high-risk day bring a
+/// migraine?"). One row per asked day; "no" answers are real negative data.
+/// `day` follows the local-calendar-day-in-UTC-midnight-key convention.
+class DayCheckins extends Table {
+  DateTimeColumn get day => dateTime()();
+  BoolColumn get hadAttack => boolean()();
+  DateTimeColumn get answeredAt => dateTime()();
+  @override
+  Set<Column> get primaryKey => {day};
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -144,6 +155,7 @@ class DayLocationOverrides extends Table {
   PeriodDaySeverities,
   ManualSleepRecords,
   DayLocationOverrides,
+  DayCheckins,
   OuraSleep,
   OuraDailySleep,
   OuraActivity,
@@ -154,7 +166,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -280,6 +292,9 @@ class AppDatabase extends _$AppDatabase {
               'FROM oura_sleep_old',
             );
             await customStatement('DROP TABLE oura_sleep_old');
+          }
+          if (from < 13) {
+            await m.createTable(dayCheckins);
           }
         },
       );

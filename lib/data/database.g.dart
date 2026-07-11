@@ -4213,6 +4213,275 @@ class DayLocationOverridesCompanion
   }
 }
 
+class $DayCheckinsTable extends DayCheckins
+    with TableInfo<$DayCheckinsTable, DayCheckin> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DayCheckinsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hadAttackMeta = const VerificationMeta(
+    'hadAttack',
+  );
+  @override
+  late final GeneratedColumn<bool> hadAttack = GeneratedColumn<bool>(
+    'had_attack',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("had_attack" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _answeredAtMeta = const VerificationMeta(
+    'answeredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> answeredAt = GeneratedColumn<DateTime>(
+    'answered_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [day, hadAttack, answeredAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'day_checkins';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DayCheckin> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('had_attack')) {
+      context.handle(
+        _hadAttackMeta,
+        hadAttack.isAcceptableOrUnknown(data['had_attack']!, _hadAttackMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_hadAttackMeta);
+    }
+    if (data.containsKey('answered_at')) {
+      context.handle(
+        _answeredAtMeta,
+        answeredAt.isAcceptableOrUnknown(data['answered_at']!, _answeredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_answeredAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {day};
+  @override
+  DayCheckin map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DayCheckin(
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      hadAttack: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}had_attack'],
+      )!,
+      answeredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}answered_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DayCheckinsTable createAlias(String alias) {
+    return $DayCheckinsTable(attachedDatabase, alias);
+  }
+}
+
+class DayCheckin extends DataClass implements Insertable<DayCheckin> {
+  final DateTime day;
+  final bool hadAttack;
+  final DateTime answeredAt;
+  const DayCheckin({
+    required this.day,
+    required this.hadAttack,
+    required this.answeredAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['day'] = Variable<DateTime>(day);
+    map['had_attack'] = Variable<bool>(hadAttack);
+    map['answered_at'] = Variable<DateTime>(answeredAt);
+    return map;
+  }
+
+  DayCheckinsCompanion toCompanion(bool nullToAbsent) {
+    return DayCheckinsCompanion(
+      day: Value(day),
+      hadAttack: Value(hadAttack),
+      answeredAt: Value(answeredAt),
+    );
+  }
+
+  factory DayCheckin.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DayCheckin(
+      day: serializer.fromJson<DateTime>(json['day']),
+      hadAttack: serializer.fromJson<bool>(json['hadAttack']),
+      answeredAt: serializer.fromJson<DateTime>(json['answeredAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'day': serializer.toJson<DateTime>(day),
+      'hadAttack': serializer.toJson<bool>(hadAttack),
+      'answeredAt': serializer.toJson<DateTime>(answeredAt),
+    };
+  }
+
+  DayCheckin copyWith({DateTime? day, bool? hadAttack, DateTime? answeredAt}) =>
+      DayCheckin(
+        day: day ?? this.day,
+        hadAttack: hadAttack ?? this.hadAttack,
+        answeredAt: answeredAt ?? this.answeredAt,
+      );
+  DayCheckin copyWithCompanion(DayCheckinsCompanion data) {
+    return DayCheckin(
+      day: data.day.present ? data.day.value : this.day,
+      hadAttack: data.hadAttack.present ? data.hadAttack.value : this.hadAttack,
+      answeredAt: data.answeredAt.present
+          ? data.answeredAt.value
+          : this.answeredAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DayCheckin(')
+          ..write('day: $day, ')
+          ..write('hadAttack: $hadAttack, ')
+          ..write('answeredAt: $answeredAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(day, hadAttack, answeredAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DayCheckin &&
+          other.day == this.day &&
+          other.hadAttack == this.hadAttack &&
+          other.answeredAt == this.answeredAt);
+}
+
+class DayCheckinsCompanion extends UpdateCompanion<DayCheckin> {
+  final Value<DateTime> day;
+  final Value<bool> hadAttack;
+  final Value<DateTime> answeredAt;
+  final Value<int> rowid;
+  const DayCheckinsCompanion({
+    this.day = const Value.absent(),
+    this.hadAttack = const Value.absent(),
+    this.answeredAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DayCheckinsCompanion.insert({
+    required DateTime day,
+    required bool hadAttack,
+    required DateTime answeredAt,
+    this.rowid = const Value.absent(),
+  }) : day = Value(day),
+       hadAttack = Value(hadAttack),
+       answeredAt = Value(answeredAt);
+  static Insertable<DayCheckin> custom({
+    Expression<DateTime>? day,
+    Expression<bool>? hadAttack,
+    Expression<DateTime>? answeredAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (day != null) 'day': day,
+      if (hadAttack != null) 'had_attack': hadAttack,
+      if (answeredAt != null) 'answered_at': answeredAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DayCheckinsCompanion copyWith({
+    Value<DateTime>? day,
+    Value<bool>? hadAttack,
+    Value<DateTime>? answeredAt,
+    Value<int>? rowid,
+  }) {
+    return DayCheckinsCompanion(
+      day: day ?? this.day,
+      hadAttack: hadAttack ?? this.hadAttack,
+      answeredAt: answeredAt ?? this.answeredAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (hadAttack.present) {
+      map['had_attack'] = Variable<bool>(hadAttack.value);
+    }
+    if (answeredAt.present) {
+      map['answered_at'] = Variable<DateTime>(answeredAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DayCheckinsCompanion(')
+          ..write('day: $day, ')
+          ..write('hadAttack: $hadAttack, ')
+          ..write('answeredAt: $answeredAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OuraSleepTable extends OuraSleep
     with TableInfo<$OuraSleepTable, OuraSleepData> {
   @override
@@ -5734,6 +6003,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ManualSleepRecordsTable(this);
   late final $DayLocationOverridesTable dayLocationOverrides =
       $DayLocationOverridesTable(this);
+  late final $DayCheckinsTable dayCheckins = $DayCheckinsTable(this);
   late final $OuraSleepTable ouraSleep = $OuraSleepTable(this);
   late final $OuraDailySleepTable ouraDailySleep = $OuraDailySleepTable(this);
   late final $OuraActivityTable ouraActivity = $OuraActivityTable(this);
@@ -5755,6 +6025,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     periodDaySeverities,
     manualSleepRecords,
     dayLocationOverrides,
+    dayCheckins,
     ouraSleep,
     ouraDailySleep,
     ouraActivity,
@@ -8176,6 +8447,170 @@ typedef $$DayLocationOverridesTableProcessedTableManager =
       DayLocationOverride,
       PrefetchHooks Function()
     >;
+typedef $$DayCheckinsTableCreateCompanionBuilder =
+    DayCheckinsCompanion Function({
+      required DateTime day,
+      required bool hadAttack,
+      required DateTime answeredAt,
+      Value<int> rowid,
+    });
+typedef $$DayCheckinsTableUpdateCompanionBuilder =
+    DayCheckinsCompanion Function({
+      Value<DateTime> day,
+      Value<bool> hadAttack,
+      Value<DateTime> answeredAt,
+      Value<int> rowid,
+    });
+
+class $$DayCheckinsTableFilterComposer
+    extends Composer<_$AppDatabase, $DayCheckinsTable> {
+  $$DayCheckinsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hadAttack => $composableBuilder(
+    column: $table.hadAttack,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DayCheckinsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DayCheckinsTable> {
+  $$DayCheckinsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hadAttack => $composableBuilder(
+    column: $table.hadAttack,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DayCheckinsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DayCheckinsTable> {
+  $$DayCheckinsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<bool> get hadAttack =>
+      $composableBuilder(column: $table.hadAttack, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get answeredAt => $composableBuilder(
+    column: $table.answeredAt,
+    builder: (column) => column,
+  );
+}
+
+class $$DayCheckinsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DayCheckinsTable,
+          DayCheckin,
+          $$DayCheckinsTableFilterComposer,
+          $$DayCheckinsTableOrderingComposer,
+          $$DayCheckinsTableAnnotationComposer,
+          $$DayCheckinsTableCreateCompanionBuilder,
+          $$DayCheckinsTableUpdateCompanionBuilder,
+          (
+            DayCheckin,
+            BaseReferences<_$AppDatabase, $DayCheckinsTable, DayCheckin>,
+          ),
+          DayCheckin,
+          PrefetchHooks Function()
+        > {
+  $$DayCheckinsTableTableManager(_$AppDatabase db, $DayCheckinsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DayCheckinsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DayCheckinsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DayCheckinsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<DateTime> day = const Value.absent(),
+                Value<bool> hadAttack = const Value.absent(),
+                Value<DateTime> answeredAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DayCheckinsCompanion(
+                day: day,
+                hadAttack: hadAttack,
+                answeredAt: answeredAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required DateTime day,
+                required bool hadAttack,
+                required DateTime answeredAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DayCheckinsCompanion.insert(
+                day: day,
+                hadAttack: hadAttack,
+                answeredAt: answeredAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DayCheckinsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DayCheckinsTable,
+      DayCheckin,
+      $$DayCheckinsTableFilterComposer,
+      $$DayCheckinsTableOrderingComposer,
+      $$DayCheckinsTableAnnotationComposer,
+      $$DayCheckinsTableCreateCompanionBuilder,
+      $$DayCheckinsTableUpdateCompanionBuilder,
+      (
+        DayCheckin,
+        BaseReferences<_$AppDatabase, $DayCheckinsTable, DayCheckin>,
+      ),
+      DayCheckin,
+      PrefetchHooks Function()
+    >;
 typedef $$OuraSleepTableCreateCompanionBuilder =
     OuraSleepCompanion Function({
       required String id,
@@ -9028,6 +9463,8 @@ class $AppDatabaseManager {
       $$ManualSleepRecordsTableTableManager(_db, _db.manualSleepRecords);
   $$DayLocationOverridesTableTableManager get dayLocationOverrides =>
       $$DayLocationOverridesTableTableManager(_db, _db.dayLocationOverrides);
+  $$DayCheckinsTableTableManager get dayCheckins =>
+      $$DayCheckinsTableTableManager(_db, _db.dayCheckins);
   $$OuraSleepTableTableManager get ouraSleep =>
       $$OuraSleepTableTableManager(_db, _db.ouraSleep);
   $$OuraDailySleepTableTableManager get ouraDailySleep =>
