@@ -195,6 +195,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
+                    const CheckinCard(),
                     const TomorrowTile(),
                     const SizedBox(height: 16),
                     if (hasChips) ...[
