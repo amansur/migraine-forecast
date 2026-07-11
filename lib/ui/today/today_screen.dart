@@ -13,6 +13,7 @@ import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
+import 'checkin_card.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
