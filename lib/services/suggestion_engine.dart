@@ -29,12 +29,12 @@ class SuggestionEngine {
           r.classification != CorrelationClassification.personalMiss) {
         continue;
       }
-      final current = currentOverrides[r.moduleId] ?? 0.0;
+      final current = currentOverrides[r.exposureId] ?? 0.0;
       final delta =
           r.classification == CorrelationClassification.personalHit ? 1.0 : -1.0;
       final recommended = (current + delta).clamp(-2.0, 2.0).toDouble();
       if (recommended == current) continue;
-      final dismissed = dismissedAt[r.moduleId];
+      final dismissed = dismissedAt[r.exposureId];
       if (dismissed != null && now.difference(dismissed) < dismissalCooldown) {
         continue;
       }
@@ -47,7 +47,7 @@ class SuggestionEngine {
                   '(vs ${(r.notFiredAttackRate.point * 100).round()}% baseline) — weaker than baseline.';
 
       out.add(WeightSuggestion(
-        moduleId: r.moduleId,
+        moduleId: r.exposureId,
         recommendedOverride: recommended,
         rationale: rationale,
         source: r,

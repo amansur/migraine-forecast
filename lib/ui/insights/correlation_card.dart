@@ -24,7 +24,7 @@ class CorrelationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _moduleLabels[result.moduleId] ?? result.moduleId;
+    final label = _moduleLabels[result.exposureId] ?? result.exposureId;
     final fired = result.firedAttackRate;
     final notFired = result.notFiredAttackRate;
     final classification = result.classification;

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/services/suggestion_engine.dart';
 
 CorrelationResult _hit(String moduleId) => CorrelationResult(
-      moduleId: moduleId,
+      exposureId: moduleId,
       classification: CorrelationClassification.personalHit,
       firedAttackRate: WilsonInterval.compute(successes: 7, trials: 10),
       notFiredAttackRate: WilsonInterval.compute(successes: 2, trials: 50),
@@ -15,7 +15,7 @@ CorrelationResult _hit(String moduleId) => CorrelationResult(
     );
 
 CorrelationResult _miss(String moduleId) => CorrelationResult(
-      moduleId: moduleId,
+      exposureId: moduleId,
       classification: CorrelationClassification.personalMiss,
       firedAttackRate: WilsonInterval.compute(successes: 0, trials: 20),
       notFiredAttackRate: WilsonInterval.compute(successes: 8, trials: 40),
@@ -27,7 +27,7 @@ CorrelationResult _miss(String moduleId) => CorrelationResult(
     );
 
 CorrelationResult _none(String moduleId) => CorrelationResult(
-      moduleId: moduleId,
+      exposureId: moduleId,
       classification: CorrelationClassification.inconclusive,
       firedAttackRate: WilsonInterval.compute(successes: 3, trials: 10),
       notFiredAttackRate: WilsonInterval.compute(successes: 4, trials: 20),

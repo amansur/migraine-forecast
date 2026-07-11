@@ -9,7 +9,7 @@ class CorrelationRepo {
   final AppDatabase _db;
   CorrelationRepo(this._db);
 
-  Future<List<ModuleCohort>> buildCohorts({
+  Future<List<Cohort>> buildCohorts({
     required DateTime windowStart,
     required DateTime windowEnd,
     required List<String> moduleIds,
@@ -61,8 +61,8 @@ class CorrelationRepo {
       final notFiredDays = allDays.difference(firedDays);
       final firedWithAttack = firedDays.intersection(attackDays).length;
       final notFiredWithAttack = notFiredDays.intersection(attackDays).length;
-      return ModuleCohort(
-        moduleId: id,
+      return Cohort(
+        exposureId: id,
         daysFiredWithAttack: firedWithAttack,
         daysFiredTotal: firedDays.length,
         daysNotFiredWithAttack: notFiredWithAttack,

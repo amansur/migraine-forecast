@@ -72,13 +72,13 @@ void main() {
       moduleIds: const ['pressure_drop', 'sleep_deficit'],
     );
 
-    final pd = cohorts.firstWhere((c) => c.moduleId == 'pressure_drop');
+    final pd = cohorts.firstWhere((c) => c.exposureId == 'pressure_drop');
     expect(pd.daysFiredTotal, 5);
     expect(pd.daysFiredWithAttack, 3);
     expect(pd.daysNotFiredTotal, 10);
     expect(pd.daysNotFiredWithAttack, 1);
 
-    final sd = cohorts.firstWhere((c) => c.moduleId == 'sleep_deficit');
+    final sd = cohorts.firstWhere((c) => c.exposureId == 'sleep_deficit');
     expect(sd.daysFiredTotal, 10);
     expect(sd.daysFiredWithAttack, 1);
   });
@@ -89,7 +89,7 @@ void main() {
       windowEnd: DateTime.utc(2026, 6, 30),
       moduleIds: const ['pressure_drop'],
     );
-    final pd = cohorts.firstWhere((c) => c.moduleId == 'pressure_drop');
+    final pd = cohorts.firstWhere((c) => c.exposureId == 'pressure_drop');
     expect(pd.totalDays, 0);
   });
 }
