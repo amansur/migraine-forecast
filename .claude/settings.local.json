@@ -58,7 +58,8 @@
       "Bash(sed -i '' 's/r\\\\.moduleId/r.exposureId/g' lib/services/suggestion_engine.dart)",
       "Bash(sed -i '' 's/result\\\\.moduleId/result.exposureId/g' lib/ui/insights/correlation_card.dart)",
       "Bash(sed -i '' -e '75s/c\\\\.moduleId/c.exposureId/' -e '81s/c\\\\.moduleId/c.exposureId/' -e '92s/c\\\\.moduleId/c.exposureId/' test/data/repos/correlation_repo_test.dart)",
-      "Bash(echo \"analyze-exit:$?\")"
+      "Bash(echo \"analyze-exit:$?\")",
+      "Bash(grep -v \"^Analyzing\\\\|issues found\\\\|^$\")"
     ]
   }
 }
