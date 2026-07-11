@@ -45,6 +45,17 @@ final dayTimelineProvider = FutureProvider<List<DayRecord>>((ref) async {
       );
 });
 
+/// Attack-rate correlation per weekday (Monday-first, exposureId
+/// 'weekday_1'..'weekday_7') over the shared timeline. Display-only —
+/// never feed these into the SuggestionEngine (see its precondition).
+final weekdayResultsProvider = FutureProvider<List<CorrelationResult>>((ref) async {
+  final timeline = await ref.watch(dayTimelineProvider.future);
+  return [
+    for (var wd = DateTime.monday; wd <= DateTime.sunday; wd++)
+      const CorrelationAnalyzer().analyze(buildCohort(timeline, Exposure.weekday(wd))),
+  ];
+});
+
 final correlationResultsProvider = FutureProvider<List<CorrelationResult>>((ref) async {
   // Watch recentAttacksProvider to re-run when attacks change
   ref.watch(recentAttacksProvider);

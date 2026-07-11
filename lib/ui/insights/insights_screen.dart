@@ -24,6 +24,7 @@ import 'calendar_heatmap.dart';
 import 'calibration_card.dart';
 import 'correlation_card.dart';
 import 'patterns_card.dart';
+import 'weekday_card.dart';
 import 'phase_ribbon.dart';
 import 'suggestion_card.dart';
 
@@ -181,6 +182,8 @@ class _Body extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
         const PatternsCard(),
+        const SizedBox(height: 24),
+        const WeekdayCard(),
         const SizedBox(height: 24),
         const CalibrationCard(),
         const SizedBox(height: 24),
