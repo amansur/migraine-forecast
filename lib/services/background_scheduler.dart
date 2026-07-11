@@ -71,20 +71,7 @@ void callbackDispatcher() {
         baselineBuilder: const BaselineSnapshotBuilder(BaselineStore()),
         db: db,
       );
-      final engine = RiskEngine(modules: [
-        PressureDropModule(),
-        HumidityModule(),
-        TempSwingModule(),
-        AirQualityModule(),
-        SleepDeficitModule(),
-        HrvLetdownModule(),
-        MenstrualPhaseModule(),
-        RefractoryModule(),
-        AlcoholModule(),
-        CaffeineModule(),
-        StressModule(),
-        HydrationModule(),
-      ]);
+      final engine = RiskEngine(modules: allTriggerModules());
       final settings = SettingsRepo(db);
       final cfg = RulesConfigLoader.parseOrFallback(
         await _loadConfigText(),

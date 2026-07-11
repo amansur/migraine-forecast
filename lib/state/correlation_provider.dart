@@ -6,21 +6,9 @@ import '../data/repos/day_timeline_repo.dart';
 import 'insights_eligibility_provider.dart';
 import 'providers.dart';
 
-const _moduleIds = [
-  'pressure_drop',
-  'humidity',
-  'temp_swing',
-  'air_quality',
-  'sleep_deficit',
-  'hrv_letdown',
-  'menstrual_phase',
-  'refractory',
-  'alcohol',
-  'caffeine',
-  'stress',
-  'hydration',
-  'intraday_pressure_swing',
-];
+// Derived from the domain registry so new modules join the correlation
+// scan automatically.
+final _moduleIds = [for (final m in allTriggerModules()) m.id];
 
 final correlationRepoProvider = Provider<CorrelationRepo>((ref) {
   return CorrelationRepo(ref.watch(databaseProvider));

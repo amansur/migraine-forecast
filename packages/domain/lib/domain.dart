@@ -13,6 +13,7 @@ export 'src/config/rules_config_loader.dart';
 export 'src/baselines/baseline_store.dart';
 export 'src/engine/trigger_module.dart';
 export 'src/engine/risk_engine.dart';
+export 'src/engine/all_modules.dart';
 export 'src/modules/pressure_drop.dart';
 export 'src/modules/humidity.dart';
 export 'src/modules/temp_swing.dart';
