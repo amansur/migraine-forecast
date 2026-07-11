@@ -33,15 +33,15 @@ class CheckinCard extends ConsumerWidget {
               FilledButton(
                 key: const Key('checkin-yes'),
                 onPressed: () async {
-                  await ref.read(checkinRepoProvider).record(
-                      day: day, hadAttack: true, at: DateTime.now().toUtc());
-                  ref.invalidate(checkinPromptProvider);
-                  if (!context.mounted) return;
-                  // Prefill the log screen with yesterday noon local time.
-                  final local =
-                      DateTime(day.year, day.month, day.day, 12);
+                  // Deliberately no day_checkins write here: the completed
+                  // attack log is what suppresses the prompt (via the
+                  // attackYesterday check). If the user backs out of /log,
+                  // the card re-shows instead of losing the data point.
+                  final local = DateTime(day.year, day.month, day.day, 12);
                   await context.push('/log', extra: local);
+                  if (!context.mounted) return;
                   ref.invalidate(recentAttacksProvider);
+                  ref.invalidate(checkinPromptProvider);
                 },
                 child: const Text('Yes'),
               ),
@@ -51,6 +51,7 @@ class CheckinCard extends ConsumerWidget {
                 onPressed: () async {
                   await ref.read(checkinRepoProvider).record(
                       day: day, hadAttack: false, at: DateTime.now().toUtc());
+                  if (!context.mounted) return;
                   ref.invalidate(checkinPromptProvider);
                 },
                 child: const Text('No'),

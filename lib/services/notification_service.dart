@@ -68,6 +68,9 @@ class NotificationService {
     );
   }
 
+  /// Cancels a pending scheduled notification. No-op if none is pending.
+  Future<void> cancelScheduled(int notificationId) => _plugin.cancel(notificationId);
+
   Future<void> showHighRisk({
     required int notificationId,
     required String title,

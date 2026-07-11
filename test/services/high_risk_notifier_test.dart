@@ -15,6 +15,8 @@ class _FakeNotifications implements NotificationService {
   }
   @override
   Future<void> scheduleCheckIn({required int notificationId, required DateTime fireAtLocal, required String title, required String body}) async {}
+  @override
+  Future<void> cancelScheduled(int notificationId) async {}
 }
 
 class _Call {

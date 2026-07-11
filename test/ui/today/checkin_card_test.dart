@@ -53,7 +53,8 @@ void main() {
     expect(rows.single.hadAttack, isFalse);
   });
 
-  testWidgets('answering Yes records a positive check-in', (tester) async {
+  testWidgets('answering Yes opens the log flow without writing a check-in row',
+      (tester) async {
     final db = AppDatabase.memory();
     addTearDown(db.close);
     await tester.pumpWidget(host(db, prompt: day));
@@ -62,8 +63,10 @@ void main() {
     await tester.tap(find.byKey(const Key('checkin-yes')));
     await tester.pumpAndSettle();
 
-    final rows = await db.select(db.dayCheckins).get();
-    expect(rows, hasLength(1));
-    expect(rows.single.hadAttack, isTrue);
+    // Navigated to the log screen; the completed attack log (not a
+    // day_checkins row) is what will suppress the prompt. Backing out
+    // re-shows the card instead of losing the data point.
+    expect(find.text('log-screen-stub'), findsOneWidget);
+    expect(await db.select(db.dayCheckins).get(), isEmpty);
   });
 }

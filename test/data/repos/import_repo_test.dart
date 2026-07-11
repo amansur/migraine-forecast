@@ -82,6 +82,38 @@ void main() {
       expect(periods, hasLength(1));
     });
 
+    test('day_checkins round-trips through full export and replace-all import',
+        () async {
+      final sourceDb = AppDatabase.memory();
+      await sourceDb.into(sourceDb.dayCheckins).insert(
+            DayCheckinsCompanion.insert(
+              day: DateTime.utc(2026, 7, 10),
+              hadAttack: false,
+              answeredAt: DateTime.utc(2026, 7, 11, 9, 5),
+            ),
+          );
+      final json =
+          await ExportRepo(sourceDb).buildJsonFull(appVersionOverride: '2.0.0');
+      await sourceDb.close();
+
+      // Pre-existing row must be wiped by replaceAll.
+      await db.into(db.dayCheckins).insert(
+            DayCheckinsCompanion.insert(
+              day: DateTime.utc(2026, 7, 1),
+              hadAttack: true,
+              answeredAt: DateTime.utc(2026, 7, 2, 9),
+            ),
+          );
+
+      await importRepo.importJson(json, ImportMode.replaceAll);
+
+      final rows = await db.select(db.dayCheckins).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.day, DateTime.utc(2026, 7, 10));
+      expect(rows.single.hadAttack, isFalse);
+      expect(rows.single.answeredAt, DateTime.utc(2026, 7, 11, 9, 5));
+    });
+
     test('attack riskAssessmentId links to preserved risk_assessment id after import',
         () async {
       // Build source DB with one risk assessment and one attack that references it.
