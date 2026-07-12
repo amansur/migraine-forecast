@@ -30,6 +30,13 @@ GoRouter buildRouter(WidgetRef ref, {Listenable? refreshListenable}) {
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
       GoRoute(path: '/today', builder: (_, __) => const TodayScreen()),
       GoRoute(path: '/tomorrow', builder: (_, __) => const TomorrowDetailScreen()),
+      GoRoute(path: '/outlook-day', builder: (context, state) {
+        final extra = state.extra;
+        if (extra is RiskAssessment) {
+          return TomorrowDetailScreen(assessment: extra);
+        }
+        return const TomorrowDetailScreen();
+      }),
       GoRoute(path: '/log', builder: (context, state) {
         final extra = state.extra;
         if (extra is Attack) {

@@ -10,6 +10,7 @@ class DataRequirement extends Equatable {
   static const weatherHumidity    = DataRequirement(id: 'weather.humidity',    label: 'Weather (humidity)');
   static const weatherTemperature = DataRequirement(id: 'weather.temperature', label: 'Weather (temperature)');
   static const weatherAirQuality = DataRequirement(id: 'weather.air_quality', label: 'Air quality');
+  static const weatherWind       = DataRequirement(id: 'weather.wind',        label: 'Weather (wind)');
   static const healthSleep       = DataRequirement(id: 'health.sleep',       label: 'Sleep data');
   static const healthHrv         = DataRequirement(id: 'health.hrv',         label: 'HRV data');
   static const healthMenstrual   = DataRequirement(id: 'health.menstrual',   label: 'Menstrual data');
@@ -17,6 +18,7 @@ class DataRequirement extends Equatable {
   static const journalCaffeine   = DataRequirement(id: 'journal.caffeine',   label: 'Caffeine log');
   static const journalStress     = DataRequirement(id: 'journal.stress',     label: 'Stress log');
   static const journalHydration  = DataRequirement(id: 'journal.hydration',  label: 'Hydration log');
+  static const journalMeals      = DataRequirement(id: 'journal.meals',      label: 'Meals log');
   static const attackHistory     = DataRequirement(id: 'attacks.history',    label: 'Attack history');
 
   @override

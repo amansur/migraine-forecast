@@ -9,14 +9,16 @@ enum CorrelationClassification {
   insufficientData,
 }
 
-class ModuleCohort extends Equatable {
-  final String moduleId;
+/// A 2×2 contingency table for any day-level exposure (a trigger module
+/// firing, a weekday, a pair of modules firing together, …) vs attack days.
+class Cohort extends Equatable {
+  final String exposureId;
   final int daysFiredWithAttack;
   final int daysFiredTotal;
   final int daysNotFiredWithAttack;
   final int daysNotFiredTotal;
-  const ModuleCohort({
-    required this.moduleId,
+  const Cohort({
+    required this.exposureId,
     required this.daysFiredWithAttack,
     required this.daysFiredTotal,
     required this.daysNotFiredWithAttack,
@@ -28,7 +30,7 @@ class ModuleCohort extends Equatable {
 
   @override
   List<Object?> get props => [
-        moduleId,
+        exposureId,
         daysFiredWithAttack,
         daysFiredTotal,
         daysNotFiredWithAttack,
@@ -37,14 +39,14 @@ class ModuleCohort extends Equatable {
 }
 
 class CorrelationResult extends Equatable {
-  final String moduleId;
+  final String exposureId;
   final CorrelationClassification classification;
   final WilsonInterval firedAttackRate;
   final WilsonInterval notFiredAttackRate;
   final LiftInterval lift;
   final int totalAttacks;
   const CorrelationResult({
-    required this.moduleId,
+    required this.exposureId,
     required this.classification,
     required this.firedAttackRate,
     required this.notFiredAttackRate,
@@ -54,13 +56,13 @@ class CorrelationResult extends Equatable {
 
   @override
   List<Object?> get props =>
-      [moduleId, classification, firedAttackRate, notFiredAttackRate, lift, totalAttacks];
+      [exposureId, classification, firedAttackRate, notFiredAttackRate, lift, totalAttacks];
 }
 
 class CorrelationAnalyzer {
   const CorrelationAnalyzer();
 
-  CorrelationResult analyze(ModuleCohort c, {int minAttacks = 3}) {
+  CorrelationResult analyze(Cohort c, {int minAttacks = 3}) {
     final fired = WilsonInterval.compute(
       successes: c.daysFiredWithAttack,
       trials: c.daysFiredTotal,
@@ -85,7 +87,7 @@ class CorrelationAnalyzer {
     }
 
     return CorrelationResult(
-      moduleId: c.moduleId,
+      exposureId: c.exposureId,
       classification: cls,
       firedAttackRate: fired,
       notFiredAttackRate: notFired,

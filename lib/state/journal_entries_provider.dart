@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'manual_sleep_provider.dart';
+import 'medication_provider.dart';
 import 'providers.dart';
 
 /// Item rendered in the history list. Either a journal entry or a manual
@@ -27,19 +28,30 @@ class SleepLogItem extends LogHistoryItem {
   DateTime get at => record.sleepStart;
 }
 
+class MedicationLogItem extends LogHistoryItem {
+  final MedicationDose dose;
+  MedicationLogItem(this.dose);
+  @override
+  DateTime get at => dose.at;
+}
+
 const _historyWindow = Duration(days: 30);
 
 final journalHistoryProvider = StreamProvider.autoDispose<List<LogHistoryItem>>((ref) {
   final journal = ref.watch(journalSourceProvider);
   final manual = ref.watch(manualSleepSourceProvider);
+  final meds = ref.watch(medicationRepoProvider);
   final now = DateTime.now().toUtc();
-  return Rx.combineLatest2<List<JournalEntry>, List<SleepRecord>, List<LogHistoryItem>>(
+  return Rx.combineLatest3<List<JournalEntry>, List<SleepRecord>,
+      List<MedicationDose>, List<LogHistoryItem>>(
     journal.watchRecentEntries(_historyWindow, now: now),
     manual.watchRecent(_historyWindow, now: now),
-    (entries, sleeps) {
+    meds.watchRecent(window: _historyWindow, now: now),
+    (entries, sleeps, doses) {
       final items = <LogHistoryItem>[
         ...entries.map(JournalLogItem.new),
         ...sleeps.map(SleepLogItem.new),
+        ...doses.map(MedicationLogItem.new),
       ];
       items.sort((a, b) => b.at.compareTo(a.at));
       return items;

@@ -27,20 +27,16 @@ import '../shared/animations/celebration_overlay.dart';
 import '../shared/mascot/mascot_widget.dart';
 import '../shared/unit_formatter.dart';
 import 'oura_settings_card.dart';
+import '../shared/module_labels.dart';
+import '../../state/medication_provider.dart';
+import '../../state/outlook_provider.dart';
 
-const _moduleLabels = <String, String>{
-  'pressure_drop': 'Pressure changes',
-  'humidity': 'Humidity',
-  'temp_swing': 'Temp swing',
-  'air_quality': 'Air quality',
-  'sleep_deficit': 'Sleep',
-  'hrv_letdown': 'HRV / stress let-down',
-  'menstrual_phase': 'Menstrual cycle',
-  'alcohol': 'Alcohol',
-  'caffeine': 'Caffeine',
-  'stress': 'Stress',
-  'hydration': 'Hydration',
-};
+// User-flaggable triggers: excludes 'refractory' (internal post-attack
+// damping, not a lifestyle trigger) and 'intraday_pressure_swing' (flagged
+// together with pressure_drop).
+final _moduleLabels = <String, String>{...moduleLabels}
+  ..remove('refractory')
+  ..remove('intraday_pressure_swing');
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -483,6 +479,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ref.invalidate(onboardingCompletedProvider);
                 ref.invalidate(riskAssessmentProvider);
                 ref.invalidate(tomorrowRiskAssessmentProvider);
+                ref.invalidate(outlookProvider);
+                ref.invalidate(recentMedicationDosesProvider);
+                ref.invalidate(mohStatusProvider);
+                ref.invalidate(medicationNamesProvider);
                 // Wait for the new false value to resolve before navigating
                 await ref.read(onboardingCompletedProvider.future);
                 if (context.mounted) {
@@ -615,6 +615,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ref.invalidate(riskAssessmentProvider);
         ref.invalidate(tomorrowRiskAssessmentProvider);
+        ref.invalidate(outlookProvider);
+                ref.invalidate(recentMedicationDosesProvider);
+                ref.invalidate(mohStatusProvider);
+                ref.invalidate(medicationNamesProvider);
         ref.invalidate(riskDisplayModeProvider);
         ref.invalidate(notificationsEnabledProvider);
         ref.invalidate(cycleTrackingEnabledProvider);

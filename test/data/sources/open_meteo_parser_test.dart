@@ -41,4 +41,22 @@ void main() {
   test('throws on malformed JSON', () {
     expect(() => OpenMeteoParser.parseForecast('not json'), throwsFormatException);
   });
+
+  test('series without wind_gusts_10m parses with null gusts (pre-wind cache rows)', () {
+    final json = File('test/data/sources/fixtures/open_meteo/forecast_typical_day.json')
+        .readAsStringSync();
+    final series = OpenMeteoParser.parseForecast(json);
+    expect(series.samples, isNotEmpty);
+    expect(series.samples.every((s) => s.windGustKph == null), isTrue);
+  });
+
+  test('series with wind_gusts_10m carries gust values', () {
+    const body = '{"hourly":{"time":["2026-07-09T00:00","2026-07-09T01:00"],'
+        '"pressure_msl":[1013,1012],"temperature_2m":[20,21],'
+        '"relative_humidity_2m":[50,55],"wind_gusts_10m":[38.5,null]}}';
+    final series = OpenMeteoParser.parseForecast(body);
+    expect(series.samples, hasLength(2));
+    expect(series.samples.first.windGustKph, 38.5);
+    expect(series.samples.last.windGustKph, isNull);
+  });
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../state/manual_sleep_provider.dart';
 import 'journal_entry_sheet.dart';
+import 'medication_entry_sheet.dart';
 import 'sleep_entry_sheet.dart';
 
 class LogPickerSheet extends ConsumerWidget {
@@ -34,6 +35,10 @@ class LogPickerSheet extends ConsumerWidget {
               label: 'Hydration', onTap: () => _openJournalSheet(context, JournalKind.hydration)),
           _kindTile(context, key: 'log-kind-stress', icon: Icons.psychology_outlined,
               label: 'Stress', onTap: () => _openJournalSheet(context, JournalKind.stress)),
+          _kindTile(context, key: 'log-kind-skipped-meal', icon: Icons.no_meals_outlined,
+              label: 'Skipped meal', onTap: () => _openJournalSheet(context, JournalKind.skippedMeal)),
+          _kindTile(context, key: 'log-kind-medication', icon: Icons.medication_outlined,
+              label: 'Medication', onTap: () => _openMedicationSheet(context)),
           if (sleepEnabled)
             _kindTile(context, key: 'log-kind-sleep', icon: Icons.bedtime_outlined,
                 label: 'Sleep', onTap: () => _openSleepSheet(context)),
@@ -69,6 +74,15 @@ class LogPickerSheet extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       builder: (_) => JournalEntrySheet(kind: kind),
+    );
+  }
+
+  Future<void> _openMedicationSheet(BuildContext context) async {
+    Navigator.of(context).pop();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const MedicationEntrySheet(),
     );
   }
 

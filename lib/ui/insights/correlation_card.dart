@@ -2,21 +2,7 @@ import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
-
-const _moduleLabels = <String, String>{
-  'pressure_drop': 'Pressure changes',
-  'humidity': 'Humidity',
-  'temp_swing': 'Temp swing',
-  'air_quality': 'Air quality',
-  'sleep_deficit': 'Sleep',
-  'hrv_letdown': 'HRV / stress let-down',
-  'menstrual_phase': 'Menstrual cycle',
-  'refractory': 'Recent attack',
-  'alcohol': 'Alcohol',
-  'caffeine': 'Caffeine',
-  'stress': 'Stress',
-  'hydration': 'Hydration',
-};
+import '../shared/module_labels.dart';
 
 class CorrelationCard extends StatelessWidget {
   final CorrelationResult result;
@@ -24,7 +10,7 @@ class CorrelationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _moduleLabels[result.moduleId] ?? result.moduleId;
+    final label = moduleLabel(result.exposureId);
     final fired = result.firedAttackRate;
     final notFired = result.notFiredAttackRate;
     final classification = result.classification;

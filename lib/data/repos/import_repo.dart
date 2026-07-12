@@ -39,6 +39,8 @@ class ImportRepo {
       if (version == 2) {
         count += await _importRiskAssessments(map['risk_assessments'] as List?, mode);
         count += await _importPeriods(map['periods'] as List?, mode);
+        count += await _importDayCheckins(map['day_checkins'] as List?, mode);
+        count += await _importMedicationDoses(map['medication_doses'] as List?, mode);
         count += await _importPeriodDaySeverities(
             map['period_day_severities'] as List?, mode);
         count += await _importManualSleepRecords(
@@ -113,8 +115,12 @@ class ImportRepo {
   Future<int> _importRiskAssessments(List? rows, ImportMode mode) async {
     if (rows == null || rows.isEmpty) return 0;
     if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
-    final companions =
-        rows.cast<Map<String, dynamic>>().map((r) => RiskAssessmentsCompanion(
+    final companions = rows
+        .cast<Map<String, dynamic>>()
+        // Outlook assessments are never persisted (AssessmentRepository.save
+        // rejects them); drop any smuggled in via hand-crafted import files.
+        .where((r) => r['horizon'] != 'outlook')
+        .map((r) => RiskAssessmentsCompanion(
               id: Value(r['id'] as int),
               targetDate: Value(DateTime.parse(r['target_date'] as String).toUtc()),
               horizon: Value(r['horizon'] as String),
@@ -127,6 +133,34 @@ class ImportRepo {
             )).toList();
     await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
         mode: InsertMode.insertOrReplace));
+    return companions.length;
+  }
+
+  Future<int> _importMedicationDoses(List? rows, ImportMode mode) async {
+    if (rows == null || rows.isEmpty) return 0;
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.medicationDoses).go();
+    final companions = rows.cast<Map<String, dynamic>>().map((r) => MedicationDosesCompanion(
+          id: Value(r['id'] as int),
+          at: Value(DateTime.parse(r['at'] as String).toUtc()),
+          name: Value(r['name'] as String),
+          medClass: Value(r['med_class'] as String),
+          reliefRating: Value(r['relief_rating'] as int?),
+        )).toList();
+    await _db.batch((b) =>
+        b.insertAll(_db.medicationDoses, companions, mode: InsertMode.insertOrIgnore));
+    return companions.length;
+  }
+
+  Future<int> _importDayCheckins(List? rows, ImportMode mode) async {
+    if (rows == null || rows.isEmpty) return 0;
+    if (mode == ImportMode.replaceAll) await _db.delete(_db.dayCheckins).go();
+    final companions = rows.cast<Map<String, dynamic>>().map((r) => DayCheckinsCompanion(
+          day: Value(DateTime.parse(r['day'] as String).toUtc()),
+          hadAttack: Value(r['had_attack'] as bool),
+          answeredAt: Value(DateTime.parse(r['answered_at'] as String).toUtc()),
+        )).toList();
+    await _db.batch((b) =>
+        b.insertAll(_db.dayCheckins, companions, mode: InsertMode.insertOrIgnore));
     return companions.length;
   }
 
@@ -193,6 +227,7 @@ class ImportRepo {
   static const _knownModules = [
     'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
     'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
+    'skipped_meals', 'wind',
   ];
 
   /// Imports a ZIP produced by [ExportRepo.buildCsvZipBytes].
@@ -306,7 +341,11 @@ class ImportRepo {
     }
     if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
 
-    final companions = rows.skip(1).map((r) {
+    final companions = rows
+        .skip(1)
+        // Same outlook guard as the JSON path — never persist outlook rows.
+        .where((r) => _cell(r, idx, 'horizon') != 'outlook')
+        .map((r) {
       // Reconstruct contributors_json from the expanded per-module columns.
       // Export wrote {id}_contribution = weight * confidence; we reconstruct
       // with weight = contribution and confidence = 1.0 so downstream scoring

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../state/journal_entries_provider.dart';
 import '../../state/manual_sleep_provider.dart';
+import '../../state/medication_provider.dart';
 import '../../state/providers.dart';
 import 'journal_entry_sheet.dart';
 import 'sleep_entry_sheet.dart';
@@ -75,17 +76,20 @@ class _Row extends ConsumerWidget {
   String _keyFor(LogHistoryItem item) {
     if (item is JournalLogItem) return 'j-${item.entry.id}';
     if (item is SleepLogItem) return 's-${item.record.night.toIso8601String()}';
+    if (item is MedicationLogItem) return 'm-${item.dose.id}';
     return item.hashCode.toString();
   }
 
   IconData _icon(LogHistoryItem item) {
     if (item is SleepLogItem) return Icons.bedtime_outlined;
+    if (item is MedicationLogItem) return Icons.medication_outlined;
     final entry = (item as JournalLogItem).entry;
     switch (entry.kind) {
       case JournalKind.alcohol:   return Icons.local_bar_outlined;
       case JournalKind.caffeine:  return Icons.local_cafe_outlined;
       case JournalKind.hydration: return Icons.water_drop_outlined;
       case JournalKind.stress:    return Icons.psychology_outlined;
+      case JournalKind.skippedMeal: return Icons.no_meals_outlined;
     }
   }
 
@@ -95,6 +99,11 @@ class _Row extends ConsumerWidget {
       final m = item.record.totalSleep.inMinutes % 60;
       return '${h}h ${m}m sleep';
     }
+    if (item is MedicationLogItem) {
+      final d = item.dose;
+      const relief = {0: ' — didn\'t help', 1: ' — helped some', 2: ' — helped'};
+      return '${d.name}${relief[d.reliefRating] ?? ''}';
+    }
     final e = (item as JournalLogItem).entry;
     switch (e.kind) {
       case JournalKind.alcohol:   return '${e.payload['units']} drinks';
@@ -103,6 +112,7 @@ class _Row extends ConsumerWidget {
         final l = (e.payload['liters'] as num).toDouble();
         return '${(l * 1000).round()} ml';
       case JournalKind.stress:    return 'Stress ${e.payload['rating']}/5';
+      case JournalKind.skippedMeal: return 'Skipped ${e.payload['meal']}';
     }
   }
 
@@ -127,6 +137,11 @@ class _Row extends ConsumerWidget {
       await ref.read(journalSourceProvider).deleteEntry(item.entry.id!);
     } else if (item is SleepLogItem) {
       await ref.read(manualSleepSourceProvider).delete(item.record.night);
+    } else if (item is MedicationLogItem) {
+      await ref.read(medicationRepoProvider).delete(item.dose.id!);
+      ref.invalidate(recentMedicationDosesProvider);
+      ref.invalidate(mohStatusProvider);
+      ref.invalidate(medicationNamesProvider);
     }
   }
 
@@ -135,6 +150,11 @@ class _Row extends ConsumerWidget {
       await ref.read(journalSourceProvider).addEntry(item.entry);
     } else if (item is SleepLogItem) {
       await ref.read(manualSleepSourceProvider).upsert(item.record);
+    } else if (item is MedicationLogItem) {
+      await ref.read(medicationRepoProvider).insert(item.dose);
+      ref.invalidate(recentMedicationDosesProvider);
+      ref.invalidate(mohStatusProvider);
+      ref.invalidate(medicationNamesProvider);
     }
   }
 }

@@ -1,6 +1,8 @@
 import 'package:domain/domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/checkin_scheduler.dart';
+
 import 'correlation_provider.dart';
 import 'insights_eligibility_provider.dart';
 import 'providers.dart';
@@ -119,6 +121,14 @@ class RiskAssessmentNotifier extends AsyncNotifier<RiskAssessment> {
     await ref.read(assessmentRepoProvider).save(ass);
     final enabled = await ref.read(settingsRepoProvider).getBool('notifications_enabled');
     await ref.read(highRiskNotifierProvider).maybeNotify(ass, enabled: enabled);
+    try {
+      // Schedule (or cancel, on downgrade) the next-morning check-in.
+      await CheckinScheduler(ref.read(notificationServiceProvider))
+          .sync(ass: ass, enabled: enabled, now: now);
+    } catch (_) {
+      // Notifications unsupported on this platform (e.g. web) — the
+      // in-app CheckinCard still covers the flow.
+    }
     return ass;
   }
 }

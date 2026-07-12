@@ -4,21 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../services/suggestion_engine.dart';
 import '../../state/trigger_flags_provider.dart';
-
-const _moduleLabels = <String, String>{
-  'pressure_drop': 'Pressure changes',
-  'humidity': 'Humidity',
-  'temp_swing': 'Temp swing',
-  'air_quality': 'Air quality',
-  'sleep_deficit': 'Sleep',
-  'hrv_letdown': 'HRV / stress let-down',
-  'menstrual_phase': 'Menstrual cycle',
-  'refractory': 'Recent attack',
-  'alcohol': 'Alcohol',
-  'caffeine': 'Caffeine',
-  'stress': 'Stress',
-  'hydration': 'Hydration',
-};
+import '../shared/module_labels.dart';
 
 class SuggestionCard extends ConsumerWidget {
   final WeightSuggestion suggestion;
@@ -27,7 +13,7 @@ class SuggestionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final label = _moduleLabels[suggestion.moduleId] ?? suggestion.moduleId;
+    final label = moduleLabel(suggestion.moduleId);
     final increase = suggestion.recommendedOverride > 0;
     return Card(
       child: Padding(

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum JournalKind { alcohol, caffeine, stress, hydration }
+enum JournalKind { alcohol, caffeine, stress, hydration, skippedMeal }
 
 class JournalEntry extends Equatable {
   final int? id;
@@ -11,6 +11,7 @@ class JournalEntry extends Equatable {
   /// - caffeine: {"mg": double}
   /// - stress: {"rating": int 1..5}
   /// - hydration: {"liters": double}
+  /// - skippedMeal: {"meal": "breakfast"|"lunch"|"dinner"}
   final Map<String, Object?> payload;
   const JournalEntry({
     this.id,

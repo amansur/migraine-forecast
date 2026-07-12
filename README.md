@@ -13,6 +13,7 @@ A Flutter app that predicts daily migraine risk from evidence-backed triggers (b
 - **Plan 3** — Flutter MVP (Onboarding, Today, Log, Settings) ✓
 - **Plan 4** — Background scheduling + notifications (+ web sqlite3 fix) ✓
 - **Plan 5** — Insights screen + correlation-driven personalization ✓
+- **Plan 6** — Generalized correlation platform: forecast-accuracy calibration, next-morning check-ins, 7-day outlook, medication tracking + ICHD-3 MOH warnings, deeper insights (streaks, weekday patterns, trigger interactions), skipped-meals + wind trigger modules ✓
 
 ## Running locally
 

@@ -13,6 +13,9 @@ import '../../state/settings_provider.dart';
 import '../cycle/baseline_severity_dialog.dart';
 import '../log/log_picker_sheet.dart';
 import '../shared/mascot/mascot_widget.dart';
+import '../insights/medication_card.dart';
+import 'checkin_card.dart';
+import 'outlook_strip.dart';
 import 'risk_display.dart';
 import 'tomorrow_tile.dart';
 import 'why_chips.dart';
@@ -195,7 +198,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
+                    const CheckinCard(),
+                    const MohBanner(),
                     const TomorrowTile(),
+                    const SizedBox(height: 8),
+                    const OutlookStrip(),
                     const SizedBox(height: 16),
                     if (hasChips) ...[
                       WhyChips(contributors: a.contributors),

@@ -21,7 +21,12 @@ import '../cycle/baseline_severity_dialog.dart';
 import '../shared/contributor_order.dart';
 import '../shared/unit_formatter.dart';
 import 'calendar_heatmap.dart';
+import 'calibration_card.dart';
 import 'correlation_card.dart';
+import 'interaction_card.dart';
+import 'medication_card.dart';
+import 'patterns_card.dart';
+import 'weekday_card.dart';
 import 'phase_ribbon.dart';
 import 'suggestion_card.dart';
 
@@ -178,6 +183,14 @@ class _Body extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 24),
+        const MedicationCard(),
+        const SizedBox(height: 24),
+        const PatternsCard(),
+        const SizedBox(height: 24),
+        const WeekdayCard(),
+        const SizedBox(height: 24),
+        const CalibrationCard(),
+        const SizedBox(height: 24),
         Text('Trigger correlations', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         correlations.when(
@@ -198,6 +211,8 @@ class _Body extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: 24),
+        const InteractionCard(),
         const SizedBox(height: 24),
         Text('Suggested adjustments', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),

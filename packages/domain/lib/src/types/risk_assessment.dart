@@ -2,7 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'trigger_signal.dart';
 
 enum RiskBand { low, moderate, high, veryHigh }
-enum RiskHorizon { today, tomorrow }
+
+/// [outlook] marks on-demand d+2..d+6 assessments. They are NEVER persisted
+/// (AssessmentRepository.save rejects them) so correlation and calibration
+/// timelines only ever contain today/tomorrow rows.
+enum RiskHorizon { today, tomorrow, outlook }
 
 class ScoreBands extends Equatable {
   /// Boundary between low and moderate.

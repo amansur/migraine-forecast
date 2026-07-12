@@ -50,11 +50,15 @@ void main() {
       }
       throw const SocketException('offline');
     });
-    final source = OpenMeteoWeatherSource(client: client, db: db, freshness: const Duration(hours: 1));
-    final realNow = DateTime.now().toUtc();
-    final now = DateTime.utc(realNow.year, realNow.month, realNow.day, 6); // start at 6am to avoid crossing midnight when adding 3 hours
+    // Freshness is measured against the real wall clock, so expiry is
+    // simulated by advancing an injected clock rather than the `now` anchor.
+    var clock = DateTime.utc(2026, 6, 11, 6);
+    final source = OpenMeteoWeatherSource(
+        client: client, db: db, freshness: const Duration(hours: 1), clock: () => clock);
+    final now = DateTime.utc(2026, 6, 11, 6);
     await source.fetch(lat: 40.7, lon: -74.0, now: now);
 
+    clock = clock.add(const Duration(hours: 3));
     final stale = await source.fetch(lat: 40.7, lon: -74.0, now: now.add(const Duration(hours: 3)));
     expect(stale.stale, isTrue);
     expect(stale.weather.samples, isNotEmpty);
@@ -92,7 +96,8 @@ void main() {
     final snapshot = await source.fetch(lat: 40.7, lon: -74.0, now: fiveDaysAgo);
 
     expect(hitUrl, isNotNull, reason: 'past-day fetch must hit the network');
-    expect(snapshot.fetchedAt, fiveDaysAgo);
+    // fetchedAt is the real fetch time (the injected clock), not the anchor.
+    expect(snapshot.fetchedAt, today);
     expect(snapshot.stale, isFalse);
   });
 
@@ -103,11 +108,25 @@ void main() {
     // just like today's snapshots. This eliminates the per-day network calls
     // during backfill while keeping the cache correct.
     final pastDay = DateTime.utc(2026, 6, 6, 12);
+    // Series genuinely covering Jun 5–7 so the coverage-aware lookup can
+    // serve the repeat request (the old fixture only spanned Jun 10–11 and
+    // the test silently leaned on the legacy fetchedAt-bucket fallback).
+    String coveringForecast() {
+      final times = <String>[];
+      for (var d = 5; d <= 7; d++) {
+        for (var h = 0; h < 24; h++) {
+          times.add('"2026-06-${d.toString().padLeft(2, '0')}T${h.toString().padLeft(2, '0')}:00"');
+        }
+      }
+      final vals = List.filled(times.length, 1013).join(',');
+      return '{"hourly":{"time":[${times.join(',')}],"pressure_msl":[$vals],"temperature_2m":[$vals],"relative_humidity_2m":[$vals]}}';
+    }
+
     var calls = 0;
     final client = MockClient((req) async {
       calls++;
       if (req.url.host == 'api.open-meteo.com') {
-        return http.Response(await fx('forecast_pressure_drop.json'), 200);
+        return http.Response(coveringForecast(), 200);
       }
       return http.Response(await fx('air_quality_typical.json'), 200);
     });
@@ -156,5 +175,52 @@ void main() {
       calls.any((u) => u.host == 'api.open-meteo.com' && u.path == '/v1/forecast'),
       isFalse,
     );
+  });
+
+  test('one 7-day fetch serves outlook days and today from cache', () async {
+    // Regression for the outlook cache blocker: a fresh 7-day series must
+    // serve future-day (d+2..d+6) requests via coverage, and outlook fetches
+    // must never poison subsequent today lookups.
+    final clock = DateTime.utc(2026, 6, 11, 12);
+    String sevenDayForecast() {
+      final times = <String>[];
+      final vals = <num>[];
+      for (var d = 0; d < 7; d++) {
+        for (var h = 0; h < 24; h++) {
+          times.add('2026-06-${11 + d}T${h.toString().padLeft(2, '0')}:00');
+          vals.add(1013);
+        }
+      }
+      final t = times.map((s) => '"$s"').join(',');
+      final p = vals.join(',');
+      return '{"hourly":{"time":[$t],"pressure_msl":[$p],"temperature_2m":[$p],"relative_humidity_2m":[$p]}}';
+    }
+
+    var calls = 0;
+    final client = MockClient((req) async {
+      calls++;
+      if (req.url.host == 'api.open-meteo.com') {
+        return http.Response(sevenDayForecast(), 200);
+      }
+      return http.Response('{"hourly":{"time":[],"pm2_5":[]}}', 200);
+    });
+    final source = OpenMeteoWeatherSource(
+        client: client, db: db, freshness: const Duration(hours: 1), clock: () => clock);
+
+    final today = DateTime.utc(2026, 6, 11, 12);
+    await source.fetch(lat: 40.7, lon: -74.0, now: today);
+    expect(calls, 2);
+
+    // Outlook days d+2..d+6: all served from the covering series.
+    for (var i = 2; i <= 6; i++) {
+      final s = await source.fetch(
+          lat: 40.7, lon: -74.0, now: DateTime.utc(2026, 6, 11 + i));
+      expect(s.stale, isFalse);
+    }
+    expect(calls, 2, reason: 'outlook days must hit the coverage-aware cache');
+
+    // Today again after outlook traffic: still cached.
+    await source.fetch(lat: 40.7, lon: -74.0, now: today);
+    expect(calls, 2, reason: 'outlook fetches must not poison the today cache');
   });
 }

@@ -127,21 +127,8 @@ final rulesConfigProvider = FutureProvider<RulesConfig>((_) async {
   return RulesConfigLoader.parse(text);
 });
 
-final riskEngineProvider = Provider<RiskEngine>((_) => RiskEngine(modules: [
-      PressureDropModule(),
-      HumidityModule(),
-      TempSwingModule(),
-      AirQualityModule(),
-      SleepDeficitModule(),
-      HrvLetdownModule(),
-      MenstrualPhaseModule(),
-      RefractoryModule(),
-      AlcoholModule(),
-      CaffeineModule(),
-      StressModule(),
-      HydrationModule(),
-      IntradayPressureSwingModule(),
-    ]));
+final riskEngineProvider =
+    Provider<RiskEngine>((_) => RiskEngine(modules: allTriggerModules()));
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();

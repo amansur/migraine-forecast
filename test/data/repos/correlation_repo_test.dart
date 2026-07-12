@@ -57,13 +57,14 @@ void main() {
     for (var i = 0; i < 5; i++) {
       final day = DateTime.utc(2026, 6, 1 + i);
       await insertAssessment(targetDate: day, contributions: {'pressure_drop': 10.0});
-      if (i < 3) await insertAttack(day.add(const Duration(hours: 6)));
+      // Local noon: attacks bin by local calendar day (matching assessment keys).
+      if (i < 3) await insertAttack(DateTime(2026, 6, 1 + i, 12));
     }
     // 10 days where pressure_drop did NOT fire, 1 of which had an attack.
     for (var i = 0; i < 10; i++) {
       final day = DateTime.utc(2026, 6, 6 + i);
       await insertAssessment(targetDate: day, contributions: {'sleep_deficit': 5.0});
-      if (i == 0) await insertAttack(day.add(const Duration(hours: 6)));
+      if (i == 0) await insertAttack(DateTime(2026, 6, 6 + i, 12));
     }
 
     final cohorts = await repo.buildCohorts(
@@ -72,13 +73,13 @@ void main() {
       moduleIds: const ['pressure_drop', 'sleep_deficit'],
     );
 
-    final pd = cohorts.firstWhere((c) => c.moduleId == 'pressure_drop');
+    final pd = cohorts.firstWhere((c) => c.exposureId == 'pressure_drop');
     expect(pd.daysFiredTotal, 5);
     expect(pd.daysFiredWithAttack, 3);
     expect(pd.daysNotFiredTotal, 10);
     expect(pd.daysNotFiredWithAttack, 1);
 
-    final sd = cohorts.firstWhere((c) => c.moduleId == 'sleep_deficit');
+    final sd = cohorts.firstWhere((c) => c.exposureId == 'sleep_deficit');
     expect(sd.daysFiredTotal, 10);
     expect(sd.daysFiredWithAttack, 1);
   });
@@ -89,7 +90,7 @@ void main() {
       windowEnd: DateTime.utc(2026, 6, 30),
       moduleIds: const ['pressure_drop'],
     );
-    final pd = cohorts.firstWhere((c) => c.moduleId == 'pressure_drop');
+    final pd = cohorts.firstWhere((c) => c.exposureId == 'pressure_drop');
     expect(pd.totalDays, 0);
   });
 }

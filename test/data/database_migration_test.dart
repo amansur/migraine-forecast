@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
 
 void main() {
-  test('schemaVersion is 12 and day_location_overrides exists on fresh DB', () async {
+  test('schemaVersion is 15 and day_location_overrides exists on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 12);
+    expect(db.schemaVersion, 15);
     // Insert a row to prove the table exists.
     await db.into(db.dayLocationOverrides).insert(
           DayLocationOverridesCompanion.insert(
@@ -23,10 +23,10 @@ void main() {
     expect(rows.single.displayName, 'New York, US');
   });
 
-  test('schemaVersion is 12 and manual_sleep_records still exists', () async {
+  test('schemaVersion is 15 and manual_sleep_records still exists', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 12);
+    expect(db.schemaVersion, 15);
     // Insert a row to prove the table exists.
     await db.into(db.manualSleepRecords).insert(
           ManualSleepRecordsCompanion.insert(
@@ -44,7 +44,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 12);
+    expect(db.schemaVersion, 15);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
@@ -129,7 +129,7 @@ void main() {
   test('v12: oura_sleep.average_heart_rate stores fractional BPM without rounding', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 12);
+    expect(db.schemaVersion, 15);
 
     // Insert a row with a fractional average_heart_rate value.
     await db.into(db.ouraSleep).insert(
@@ -161,5 +161,37 @@ void main() {
 
     final row = await (db.select(db.weatherSnapshots)..where((t) => t.id.equals(id))).getSingle();
     expect(row.source, 'archive');
+  });
+
+  test('v13: day_checkins table exists and accepts inserts on fresh DB', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect(db.schemaVersion, 15);
+    await db.into(db.dayCheckins).insert(
+          DayCheckinsCompanion.insert(
+            day: DateTime.utc(2026, 7, 10),
+            hadAttack: false,
+            answeredAt: DateTime.utc(2026, 7, 11, 9),
+          ),
+        );
+    final rows = await db.select(db.dayCheckins).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.hadAttack, isFalse);
+  });
+
+  test('v14: medication_doses table exists and accepts inserts on fresh DB', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect(db.schemaVersion, 15);
+    await db.into(db.medicationDoses).insert(
+          MedicationDosesCompanion.insert(
+            at: DateTime.utc(2026, 7, 11, 8),
+            name: 'Sumatriptan',
+            medClass: 'triptan',
+          ),
+        );
+    final rows = await db.select(db.medicationDoses).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.reliefRating, isNull);
   });
 }

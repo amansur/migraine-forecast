@@ -13,6 +13,10 @@ class OpenMeteoParser {
     final pressures = (hourly['pressure_msl'] as List);
     final temps = (hourly['temperature_2m'] as List);
     final humidities = (hourly['relative_humidity_2m'] as List);
+    // Nullable: cached rows fetched before wind was requested lack this
+    // series entirely; samples then carry windGustKph == null (missing,
+    // not calm — the wind module degrades to a zero-confidence signal).
+    final gusts = hourly['wind_gusts_10m'] as List?;
     final samples = <WeatherSample>[];
     for (var i = 0; i < times.length; i++) {
       // Open-Meteo returns nulls for hours where a series is unavailable
@@ -22,11 +26,13 @@ class OpenMeteoParser {
       final t = temps[i];
       final h = humidities[i];
       if (p is! num || t is! num || h is! num) continue;
+      final g = gusts != null && i < gusts.length ? gusts[i] : null;
       samples.add(WeatherSample(
         at: _parseUtc(times[i]),
         pressureMsl: p.toDouble(),
         temperatureC: t.toDouble(),
         humidityPct: h.toDouble(),
+        windGustKph: g is num ? g.toDouble() : null,
       ));
     }
     return WeatherSeries(samples: samples);

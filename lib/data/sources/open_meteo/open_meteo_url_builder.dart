@@ -7,8 +7,8 @@ class OpenMeteoUrlBuilder {
       Uri.https('api.open-meteo.com', '/v1/forecast', {
         'latitude': lat.toString(),
         'longitude': lon.toString(),
-        'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m',
-        'forecast_days': '3',
+        'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m,wind_gusts_10m',
+        'forecast_days': '7',
         'past_days': pastDays.toString(),
         'timezone': 'UTC',
       });
@@ -26,7 +26,7 @@ class OpenMeteoUrlBuilder {
       'longitude': lon.toString(),
       'start_date': fmt(startDate),
       'end_date': fmt(endDate),
-      'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m',
+      'hourly': 'pressure_msl,temperature_2m,relative_humidity_2m,wind_gusts_10m',
       'timezone': 'UTC',
     });
   }
@@ -40,7 +40,7 @@ class OpenMeteoUrlBuilder {
         'latitude': lat.toString(),
         'longitude': lon.toString(),
         'hourly': 'pm2_5',
-        'forecast_days': '2',
+        'forecast_days': '7',
         'past_days': pastDays.toString(),
         'timezone': 'UTC',
       });

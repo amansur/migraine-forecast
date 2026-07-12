@@ -131,6 +131,25 @@ class DayLocationOverrides extends Table {
   Set<Column> get primaryKey => {day};
 }
 
+/// Next-morning check-in answers ("did yesterday's high-risk day bring a
+/// migraine?"). One row per asked day; "no" answers are real negative data.
+/// `day` follows the local-calendar-day-in-UTC-midnight-key convention.
+class DayCheckins extends Table {
+  DateTimeColumn get day => dateTime()();
+  BoolColumn get hadAttack => boolean()();
+  DateTimeColumn get answeredAt => dateTime()();
+  @override
+  Set<Column> get primaryKey => {day};
+}
+
+class MedicationDoses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get name => text()();
+  TextColumn get medClass => text()(); // MedClass.name
+  IntColumn get reliefRating => integer().nullable()(); // 0 no, 1 some, 2 yes
+}
+
 @DriftDatabase(tables: [
   Attacks,
   JournalEntries,
@@ -144,6 +163,8 @@ class DayLocationOverrides extends Table {
   PeriodDaySeverities,
   ManualSleepRecords,
   DayLocationOverrides,
+  DayCheckins,
+  MedicationDoses,
   OuraSleep,
   OuraDailySleep,
   OuraActivity,
@@ -154,7 +175,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -280,6 +301,23 @@ class AppDatabase extends _$AppDatabase {
               'FROM oura_sleep_old',
             );
             await customStatement('DROP TABLE oura_sleep_old');
+          }
+          if (from < 13) {
+            await m.createTable(dayCheckins);
+          }
+          if (from < 14) {
+            await m.createTable(medicationDoses);
+          }
+          if (from < 15) {
+            // One-time sweep of weather rows future-stamped by the pre-fix
+            // outlook code (fetchedAt used to be the requested-day anchor,
+            // up to d+6 ahead). Such rows outrank genuinely newer ones in
+            // the cache lookups and always fail the freshness gate, forcing
+            // a network fetch on every compute until they age out.
+            await (delete(weatherSnapshots)
+                  ..where((t) =>
+                      t.fetchedAt.isBiggerThanValue(DateTime.now().toUtc())))
+                .go();
           }
         },
       );

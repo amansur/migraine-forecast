@@ -6,8 +6,8 @@ void main() {
     final analyzer = const CorrelationAnalyzer();
 
     test('refuses to produce a result with too few attacks', () {
-      final input = const ModuleCohort(
-        moduleId: 'pressure_drop',
+      final input = const Cohort(
+        exposureId: 'pressure_drop',
         daysFiredWithAttack: 1,
         daysFiredTotal: 5,
         daysNotFiredWithAttack: 0,
@@ -18,8 +18,8 @@ void main() {
     });
 
     test('clear positive correlation produces a hit', () {
-      final input = const ModuleCohort(
-        moduleId: 'pressure_drop',
+      final input = const Cohort(
+        exposureId: 'pressure_drop',
         daysFiredWithAttack: 7,        // module fired, attack happened
         daysFiredTotal: 10,            // 70% attack rate when fired
         daysNotFiredWithAttack: 2,
@@ -34,8 +34,8 @@ void main() {
     });
 
     test('clear negative correlation produces a miss', () {
-      final input = const ModuleCohort(
-        moduleId: 'humidity_temp_swing',
+      final input = const Cohort(
+        exposureId: 'humidity_temp_swing',
         daysFiredWithAttack: 0,
         daysFiredTotal: 20,            // 0% attack rate when fired
         daysNotFiredWithAttack: 8,
@@ -46,8 +46,8 @@ void main() {
     });
 
     test('ambiguous correlation produces inconclusive', () {
-      final input = const ModuleCohort(
-        moduleId: 'caffeine',
+      final input = const Cohort(
+        exposureId: 'caffeine',
         daysFiredWithAttack: 3,
         daysFiredTotal: 10,            // 30%
         daysNotFiredWithAttack: 7,

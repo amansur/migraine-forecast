@@ -14,18 +14,20 @@ import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/trigger_flags_provider.dart';
 import '../shared/mascot/mascot_widget.dart';
+import '../../state/outlook_provider.dart';
 
 /// User-facing labels for the multi-select. Each maps to one or more module IDs;
 /// a single chip can stand in for a family of related modules.
 const _triggerOptions = <String, List<String>>{
   'Stress': ['stress'],
   'Sleep': ['sleep_deficit'],
-  'Weather': ['pressure_drop', 'humidity', 'temp_swing'],
+  'Weather': ['pressure_drop', 'humidity', 'temp_swing', 'wind'],
   'Air quality': ['air_quality'],
   'Hormones': ['menstrual_phase'],
   'Alcohol': ['alcohol'],
   'Caffeine': ['caffeine'],
   'Dehydration': ['hydration'],
+  'Skipped meals': ['skipped_meals'],
 };
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -167,6 +169,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       // Invalidate the risk assessment provider so that it re-runs with the new location permission.
       ref.invalidate(riskAssessmentProvider);
       ref.invalidate(tomorrowRiskAssessmentProvider);
+      ref.invalidate(outlookProvider);
 
       // Fire-and-forget: populate historical assessments in the background.
       // Use the long-lived ProviderContainer rather than the widget's ref, so
