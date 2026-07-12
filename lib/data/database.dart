@@ -175,7 +175,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -307,6 +307,17 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 14) {
             await m.createTable(medicationDoses);
+          }
+          if (from < 15) {
+            // One-time sweep of weather rows future-stamped by the pre-fix
+            // outlook code (fetchedAt used to be the requested-day anchor,
+            // up to d+6 ahead). Such rows outrank genuinely newer ones in
+            // the cache lookups and always fail the freshness gate, forcing
+            // a network fetch on every compute until they age out.
+            await (delete(weatherSnapshots)
+                  ..where((t) =>
+                      t.fetchedAt.isBiggerThanValue(DateTime.now().toUtc())))
+                .go();
           }
         },
       );

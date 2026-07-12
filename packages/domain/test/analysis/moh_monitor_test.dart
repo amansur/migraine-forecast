@@ -1,11 +1,13 @@
 import 'package:domain/domain.dart';
 import 'package:test/test.dart';
 
+// Local noon: assessMoh bins by local calendar day, so local-constructed
+// times keep these tests timezone-independent.
 MedicationDose dose(int day, MedClass c, {String name = 'x'}) => MedicationDose(
-    at: DateTime.utc(2026, 6, day, 10), name: name, medClass: c);
+    at: DateTime(2026, 6, day, 12), name: name, medClass: c);
 
 void main() {
-  final now = DateTime.utc(2026, 6, 30);
+  final now = DateTime(2026, 6, 30, 18);
 
   test('10 distinct triptan days in 30d → exceeded (ICHD-3)', () {
     final doses = [for (var d = 1; d <= 10; d++) dose(d, MedClass.triptan)];

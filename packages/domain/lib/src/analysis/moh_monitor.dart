@@ -27,11 +27,15 @@ MohStatus assessMoh(List<MedicationDose> doses, DateTime now) {
   final cutoff = now.subtract(const Duration(days: 30));
   MohStatus worst = const MohStatus(level: MohLevel.none);
   for (final entry in thresholds.entries) {
-    final days = <DateTime>{
-      for (final d in doses)
-        if (d.medClass == entry.key && !d.at.isBefore(cutoff))
-          DateTime.utc(d.at.year, d.at.month, d.at.day),
-    };
+    // Bin by the user's LOCAL calendar day (the convention this codebase
+    // uses everywhere) — UTC binning would split or merge evening doses
+    // west of UTC, moving the count right at a medically-framed threshold.
+    final days = <DateTime>{};
+    for (final d in doses) {
+      if (d.medClass != entry.key || d.at.isBefore(cutoff)) continue;
+      final local = d.at.toLocal();
+      days.add(DateTime.utc(local.year, local.month, local.day));
+    }
     final used = days.length;
     final threshold = entry.value;
     final level = used >= threshold

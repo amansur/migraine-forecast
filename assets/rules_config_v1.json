@@ -1,20 +1,116 @@
 {
-  "version": 2,
+  "version": 3,
   "modules": {
-    "pressure_drop":        { "enabled": true, "weight_max": 18, "params": { "threshold_hpa": 5, "lookahead_hours": 48 } },
-    "humidity":             { "enabled": true, "weight_max": 6,  "params": { "humidity_pct": 60 } },
-    "temp_swing":           { "enabled": true, "weight_max": 6,  "params": { "temp_delta_c": 5 } },
-    "air_quality":          { "enabled": true, "weight_max": 10, "params": { "pm25_threshold": 35 } },
-    "sleep_deficit":        { "enabled": true, "weight_max": 20, "params": { "hours_threshold": 6, "efficiency_threshold": 0.85, "baseline_days": 7, "typical_sleep_start_hour": 22 } },
-    "hrv_letdown":          { "enabled": true, "weight_max": 12, "params": { "drop_pct": 20, "baseline_days": 14 } },
-    "menstrual_phase":      { "enabled": false, "weight_max": 20, "params": { "window_days": [-2, 3] } },
-    "refractory":           { "enabled": true, "weight_max": 6,  "params": { "suppression_hours": 48 } },
-    "alcohol":              { "enabled": true, "weight_max": 12, "params": { "lookback_hours": 24 } },
-    "caffeine":             { "enabled": true, "weight_max": 8,  "params": { "delta_mg_threshold": 100 } },
-    "stress":               { "enabled": true, "weight_max": 12, "params": {} },
-    "hydration":            { "enabled": true, "weight_max": 8,  "params": { "min_liters": 1.5 } },
-    "intraday_pressure_swing": { "enabled": true, "weight_max": 12, "params": { "threshold_volatility_hpa": 10.0, "lookback_hours": 24 } }
+    "pressure_drop": {
+      "enabled": true,
+      "weight_max": 18,
+      "params": {
+        "threshold_hpa": 5,
+        "lookahead_hours": 48
+      }
+    },
+    "humidity": {
+      "enabled": true,
+      "weight_max": 6,
+      "params": {
+        "humidity_pct": 60
+      }
+    },
+    "temp_swing": {
+      "enabled": true,
+      "weight_max": 6,
+      "params": {
+        "temp_delta_c": 5
+      }
+    },
+    "air_quality": {
+      "enabled": true,
+      "weight_max": 10,
+      "params": {
+        "pm25_threshold": 35
+      }
+    },
+    "sleep_deficit": {
+      "enabled": true,
+      "weight_max": 20,
+      "params": {
+        "hours_threshold": 6,
+        "efficiency_threshold": 0.85,
+        "baseline_days": 7,
+        "typical_sleep_start_hour": 22
+      }
+    },
+    "hrv_letdown": {
+      "enabled": true,
+      "weight_max": 12,
+      "params": {
+        "drop_pct": 20,
+        "baseline_days": 14
+      }
+    },
+    "menstrual_phase": {
+      "enabled": false,
+      "weight_max": 20,
+      "params": {
+        "window_days": [
+          -2,
+          3
+        ]
+      }
+    },
+    "refractory": {
+      "enabled": true,
+      "weight_max": 6,
+      "params": {
+        "suppression_hours": 48
+      }
+    },
+    "alcohol": {
+      "enabled": true,
+      "weight_max": 12,
+      "params": {
+        "lookback_hours": 24
+      }
+    },
+    "caffeine": {
+      "enabled": true,
+      "weight_max": 8,
+      "params": {
+        "delta_mg_threshold": 100
+      }
+    },
+    "stress": {
+      "enabled": true,
+      "weight_max": 12,
+      "params": {}
+    },
+    "hydration": {
+      "enabled": true,
+      "weight_max": 8,
+      "params": {
+        "min_liters": 1.5
+      }
+    },
+    "intraday_pressure_swing": {
+      "enabled": true,
+      "weight_max": 12,
+      "params": {
+        "threshold_volatility_hpa": 10.0,
+        "lookback_hours": 24
+      }
+    },
+    "skipped_meals": {
+      "enabled": true,
+      "weight_max": 10,
+      "params": {
+        "lookback_hours": 24
+      }
+    }
   },
-  "score_bands": { "low": 25, "moderate": 50, "high": 75 },
+  "score_bands": {
+    "low": 25,
+    "moderate": 50,
+    "high": 75
+  },
   "unflagged_trigger_confidence_multiplier": 0.6
 }

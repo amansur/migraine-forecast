@@ -35,6 +35,8 @@ class LogPickerSheet extends ConsumerWidget {
               label: 'Hydration', onTap: () => _openJournalSheet(context, JournalKind.hydration)),
           _kindTile(context, key: 'log-kind-stress', icon: Icons.psychology_outlined,
               label: 'Stress', onTap: () => _openJournalSheet(context, JournalKind.stress)),
+          _kindTile(context, key: 'log-kind-skipped-meal', icon: Icons.no_meals_outlined,
+              label: 'Skipped meal', onTap: () => _openJournalSheet(context, JournalKind.skippedMeal)),
           _kindTile(context, key: 'log-kind-medication', icon: Icons.medication_outlined,
               label: 'Medication', onTap: () => _openMedicationSheet(context)),
           if (sleepEnabled)

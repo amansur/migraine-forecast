@@ -89,6 +89,7 @@ class _Row extends ConsumerWidget {
       case JournalKind.caffeine:  return Icons.local_cafe_outlined;
       case JournalKind.hydration: return Icons.water_drop_outlined;
       case JournalKind.stress:    return Icons.psychology_outlined;
+      case JournalKind.skippedMeal: return Icons.no_meals_outlined;
     }
   }
 
@@ -111,6 +112,7 @@ class _Row extends ConsumerWidget {
         final l = (e.payload['liters'] as num).toDouble();
         return '${(l * 1000).round()} ml';
       case JournalKind.stress:    return 'Stress ${e.payload['rating']}/5';
+      case JournalKind.skippedMeal: return 'Skipped ${e.payload['meal']}';
     }
   }
 
@@ -137,6 +139,9 @@ class _Row extends ConsumerWidget {
       await ref.read(manualSleepSourceProvider).delete(item.record.night);
     } else if (item is MedicationLogItem) {
       await ref.read(medicationRepoProvider).delete(item.dose.id!);
+      ref.invalidate(recentMedicationDosesProvider);
+      ref.invalidate(mohStatusProvider);
+      ref.invalidate(medicationNamesProvider);
     }
   }
 
@@ -147,6 +152,9 @@ class _Row extends ConsumerWidget {
       await ref.read(manualSleepSourceProvider).upsert(item.record);
     } else if (item is MedicationLogItem) {
       await ref.read(medicationRepoProvider).insert(item.dose);
+      ref.invalidate(recentMedicationDosesProvider);
+      ref.invalidate(mohStatusProvider);
+      ref.invalidate(medicationNamesProvider);
     }
   }
 }

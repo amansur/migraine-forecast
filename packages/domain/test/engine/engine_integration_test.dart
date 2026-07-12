@@ -67,7 +67,7 @@ void main() {
     expect(ass.score, greaterThan(50));
     expect(ass.band, anyOf(RiskBand.high, RiskBand.veryHigh));
     expect(ass.contributors.first.contribution, greaterThan(0));
-    expect(ass.configVersion, 2);
+    expect(ass.configVersion, 3);
   });
 
   test('empty context with no permissions yields onboarding assessment', () {

@@ -227,6 +227,7 @@ class ImportRepo {
   static const _knownModules = [
     'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
     'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
+    'skipped_meals',
   ];
 
   /// Imports a ZIP produced by [ExportRepo.buildCsvZipBytes].
@@ -340,7 +341,11 @@ class ImportRepo {
     }
     if (mode == ImportMode.replaceAll) await _db.delete(_db.riskAssessments).go();
 
-    final companions = rows.skip(1).map((r) {
+    final companions = rows
+        .skip(1)
+        // Same outlook guard as the JSON path — never persist outlook rows.
+        .where((r) => _cell(r, idx, 'horizon') != 'outlook')
+        .map((r) {
       // Reconstruct contributors_json from the expanded per-module columns.
       // Export wrote {id}_contribution = weight * confidence; we reconstruct
       // with weight = contribution and confidence = 1.0 so downstream scoring

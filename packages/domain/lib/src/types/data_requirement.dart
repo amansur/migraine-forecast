@@ -17,6 +17,7 @@ class DataRequirement extends Equatable {
   static const journalCaffeine   = DataRequirement(id: 'journal.caffeine',   label: 'Caffeine log');
   static const journalStress     = DataRequirement(id: 'journal.stress',     label: 'Stress log');
   static const journalHydration  = DataRequirement(id: 'journal.hydration',  label: 'Hydration log');
+  static const journalMeals      = DataRequirement(id: 'journal.meals',      label: 'Meals log');
   static const attackHistory     = DataRequirement(id: 'attacks.history',    label: 'Attack history');
 
   @override

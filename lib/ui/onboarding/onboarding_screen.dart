@@ -27,6 +27,7 @@ const _triggerOptions = <String, List<String>>{
   'Alcohol': ['alcohol'],
   'Caffeine': ['caffeine'],
   'Dehydration': ['hydration'],
+  'Skipped meals': ['skipped_meals'],
 };
 
 class OnboardingScreen extends ConsumerStatefulWidget {

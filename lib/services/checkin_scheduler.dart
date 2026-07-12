@@ -12,7 +12,9 @@ class CheckinScheduler {
 
   /// Deterministic across app restarts (unlike Object.hash) so recomputes
   /// after a relaunch replace the pending schedule instead of duplicating it.
-  /// 900M offset keeps the range clear of HighRiskNotifier's hashed ids.
+  /// The 900M offset makes collisions with HighRiskNotifier's hashed ids
+  /// astronomically unlikely (its ids span all of [0, 2^31), so true
+  /// disjointness is impossible — ~2e4/2^31 odds per notification).
   static int idFor(DateTime dayKey) =>
       900000000 + dayKey.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
 

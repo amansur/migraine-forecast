@@ -19,7 +19,8 @@ void main() {
       'stress',
       'hydration',
       'intraday_pressure_swing',
+      'skipped_meals',
     ]));
-    expect(ids, hasLength(13));
+    expect(ids, hasLength(14));
   });
 }

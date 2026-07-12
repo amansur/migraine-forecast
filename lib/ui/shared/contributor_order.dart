@@ -14,6 +14,7 @@ const _moduleOrder = <String>[
   'caffeine',
   'stress',
   'hydration',
+  'skipped_meals',
 ];
 
 int _orderIndex(String id) {

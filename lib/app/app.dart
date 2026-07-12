@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../services/lifecycle_observer.dart';
 import '../state/onboarding_provider.dart';
 import '../state/providers.dart';
+import '../state/medication_provider.dart';
 import '../state/outlook_provider.dart';
 import '../state/risk_assessment_provider.dart';
 import '../state/settings_provider.dart';
@@ -45,6 +46,8 @@ class _MigraineForecastAppState extends ConsumerState<MigraineForecastApp> {
         // Outlook (d+2..d+6) shares the staleness trigger: without this an
         // app resumed on a new day keeps showing yesterday's week strip.
         ref.invalidate(outlookProvider);
+        // Re-anchor the rolling 30-day MOH window on resume.
+        ref.invalidate(recentMedicationDosesProvider);
       },
     );
     WidgetsBinding.instance.addObserver(_observer);

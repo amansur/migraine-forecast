@@ -47,6 +47,7 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    if (!_initialized) return; // see cancelScheduled
     await _plugin.zonedSchedule(
       notificationId,
       title,
@@ -68,8 +69,13 @@ class NotificationService {
     );
   }
 
-  /// Cancels a pending scheduled notification. No-op if none is pending.
-  Future<void> cancelScheduled(int notificationId) => _plugin.cancel(notificationId);
+  /// Cancels a pending scheduled notification. No-op if none is pending or
+  /// the plugin was never initialized (nothing can be pending then — and in
+  /// widget tests the un-mocked platform channel would hang forever).
+  Future<void> cancelScheduled(int notificationId) async {
+    if (!_initialized) return;
+    await _plugin.cancel(notificationId);
+  }
 
   Future<void> showHighRisk({
     required int notificationId,

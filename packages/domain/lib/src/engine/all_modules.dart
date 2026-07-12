@@ -8,6 +8,7 @@ import '../modules/intraday_pressure_swing.dart';
 import '../modules/menstrual_phase.dart';
 import '../modules/pressure_drop.dart';
 import '../modules/refractory.dart';
+import '../modules/skipped_meal.dart';
 import '../modules/sleep_deficit.dart';
 import '../modules/stress.dart';
 import '../modules/temp_swing.dart';
@@ -31,4 +32,5 @@ List<TriggerModule> allTriggerModules() => [
       StressModule(),
       HydrationModule(),
       IntradayPressureSwingModule(),
+      SkippedMealModule(),
     ];

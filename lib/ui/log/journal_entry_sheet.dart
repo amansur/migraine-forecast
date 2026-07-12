@@ -20,6 +20,7 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
   int? _mg;        // caffeine
   double? _liters; // hydration
   int? _rating;    // stress
+  String? _meal;   // skippedMeal
 
   static const _coffeeMg = 95;
   static const _espressoMg = 64;
@@ -41,6 +42,8 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
           _liters = (p['liters'] as num?)?.toDouble();
         case JournalKind.stress:
           _rating = (p['rating'] as num?)?.toInt();
+        case JournalKind.skippedMeal:
+          _meal = p['meal'] as String?;
       }
     }
   }
@@ -55,6 +58,8 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
         return (_liters ?? 0) > 0;
       case JournalKind.stress:
         return _rating != null;
+      case JournalKind.skippedMeal:
+        return _meal != null;
     }
   }
 
@@ -68,6 +73,8 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
         return {'liters': _liters!};
       case JournalKind.stress:
         return {'rating': _rating!};
+      case JournalKind.skippedMeal:
+        return {'meal': _meal!};
     }
   }
 
@@ -163,6 +170,7 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
       case JournalKind.caffeine:  return 'Log caffeine';
       case JournalKind.hydration: return 'Log hydration';
       case JournalKind.stress:    return 'Log stress';
+      case JournalKind.skippedMeal: return 'Log skipped meal';
     }
   }
 
@@ -172,6 +180,7 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
       case JournalKind.caffeine:  return _caffeine();
       case JournalKind.hydration: return _hydration();
       case JournalKind.stress:    return _stress();
+      case JournalKind.skippedMeal: return _skippedMeal();
     }
   }
 
@@ -237,6 +246,22 @@ class _JournalEntrySheetState extends ConsumerState<JournalEntrySheet> {
       label: Text(label),
       selected: selected,
       onSelected: (_) => setState(() => _liters = liters),
+    );
+  }
+
+  Widget _skippedMeal() {
+    return Wrap(
+      spacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        for (final meal in const ['breakfast', 'lunch', 'dinner'])
+          ChoiceChip(
+            key: Key('meal-$meal'),
+            label: Text(meal[0].toUpperCase() + meal.substring(1)),
+            selected: _meal == meal,
+            onSelected: (_) => setState(() => _meal = meal),
+          ),
+      ],
     );
   }
 

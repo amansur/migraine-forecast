@@ -14,6 +14,7 @@ void main() {
     registerFallbackValue(AndroidScheduleMode.inexactAllowWhileIdle);
     registerFallbackValue(UILocalNotificationDateInterpretation.absoluteTime);
     registerFallbackValue(tz.TZDateTime.utc(2026));
+    registerFallbackValue(const InitializationSettings());
   });
 
   test('scheduleCheckIn schedules at the exact instant with inexact mode', () async {
@@ -31,7 +32,9 @@ void main() {
           matchDateTimeComponents: any(named: 'matchDateTimeComponents'),
         )).thenAnswer((_) async {});
 
+    when(() => plugin.initialize(any())).thenAnswer((_) async => true);
     final service = NotificationService(plugin: plugin);
+    await service.init(); // scheduling is a no-op on an uninitialized service
     // Local wall-clock 9am tomorrow; the service must schedule the same
     // absolute instant (expressed in any zone).
     final fireAt = DateTime(2026, 7, 12, 9);
