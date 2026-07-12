@@ -616,9 +616,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ref.invalidate(riskAssessmentProvider);
         ref.invalidate(tomorrowRiskAssessmentProvider);
         ref.invalidate(outlookProvider);
-                ref.invalidate(recentMedicationDosesProvider);
-                ref.invalidate(mohStatusProvider);
-                ref.invalidate(medicationNamesProvider);
+        ref.invalidate(recentMedicationDosesProvider);
+        ref.invalidate(mohStatusProvider);
+        ref.invalidate(medicationNamesProvider);
         ref.invalidate(riskDisplayModeProvider);
         ref.invalidate(notificationsEnabledProvider);
         ref.invalidate(cycleTrackingEnabledProvider);

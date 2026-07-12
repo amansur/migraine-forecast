@@ -5,6 +5,7 @@ import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 
 import '../database.dart';
+import 'csv_module_columns.dart';
 
 enum ImportMode { replaceAll, merge }
 
@@ -224,12 +225,6 @@ class ImportRepo {
     return companions.length;
   }
 
-  static const _knownModules = [
-    'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
-    'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
-    'skipped_meals', 'wind',
-  ];
-
   /// Imports a ZIP produced by [ExportRepo.buildCsvZipBytes].
   /// Returns total rows inserted/upserted.
   /// Throws [FormatException] for an unreadable ZIP or a CSV missing required
@@ -351,7 +346,7 @@ class ImportRepo {
       // with weight = contribution and confidence = 1.0 so downstream scoring
       // can use contribution as-is.
       final contributors = <Map<String, dynamic>>[];
-      for (final m in _knownModules) {
+      for (final m in csvModuleColumns) {
         final contribution = _cell(r, idx, '${m}_contribution');
         final explanation = _cell(r, idx, '${m}_explanation');
         if (contribution != null) {

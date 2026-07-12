@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../database.dart';
+import 'csv_module_columns.dart';
 
 class ExportRepo {
   final AppDatabase _db;
@@ -84,12 +85,6 @@ class ExportRepo {
     return encoder.convert(payload);
   }
 
-  static const _knownModules = [
-    'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
-    'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
-    'skipped_meals', 'wind',
-  ];
-
   Future<Uint8List> buildCsvZipBytes() async {
     final attacks = await _db.select(_db.attacks).get();
     final journalEntries = await _db.select(_db.journalEntries).get();
@@ -145,7 +140,7 @@ class ExportRepo {
   static List<int> _buildRiskAssessmentsCsv(List<RiskAssessment> rows) {
     final headers = [
       'target_date', 'horizon', 'score', 'band', 'computed_at', 'config_version', 'backfilled',
-      for (final m in _knownModules) ...['${m}_contribution', '${m}_explanation'],
+      for (final m in csvModuleColumns) ...['${m}_contribution', '${m}_explanation'],
     ];
     final buf = StringBuffer()..writeln(_csvRow(headers));
     for (final r in rows) {
@@ -159,7 +154,7 @@ class ExportRepo {
         r.computedAt.toUtc().toIso8601String(),
         r.configVersion,
         r.backfilled,
-        for (final m in _knownModules) ...[
+        for (final m in csvModuleColumns) ...[
           byModule[m] != null
               ? (byModule[m]!['weight'] as num) * (byModule[m]!['confidence'] as num)
               : null,

@@ -75,6 +75,47 @@ void main() {
     expect(fake.added.single.payload['rating'], 4);
   });
 
+  testWidgets('skipped meal: tapping Lunch writes meal=lunch', (tester) async {
+    final fake = _FakeJournal();
+    await _pumpSheet(tester, fake, JournalKind.skippedMeal);
+    await tester.tap(find.byKey(const Key('meal-lunch')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('entry-save')));
+    await tester.pump();
+    expect(fake.added, hasLength(1));
+    expect(fake.added.single.kind, JournalKind.skippedMeal);
+    expect(fake.added.single.payload['meal'], 'lunch');
+  });
+
+  testWidgets('skipped meal: save is disabled until a meal is chosen', (tester) async {
+    final fake = _FakeJournal();
+    await _pumpSheet(tester, fake, JournalKind.skippedMeal);
+    final saveBtn = tester.widget<FilledButton>(find.byKey(const Key('entry-save')));
+    expect(saveBtn.onPressed, isNull);
+  });
+
+  testWidgets('skipped meal: edit mode pre-fills the meal and calls updateEntry', (tester) async {
+    final fake = _FakeJournal();
+    final initial = JournalEntry(
+      id: 9,
+      at: DateTime.utc(2026, 6, 13, 8),
+      kind: JournalKind.skippedMeal,
+      payload: const {'meal': 'breakfast'},
+    );
+    await _pumpSheet(tester, fake, JournalKind.skippedMeal, initial: initial);
+    expect(
+      tester.widget<ChoiceChip>(find.byKey(const Key('meal-breakfast'))).selected,
+      isTrue,
+    );
+    await tester.tap(find.byKey(const Key('meal-dinner')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('entry-save')));
+    await tester.pump();
+    expect(fake.updated, hasLength(1));
+    expect(fake.updated.single.id, 9);
+    expect(fake.updated.single.payload['meal'], 'dinner');
+  });
+
   testWidgets('edit mode pre-fills and calls updateEntry', (tester) async {
     final fake = _FakeJournal();
     final initial = JournalEntry(
