@@ -15,6 +15,7 @@ const moduleLabels = <String, String>{
   'hydration': 'Hydration',
   'intraday_pressure_swing': 'Pressure volatility',
   'skipped_meals': 'Skipped meals',
+  'wind': 'Strong wind',
 };
 
 String moduleLabel(String id) => moduleLabels[id] ?? id;

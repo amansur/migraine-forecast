@@ -12,6 +12,7 @@ import '../modules/skipped_meal.dart';
 import '../modules/sleep_deficit.dart';
 import '../modules/stress.dart';
 import '../modules/temp_swing.dart';
+import '../modules/wind.dart';
 import 'trigger_module.dart';
 
 /// The single source of truth for the engine's module set. Both the app's
@@ -33,4 +34,5 @@ List<TriggerModule> allTriggerModules() => [
       HydrationModule(),
       IntradayPressureSwingModule(),
       SkippedMealModule(),
+      WindModule(),
     ];

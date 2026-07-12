@@ -5,14 +5,19 @@ class WeatherSample extends Equatable {
   final double pressureMsl;     // hPa
   final double temperatureC;
   final double humidityPct;
+  /// Nullable: cache rows written before the wind columns were requested
+  /// from Open-Meteo have no gust data. Modules must treat null as missing,
+  /// not calm.
+  final double? windGustKph;
   const WeatherSample({
     required this.at,
     required this.pressureMsl,
     required this.temperatureC,
     required this.humidityPct,
+    this.windGustKph,
   });
   @override
-  List<Object?> get props => [at, pressureMsl, temperatureC, humidityPct];
+  List<Object?> get props => [at, pressureMsl, temperatureC, humidityPct, windGustKph];
 }
 
 class WeatherSeries extends Equatable {
@@ -79,6 +84,17 @@ class WeatherSeries extends Equatable {
     final inWindow = _around(anchor, window, now).toList();
     if (inWindow.isEmpty) return null;
     return inWindow.map((s) => s.humidityPct).reduce((a, b) => a > b ? a : b);
+  }
+
+  /// Max wind gust across samples that carry gust data; null when none do
+  /// (e.g. a series parsed from a pre-wind cache row).
+  double? maxWindGustAround(DateTime anchor, Duration window, {required DateTime now}) {
+    final gusts = _around(anchor, window, now)
+        .map((s) => s.windGustKph)
+        .whereType<double>()
+        .toList();
+    if (gusts.isEmpty) return null;
+    return gusts.reduce((a, b) => a > b ? a : b);
   }
 
   double? hourlyPressureVolatilityAround(

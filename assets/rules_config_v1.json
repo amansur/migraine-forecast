@@ -105,6 +105,15 @@
       "params": {
         "lookback_hours": 24
       }
+    },
+    "wind": {
+      "enabled": true,
+      "weight_max": 10,
+      "params": {
+        "gust_threshold_kmh": 45,
+        "gust_saturation_kmh": 75,
+        "lookahead_hours": 24
+      }
     }
   },
   "score_bands": {

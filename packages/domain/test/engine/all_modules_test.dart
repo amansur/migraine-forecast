@@ -20,7 +20,8 @@ void main() {
       'hydration',
       'intraday_pressure_swing',
       'skipped_meals',
+      'wind',
     ]));
-    expect(ids, hasLength(14));
+    expect(ids, hasLength(15));
   });
 }

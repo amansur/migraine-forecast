@@ -227,7 +227,7 @@ class ImportRepo {
   static const _knownModules = [
     'pressure_drop', 'humidity', 'temp_swing', 'air_quality',
     'stress', 'sleep_deficit', 'alcohol', 'caffeine', 'hydration', 'menstrual_phase',
-    'skipped_meals',
+    'skipped_meals', 'wind',
   ];
 
   /// Imports a ZIP produced by [ExportRepo.buildCsvZipBytes].

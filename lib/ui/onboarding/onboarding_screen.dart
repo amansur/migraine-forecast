@@ -21,7 +21,7 @@ import '../../state/outlook_provider.dart';
 const _triggerOptions = <String, List<String>>{
   'Stress': ['stress'],
   'Sleep': ['sleep_deficit'],
-  'Weather': ['pressure_drop', 'humidity', 'temp_swing'],
+  'Weather': ['pressure_drop', 'humidity', 'temp_swing', 'wind'],
   'Air quality': ['air_quality'],
   'Hormones': ['menstrual_phase'],
   'Alcohol': ['alcohol'],

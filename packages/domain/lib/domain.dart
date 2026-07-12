@@ -28,6 +28,7 @@ export 'src/modules/stress.dart';
 export 'src/modules/hydration.dart';
 export 'src/modules/intraday_pressure_swing.dart';
 export 'src/modules/skipped_meal.dart';
+export 'src/modules/wind.dart';
 export 'src/cycle/phase.dart';
 export 'src/correlation/wilson_interval.dart';
 export 'src/correlation/correlation_analyzer.dart';
