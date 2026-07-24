@@ -76,7 +76,7 @@ class DriftJournalSource implements JournalSource {
             startedAt: attack.startedAt.toUtc(),
             endedAt: Value(attack.endedAt?.toUtc()),
             severity: attack.severity,
-            notes: const Value.absent(),
+            notes: Value(attack.notes),
             riskAssessmentId: Value(riskAssessmentId),
             inProgress: Value(attack.inProgress),
           ),
@@ -97,6 +97,7 @@ class DriftJournalSource implements JournalSource {
               endedAt: r.endedAt?.toUtc(),
               severity: r.severity,
               inProgress: r.inProgress,
+              notes: r.notes,
             ))
         .toList();
   }
@@ -114,6 +115,7 @@ class DriftJournalSource implements JournalSource {
               endedAt: r.endedAt?.toUtc(),
               severity: r.severity,
               inProgress: r.inProgress,
+              notes: r.notes,
             ))
         .toList());
   }
@@ -238,6 +240,7 @@ class DriftJournalSource implements JournalSource {
           endedAt: Value(updated.endedAt?.toUtc()),
           severity: Value(updated.severity),
           inProgress: Value(updated.inProgress),
+          notes: Value(updated.notes),
         ));
   }
 }

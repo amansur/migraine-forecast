@@ -20,7 +20,7 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
   late DateTime? _end = widget.initialAttack?.endedAt?.toLocal();
   late double _severity = widget.initialAttack?.severity.toDouble() ?? 5;
   late bool _inProgress = widget.initialAttack?.inProgress ?? false;
-  late final _notesCtrl = TextEditingController();
+  late final _notesCtrl = TextEditingController(text: widget.initialAttack?.notes ?? '');
   bool _saving = false;
 
   DateTime _initStart() {
@@ -175,11 +175,13 @@ class _LogAttackScreenState extends ConsumerState<LogAttackScreen> {
         activeId = await repo.activeAtRowId(startUtc);
       }
 
+      final trimmedNotes = _notesCtrl.text.trim();
       final current = Attack(
         startedAt: startUtc,
         endedAt: _inProgress ? null : _end?.toUtc(),
         severity: _severity.round(),
         inProgress: _inProgress,
+        notes: trimmedNotes.isEmpty ? null : trimmedNotes,
       );
 
       if (widget.initialAttack != null) {

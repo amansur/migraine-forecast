@@ -23,5 +23,16 @@ void main() {
       final b = Attack(startedAt: DateTime.utc(2026, 6, 1, 12), severity: 5, inProgress: true);
       expect(a, isNot(equals(b)));
     });
+
+    test('notes defaults to null', () {
+      final a = Attack(startedAt: DateTime.utc(2026, 6, 1, 12), severity: 5);
+      expect(a.notes, isNull);
+    });
+
+    test('equality includes notes', () {
+      final a = Attack(startedAt: DateTime.utc(2026, 6, 1, 12), severity: 5, notes: 'ate cheese');
+      final b = Attack(startedAt: DateTime.utc(2026, 6, 1, 12), severity: 5, notes: 'skipped sleep');
+      expect(a, isNot(equals(b)));
+    });
   });
 }

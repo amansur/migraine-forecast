@@ -28,14 +28,16 @@ class Attack extends Equatable {
   final DateTime? endedAt;
   final int severity; // 1..10
   final bool inProgress;
+  final String? notes;
   const Attack({
     required this.startedAt,
     this.endedAt,
     required this.severity,
     this.inProgress = false,
+    this.notes,
   });
   @override
-  List<Object?> get props => [startedAt, endedAt, severity, inProgress];
+  List<Object?> get props => [startedAt, endedAt, severity, inProgress, notes];
 }
 
 /// A user-logged menstrual period. `endedAt == null` means in-progress.

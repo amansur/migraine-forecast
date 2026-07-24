@@ -107,6 +107,22 @@ void main() {
     expect(flags.first['weight_override'], 1.0);
   });
 
+  test('attack notes are included in JSON export', () async {
+    await db.into(db.attacks).insert(
+          AttacksCompanion.insert(
+            startedAt: DateTime.utc(2026, 6, 10, 9, 0, 0),
+            severity: 3,
+            notes: const Value('ate cheese, drank wine'),
+          ),
+        );
+
+    final json = await repo.buildJson(appVersionOverride: '1.0.0');
+    final map = jsonDecode(json) as Map<String, Object?>;
+
+    final attacks = map['attacks'] as List;
+    expect(attacks.first['notes'], 'ate cheese, drank wine');
+  });
+
   test('output is valid pretty-printed JSON', () async {
     final json = await repo.buildJson(appVersionOverride: '1.0.0');
     expect(json, contains('\n'));

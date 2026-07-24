@@ -245,4 +245,90 @@ void main() {
     expect(journal.lastAssessmentId, isNull,
         reason: 'failed backfill leaves the link null');
   });
+
+  testWidgets('typing notes then saving persists them', (tester) async {
+    final journal = _RecordingJournal();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_MockRiskAssessmentNotifier.new),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const LogAttackScreen()),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'ate too much cheese');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(journal.lastAttack, isNotNull);
+    expect(journal.lastAttack!.notes, 'ate too much cheese');
+  });
+
+  testWidgets('leaving notes blank saves null', (tester) async {
+    final journal = _RecordingJournal();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_MockRiskAssessmentNotifier.new),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const LogAttackScreen()),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(journal.lastAttack, isNotNull);
+    expect(journal.lastAttack!.notes, isNull);
+  });
+
+  testWidgets('editing an attack prefills the notes field', (tester) async {
+    final journal = _RecordingJournal();
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final existing = Attack(
+      startedAt: DateTime.utc(2026, 6, 5, 9),
+      severity: 4,
+      notes: 'triggered by wine',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          journalSourceProvider.overrideWithValue(journal),
+          riskAssessmentProvider.overrideWith(_MockRiskAssessmentNotifier.new),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => LogAttackScreen(initialAttack: existing)),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('triggered by wine'), findsOneWidget);
+  });
 }

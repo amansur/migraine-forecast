@@ -342,7 +342,14 @@ class DayDetailSheet extends ConsumerWidget {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text('Severity ${a.severity}'),
-                          subtitle: Text('$start - $endLabel'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('$start - $endLabel'),
+                              if (a.notes != null && a.notes!.isNotEmpty) Text(a.notes!),
+                            ],
+                          ),
                           leading: const Icon(Icons.bolt, color: Colors.orange),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,

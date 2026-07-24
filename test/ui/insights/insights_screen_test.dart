@@ -96,6 +96,38 @@ void main() {
     expect(find.textContaining('No end time recorded'), findsOneWidget);
   });
 
+  testWidgets('detail sheet shows notes when present', (tester) async {
+    final attack = Attack(
+      startedAt: DateTime.utc(2026, 6, 5, 12),
+      severity: 5,
+      notes: 'triggered by wine',
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          insightsEligibleProvider.overrideWith((ref) => Stream.value(true)),
+          recentAttacksProvider.overrideWith((ref) => Stream.value([attack])),
+          correlationResultsProvider.overrideWith((ref) async => []),
+          suggestionsProvider.overrideWith((ref) async => []),
+          dayAssessmentProvider.overrideWith((ref, date) async => null),
+          dayAttacksProvider.overrideWith((ref, date) => Stream.value([attack])),
+        ],
+        child: MaterialApp.router(
+          routerConfig: GoRouter(routes: [
+            GoRoute(path: '/', builder: (_, __) => const InsightsScreen()),
+          ]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dayWidget = find.byType(InkWell).first;
+    await tester.tap(dayWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.text('triggered by wine'), findsOneWidget);
+  });
+
   testWidgets('detail sheet shows "In progress" only when inProgress=true', (tester) async {
     final attack = Attack(
       startedAt: DateTime.utc(2026, 6, 5, 12),

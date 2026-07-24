@@ -49,6 +49,25 @@ void main() {
           '2026-06-01T08:00:00.000Z');
     });
 
+    test('round-trips attack notes through JSON', () async {
+      final sourceDb = AppDatabase.memory();
+      await sourceDb.into(sourceDb.attacks).insert(
+            AttacksCompanion.insert(
+              startedAt: DateTime.utc(2026, 6, 1, 8),
+              severity: 3,
+              notes: const Value('ate cheese, drank wine'),
+            ),
+          );
+      final json = await ExportRepo(sourceDb).buildJsonFull(appVersionOverride: '2.0.0');
+      await sourceDb.close();
+
+      await importRepo.importJson(json, ImportMode.replaceAll);
+
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      expect(attacks.first.notes, 'ate cheese, drank wine');
+    });
+
     test('imports all v2 tables', () async {
       final sourceDb = AppDatabase.memory();
       await sourceDb.into(sourceDb.riskAssessments).insert(
@@ -431,6 +450,23 @@ void main() {
       expect(attacks.first.severity, 3);
       expect(attacks.first.startedAt.toUtc().toIso8601String(),
           '2026-06-01T08:00:00.000Z');
+    });
+
+    test('round-trips attack notes with commas and newlines through CSV ZIP', () async {
+      const notes = 'ate cheese, drank wine\nslept poorly';
+      await db.into(db.attacks).insert(AttacksCompanion.insert(
+            startedAt: DateTime.utc(2026, 6, 1, 8),
+            severity: 3,
+            notes: const Value(notes),
+          ));
+      final zipBytes = await exportRepo.buildCsvZipBytes();
+
+      await db.delete(db.attacks).go();
+      await importRepo.importCsvZip(zipBytes, ImportMode.replaceAll);
+
+      final attacks = await db.select(db.attacks).get();
+      expect(attacks, hasLength(1));
+      expect(attacks.first.notes, notes);
     });
 
     test('round-trips journal entries through CSV ZIP', () async {
