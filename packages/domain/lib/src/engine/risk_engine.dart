@@ -62,6 +62,9 @@ class RiskEngine {
       configVersion: config.version,
       targetDate: ctx.targetDate,
       horizon: horizon,
+      resolvedLat: ctx.resolvedLat,
+      resolvedLon: ctx.resolvedLon,
+      locationName: ctx.locationName,
     );
   }
 }

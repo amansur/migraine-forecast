@@ -67,4 +67,40 @@ void main() {
     expect(ctx.recentJournal, hasLength(1));
     expect(ctx.userFlags.flaggedModuleIds, isEmpty);
   });
+
+  test('build carries resolved lat/lon and name onto the context', () async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final journal = DriftJournalSource(db);
+
+    final weather = OpenMeteoParser.parseForecast(
+        '{"hourly": {"time": ["2026-07-20T06:00"], "pressure_msl": [1012], "temperature_2m": [20], "relative_humidity_2m": [55]}}');
+    const aq = AirQualitySeries(samples: []);
+    final stubWeather = _StubWeatherSource(
+      WeatherSnapshot(
+          weather: weather, airQuality: aq, fetchedAt: DateTime.utc(2026, 7, 20, 6)),
+    );
+
+    final location = ManualLocationSource();
+    await location.set(lat: 37.8044, lon: -122.2712, label: 'Oakland, California');
+
+    final builder = ContextBuilder(
+      weather: stubWeather,
+      health: FakeHealthSource(),
+      journal: journal,
+      location: location,
+      flagsRepo: _NoFlagsRepo(),
+      baselineBuilder: const BaselineSnapshotBuilder(BaselineStore()),
+      db: db,
+    );
+
+    final ctx = await builder.build(
+      now: DateTime.utc(2026, 7, 20, 23),
+      target: DateTime.utc(2026, 7, 20),
+    );
+
+    expect(ctx.resolvedLat, closeTo(37.8044, 0.0001));
+    expect(ctx.resolvedLon, closeTo(-122.2712, 0.0001));
+    expect(ctx.locationName, 'Oakland, California');
+  });
 }

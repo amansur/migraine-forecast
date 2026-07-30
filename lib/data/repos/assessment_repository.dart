@@ -33,6 +33,9 @@ class AssessmentRepository {
               })
           .toList()),
       backfilled: Value(ass.backfilled),
+      resolvedLat: Value(ass.resolvedLat),
+      resolvedLon: Value(ass.resolvedLon),
+      locationName: Value(ass.locationName),
     );
     return _db.into(_db.riskAssessments).insert(
           companion,

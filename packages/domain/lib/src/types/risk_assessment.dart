@@ -38,6 +38,9 @@ class RiskAssessment extends Equatable {
   final DateTime targetDate;
   final RiskHorizon horizon;
   final bool backfilled;
+  final double? resolvedLat;
+  final double? resolvedLon;
+  final String? locationName;
 
   const RiskAssessment({
     required this.score,
@@ -48,6 +51,9 @@ class RiskAssessment extends Equatable {
     required this.targetDate,
     required this.horizon,
     this.backfilled = false,
+    this.resolvedLat,
+    this.resolvedLon,
+    this.locationName,
   });
 
   bool get isOnboarding =>
@@ -55,5 +61,5 @@ class RiskAssessment extends Equatable {
 
   @override
   List<Object?> get props =>
-      [score, band, contributors, computedAt, configVersion, targetDate, horizon, backfilled];
+      [score, band, contributors, computedAt, configVersion, targetDate, horizon, backfilled, resolvedLat, resolvedLon, locationName];
 }
