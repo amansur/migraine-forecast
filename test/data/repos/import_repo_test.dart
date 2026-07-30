@@ -603,4 +603,73 @@ void main() {
       );
     });
   });
+
+  group('risk assessment resolved location portability', () {
+    test('round-trips through JSON', () async {
+      final sourceDb = AppDatabase.memory();
+      await sourceDb.into(sourceDb.riskAssessments).insert(
+            RiskAssessmentsCompanion.insert(
+              targetDate: DateTime.utc(2026, 7, 29),
+              horizon: 'today',
+              score: 28,
+              band: 'moderate',
+              computedAt: DateTime.utc(2026, 7, 29, 23),
+              configVersion: 1,
+              contributorsJson: '[]',
+              resolvedLat: const Value(40.6609),
+              resolvedLon: const Value(-73.9613),
+              locationName: const Value('Brooklyn, New York'),
+            ),
+          );
+      final json = await ExportRepo(sourceDb).buildJsonFull(appVersionOverride: '2.0.0');
+      await sourceDb.close();
+
+      await importRepo.importJson(json, ImportMode.replaceAll);
+
+      final row = await db.select(db.riskAssessments).getSingle();
+      expect(row.resolvedLat, closeTo(40.6609, 0.0001));
+      expect(row.resolvedLon, closeTo(-73.9613, 0.0001));
+      expect(row.locationName, 'Brooklyn, New York');
+    });
+
+    test('round-trips through CSV', () async {
+      final sourceDb = AppDatabase.memory();
+      await sourceDb.into(sourceDb.riskAssessments).insert(
+            RiskAssessmentsCompanion.insert(
+              targetDate: DateTime.utc(2026, 7, 29),
+              horizon: 'today',
+              score: 28,
+              band: 'moderate',
+              computedAt: DateTime.utc(2026, 7, 29, 23),
+              configVersion: 1,
+              contributorsJson: '[]',
+              resolvedLat: const Value(40.6609),
+              resolvedLon: const Value(-73.9613),
+              locationName: const Value('Brooklyn, New York'),
+            ),
+          );
+      final zip = await ExportRepo(sourceDb).buildCsvZipBytes();
+      await sourceDb.close();
+
+      await importRepo.importCsvZip(zip, ImportMode.replaceAll);
+
+      final row = await db.select(db.riskAssessments).getSingle();
+      expect(row.resolvedLat, closeTo(40.6609, 0.0001));
+      expect(row.resolvedLon, closeTo(-73.9613, 0.0001));
+      expect(row.locationName, 'Brooklyn, New York');
+    });
+
+    test('pre-v16 JSON backup without location fields still imports', () async {
+      const oldJson = '{"schema_version":2,"app_version":"1.0.0",'
+          '"risk_assessments":[{"id":1,"target_date":"2026-06-01T00:00:00.000Z",'
+          '"horizon":"today","score":10,"band":"low",'
+          '"computed_at":"2026-06-01T06:00:00.000Z","config_version":1,'
+          '"contributors_json":"[]","backfilled":false}]}';
+      final count = await importRepo.importJson(oldJson, ImportMode.replaceAll);
+      expect(count, 1);
+      final row = await db.select(db.riskAssessments).getSingle();
+      expect(row.resolvedLat == null, isTrue);
+      expect(row.locationName == null, isTrue);
+    });
+  });
 }

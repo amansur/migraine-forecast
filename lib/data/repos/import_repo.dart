@@ -131,6 +131,9 @@ class ImportRepo {
               configVersion: Value(r['config_version'] as int),
               contributorsJson: Value(r['contributors_json'] as String),
               backfilled: Value(r['backfilled'] as bool? ?? false),
+              resolvedLat: Value((r['resolved_lat'] as num?)?.toDouble()),
+              resolvedLon: Value((r['resolved_lon'] as num?)?.toDouble()),
+              locationName: Value(r['location_name'] as String?),
             )).toList();
     await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
         mode: InsertMode.insertOrReplace));
@@ -367,6 +370,10 @@ class ImportRepo {
         configVersion: Value(int.parse(_cell(r, idx, 'config_version')!)),
         contributorsJson: Value(jsonEncode(contributors)),
         backfilled: Value(_cell(r, idx, 'backfilled') == 'true'),
+        // Optional columns (absent in pre-v16 exports) — null-safe.
+        resolvedLat: Value(double.tryParse(_cell(r, idx, 'resolved_lat') ?? '')),
+        resolvedLon: Value(double.tryParse(_cell(r, idx, 'resolved_lon') ?? '')),
+        locationName: Value(_cell(r, idx, 'location_name')),
       );
     }).toList();
     await _db.batch((b) => b.insertAll(_db.riskAssessments, companions,
