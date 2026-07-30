@@ -21,6 +21,7 @@ import '../data/sources/merged_health_source.dart';
 import '../data/sources/oura_api_client.dart';
 import '../data/sources/oura_auth_manager.dart';
 import '../data/sources/oura_health_source.dart';
+import '../data/sources/reverse_geocoder.dart';
 import '../data/sources/location_source.dart';
 import '../data/sources/geolocator_location_source.dart';
 import '../data/sources/persisted_manual_location_source.dart';
@@ -50,6 +51,9 @@ final permissionServiceProvider = Provider<PermissionService>((_) => PermissionS
 
 final geocoderProvider = Provider<OpenMeteoGeocoder>(
     (ref) => OpenMeteoGeocoder(ref.watch(httpClientProvider)));
+
+final reverseGeocoderProvider =
+    Provider<ReverseGeocoder>((_) => PlatformReverseGeocoder());
 
 final weatherSourceProvider = Provider<WeatherSource>((ref) =>
     OpenMeteoWeatherSource(client: ref.watch(httpClientProvider), db: ref.watch(databaseProvider)));
