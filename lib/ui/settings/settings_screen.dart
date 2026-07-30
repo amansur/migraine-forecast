@@ -677,8 +677,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
-        onPick: (result) =>
-            ref.read(setManualLocationProvider)(result.lat, result.lon),
+        onPick: (result) => ref
+            .read(setManualLocationProvider)(result.lat, result.lon, result.displayName),
       ),
     );
   }
