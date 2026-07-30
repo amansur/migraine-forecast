@@ -181,7 +181,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -335,6 +335,13 @@ class AppDatabase extends _$AppDatabase {
             // Re-run with the broadened backfill (nearest-fetch fallback) so
             // historical days that had no exactly-covering snapshot still get a
             // real recorded location instead of showing "Location not recorded".
+            await backfillAssessmentLocations();
+          }
+          if (from < 18) {
+            // Earlier builds saved backfilled/recalculated assessments through a
+            // path that dropped the resolved location (now fixed via copyWith),
+            // so rows written after the v16/v17 backfill could have been nulled
+            // again. Re-run the backfill to heal them.
             await backfillAssessmentLocations();
           }
         },

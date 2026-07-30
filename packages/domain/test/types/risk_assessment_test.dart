@@ -64,5 +64,25 @@ void main() {
       expect(backfilled.backfilled, isTrue);
       expect(backfilled, isNot(equals(base)));
     });
+
+    test('copyWith(backfilled: true) preserves the resolved location', () {
+      final base = RiskAssessment(
+        score: 22,
+        band: RiskBand.low,
+        contributors: const [],
+        computedAt: DateTime.utc(2026, 7, 29, 23),
+        configVersion: 1,
+        targetDate: DateTime.utc(2026, 7, 29),
+        horizon: RiskHorizon.today,
+        resolvedLat: 40.6609,
+        resolvedLon: -73.9613,
+        locationName: 'Brooklyn, New York',
+      );
+      final copy = base.copyWith(backfilled: true);
+      expect(copy.backfilled, isTrue);
+      expect(copy.resolvedLat, 40.6609);
+      expect(copy.resolvedLon, -73.9613);
+      expect(copy.locationName, 'Brooklyn, New York');
+    });
   });
 }

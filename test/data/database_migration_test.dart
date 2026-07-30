@@ -7,7 +7,7 @@ void main() {
   test('schemaVersion is 15 and day_location_overrides exists on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
     // Insert a row to prove the table exists.
     await db.into(db.dayLocationOverrides).insert(
           DayLocationOverridesCompanion.insert(
@@ -26,7 +26,7 @@ void main() {
   test('schemaVersion is 15 and manual_sleep_records still exists', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
     // Insert a row to prove the table exists.
     await db.into(db.manualSleepRecords).insert(
           ManualSleepRecordsCompanion.insert(
@@ -44,7 +44,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
@@ -129,7 +129,7 @@ void main() {
   test('v12: oura_sleep.average_heart_rate stores fractional BPM without rounding', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
 
     // Insert a row with a fractional average_heart_rate value.
     await db.into(db.ouraSleep).insert(
@@ -166,7 +166,7 @@ void main() {
   test('v13: day_checkins table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
     await db.into(db.dayCheckins).insert(
           DayCheckinsCompanion.insert(
             day: DateTime.utc(2026, 7, 10),
@@ -182,7 +182,7 @@ void main() {
   test('v14: medication_doses table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
     await db.into(db.medicationDoses).insert(
           MedicationDosesCompanion.insert(
             at: DateTime.utc(2026, 7, 11, 8),
@@ -198,7 +198,7 @@ void main() {
   test('v16: risk_assessments has nullable resolved location columns', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 17);
+    expect(db.schemaVersion, 18);
 
     final id = await db.into(db.riskAssessments).insert(
           RiskAssessmentsCompanion.insert(
