@@ -140,6 +140,7 @@ class ExportRepo {
   static List<int> _buildRiskAssessmentsCsv(List<RiskAssessment> rows) {
     final headers = [
       'target_date', 'horizon', 'score', 'band', 'computed_at', 'config_version', 'backfilled',
+      'resolved_lat', 'resolved_lon', 'location_name',
       for (final m in csvModuleColumns) ...['${m}_contribution', '${m}_explanation'],
     ];
     final buf = StringBuffer()..writeln(_csvRow(headers));
@@ -154,6 +155,9 @@ class ExportRepo {
         r.computedAt.toUtc().toIso8601String(),
         r.configVersion,
         r.backfilled,
+        r.resolvedLat,
+        r.resolvedLon,
+        r.locationName,
         for (final m in csvModuleColumns) ...[
           byModule[m] != null
               ? (byModule[m]!['weight'] as num) * (byModule[m]!['confidence'] as num)
@@ -176,6 +180,9 @@ class ExportRepo {
         'config_version': row.configVersion,
         'contributors_json': row.contributorsJson,
         'backfilled': row.backfilled,
+        'resolved_lat': row.resolvedLat,
+        'resolved_lon': row.resolvedLon,
+        'location_name': row.locationName,
       };
 
   Map<String, Object?> _medicationDoseToMap(MedicationDose row) => {

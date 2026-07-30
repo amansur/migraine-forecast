@@ -159,6 +159,10 @@ void main() {
     expect(rows, hasLength(7));
     expect(rows.every((r) => r.backfilled), isTrue);
     expect(rows.every((r) => r.horizon == 'today'), isTrue);
+    // The resolved location must be persisted, not dropped during the
+    // backfilled: true copy (regression: history showed "Location not recorded").
+    expect(rows.every((r) => r.resolvedLat == 37.7 && r.resolvedLon == -122.4),
+        isTrue);
   });
 
   test('half-full DB: only fills missing days', () async {

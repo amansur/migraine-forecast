@@ -266,7 +266,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             error: (e, _) => Text('Error: $e'),
             data: (enabled) => SwitchListTile(
               title: const Text('High-risk alerts'),
-              subtitle: const Text('Background notifications come in Plan 4'),
+              subtitle: const Text(
+                'Get a notification when your migraine risk turns high.',
+              ),
               value: enabled,
               onChanged: (v) => ref.read(setNotificationsEnabledProvider)(v),
             ),
@@ -285,7 +287,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: const Text('Location'),
                       subtitle: loc != null
                           ? Text(
-                              '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
+                              loc.label != null
+                                  ? '${loc.label} (${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)})'
+                                  : '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
                             )
                           : const Text('Auto (GPS)'),
                       trailing: const Icon(Icons.edit_outlined),
@@ -677,8 +681,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
-        onPick: (result) =>
-            ref.read(setManualLocationProvider)(result.lat, result.lon),
+        initialQuery: current?.label,
+        onPick: (result) => ref
+            .read(setManualLocationProvider)(result.lat, result.lon, result.displayName),
       ),
     );
   }

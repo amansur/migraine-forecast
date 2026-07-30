@@ -69,6 +69,12 @@ class RiskAssessments extends Table {
   IntColumn get configVersion => integer()();
   TextColumn get contributorsJson => text()();
   BoolColumn get backfilled => boolean().withDefault(const Constant(false))();
+  // Resolved location the assessment was scored at. Nullable: not every day has
+  // a location-driven score, and pre-v16 rows are backfilled from the weather
+  // cache (locationName stays null there — reverse-geocoded lazily at display).
+  RealColumn get resolvedLat => real().nullable()();
+  RealColumn get resolvedLon => real().nullable()();
+  TextColumn get locationName => text().nullable()();
 
   @override
   List<Set<Column>> get uniqueKeys => [
@@ -175,7 +181,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -319,8 +325,131 @@ class AppDatabase extends _$AppDatabase {
                       t.fetchedAt.isBiggerThanValue(DateTime.now().toUtc())))
                 .go();
           }
+          if (from < 16) {
+            await _ensureResolvedLocationColumns();
+            await _tryBackfillAssessmentLocations();
+          }
+          if (from < 17) {
+            // Re-run with the broadened backfill (nearest-fetch fallback) so
+            // historical days that had no exactly-covering snapshot still get a
+            // real recorded location instead of showing "Location not recorded".
+            await _tryBackfillAssessmentLocations();
+          }
+          if (from < 18) {
+            // Earlier builds saved backfilled/recalculated assessments through a
+            // path that dropped the resolved location (now fixed via copyWith),
+            // so rows written after the v16/v17 backfill could have been nulled
+            // again. Re-run the backfill to heal them.
+            await _tryBackfillAssessmentLocations();
+          }
+          if (from < 19) {
+            // Heal DBs whose v16 column-add didn't persist — notably drift's web
+            // sharedIndexedDb fallback, where a migration interrupted by another
+            // open tab could bump the version without applying the ALTERs.
+            await _ensureResolvedLocationColumns();
+            await _tryBackfillAssessmentLocations();
+          }
+        },
+        beforeOpen: (details) async {
+          // Final safety net: guarantee the resolved-location columns exist on
+          // every open, regardless of how migrations played out. Idempotent, so
+          // it's a no-op once the columns are present. This is what makes the
+          // v18 "no column named resolved_lat" failure impossible to recur.
+          await _ensureResolvedLocationColumns();
         },
       );
+
+  /// Adds the resolved-location columns to `risk_assessments` if they are
+  /// missing. Idempotent — checks `PRAGMA table_info` first — so it is safe to
+  /// call from any migration step and from [beforeOpen]. Uses raw `ALTER TABLE`
+  /// (not the generated schema) so it never depends on migration bookkeeping.
+  Future<void> _ensureResolvedLocationColumns() async {
+    final info =
+        await customSelect('PRAGMA table_info(risk_assessments)').get();
+    final columns = info.map((r) => r.read<String>('name')).toSet();
+    if (!columns.contains('resolved_lat')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN resolved_lat REAL');
+    }
+    if (!columns.contains('resolved_lon')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN resolved_lon REAL');
+    }
+    if (!columns.contains('location_name')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN location_name TEXT');
+    }
+  }
+
+  /// Best-effort backfill. Wrapped so a failure (e.g. one unparseable cached
+  /// row) can never roll back the column-add DDL that shares its transaction.
+  Future<void> _tryBackfillAssessmentLocations() async {
+    try {
+      await backfillAssessmentLocations();
+    } catch (_) {
+      // Columns still exist; days simply show "Location not recorded" until a
+      // later successful backfill or recompute fills them.
+    }
+  }
+
+  /// Populates resolvedLat/resolvedLon on assessment rows that lack them from
+  /// the cached weather snapshots.
+  ///
+  /// For each assessment we first look for a snapshot whose coverage window
+  /// contains the assessment's targetDate; if none exists we fall back to the
+  /// nearest snapshot by fetchedAt, but only when that fetch is within
+  /// [nearestWindow] of the assessment's computedAt (default 2 days) so we
+  /// never attribute a far-away fetch's location to an unrelated day. Both are
+  /// real recorded fetch locations — not the user's *current* location — so
+  /// history stays honest for people who travel. locationName is left null
+  /// (historical name unknown; reverse-geocoded lazily at display). Returns the
+  /// number of rows updated.
+  Future<int> backfillAssessmentLocations({
+    Duration nearestWindow = const Duration(days: 2),
+  }) async {
+    final snaps = await select(weatherSnapshots).get();
+    if (snaps.isEmpty) return 0;
+    final withCoverage = snaps
+        .where((s) => s.coverageStart != null && s.coverageEnd != null)
+        .toList();
+    final assessments = await (select(riskAssessments)
+          ..where((t) => t.resolvedLat.isNull()))
+        .get();
+    var updated = 0;
+    for (final a in assessments) {
+      final day = a.targetDate;
+      final covering = withCoverage.where((s) =>
+          !s.coverageStart!.isAfter(day) && !s.coverageEnd!.isBefore(day));
+
+      WeatherSnapshot? best;
+      if (covering.isNotEmpty) {
+        best = covering.reduce((x, y) =>
+            (x.fetchedAt.difference(a.computedAt).abs() <=
+                    y.fetchedAt.difference(a.computedAt).abs())
+                ? x
+                : y);
+      } else {
+        // No covering snapshot — use the nearest fetch within the window.
+        for (final s in snaps) {
+          final gap = s.fetchedAt.difference(a.computedAt).abs();
+          if (gap > nearestWindow) continue;
+          if (best == null ||
+              gap < best.fetchedAt.difference(a.computedAt).abs()) {
+            best = s;
+          }
+        }
+      }
+      if (best == null) continue;
+
+      await (update(riskAssessments)..where((t) => t.id.equals(a.id)))
+          .write(RiskAssessmentsCompanion(
+        resolvedLat: Value(best.lat),
+        resolvedLon: Value(best.lon),
+      ));
+      updated++;
+    }
+    return updated;
+  }
 
   /// Parses [forecastJson] and returns the hourly timestamps as UTC [DateTime]
   /// objects. Returns an empty list if the JSON is missing a "time" array.

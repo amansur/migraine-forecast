@@ -7,16 +7,18 @@ class PersistedManualLocationSource implements LocationSource {
 
   PersistedManualLocationSource(this._settings);
 
-  Future<void> set({required double lat, required double lon}) async {
-    _cached = UserLocation(lat: lat, lon: lon);
+  Future<void> set({required double lat, required double lon, String? label}) async {
+    _cached = UserLocation(lat: lat, lon: lon, label: label);
     await _settings.setString('manual_lat', lat.toString());
     await _settings.setString('manual_lon', lon.toString());
+    await _settings.setString('manual_label', label ?? '');
   }
 
   Future<void> clear() async {
     _cached = null;
     await _settings.setString('manual_lat', '');
     await _settings.setString('manual_lon', '');
+    await _settings.setString('manual_label', '');
   }
 
   @override
@@ -28,7 +30,12 @@ class PersistedManualLocationSource implements LocationSource {
     final lat = double.tryParse(latStr);
     final lon = double.tryParse(lonStr);
     if (lat == null || lon == null) return null;
-    _cached = UserLocation(lat: lat, lon: lon);
+    final label = await _settings.getString('manual_label');
+    _cached = UserLocation(
+      lat: lat,
+      lon: lon,
+      label: (label == null || label.isEmpty) ? null : label,
+    );
     return _cached;
   }
 }

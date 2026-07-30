@@ -422,8 +422,25 @@ final _overriddenDaysProvider = StreamProvider.autoDispose<Set<DateTime>>((ref) 
       .map((map) => map.keys.toSet());
 });
 
-/// Shows the effective location for [day] (override or "Auto (GPS)") with
-/// affordances to search and set a new location or clear the current override.
+/// Resolves the display label for a day: override name → stored location name
+/// (or reverse-geocoded stored coords) → "Location not recorded".
+final _dayLocationLabelProvider =
+    FutureProvider.autoDispose.family<String, DateTime>((ref, day) async {
+  final override = ref.watch(_locationOverrideForDayProvider(day)).asData?.value;
+  if (override != null) return override.displayName;
+  final stored =
+      await ref.watch(assessmentRepoProvider).resolvedLocationForDay(day);
+  if (stored == null || stored.lat == null || stored.lon == null) {
+    return 'Location not recorded';
+  }
+  final name = stored.name ??
+      await ref.watch(reverseGeocoderProvider).label(stored.lat!, stored.lon!);
+  return '$name (${stored.lat!.toStringAsFixed(4)}, ${stored.lon!.toStringAsFixed(4)})';
+});
+
+/// Shows the effective location for [day] (override or stored assessment
+/// location) with affordances to search and set a new location or clear the
+/// current override.
 class _LocationOverrideRow extends ConsumerWidget {
   final DateTime day;
   const _LocationOverrideRow({required this.day});
@@ -433,7 +450,8 @@ class _LocationOverrideRow extends ConsumerWidget {
     final overrideAsync = ref.watch(_locationOverrideForDayProvider(day));
     final override = overrideAsync.asData?.value;
     final hasOverride = override != null;
-    final label = hasOverride ? override.displayName : 'Auto (GPS)';
+    final label = ref.watch(_dayLocationLabelProvider(day)).asData?.value ??
+        (hasOverride ? override.displayName : '…');
 
     return Row(
       children: [

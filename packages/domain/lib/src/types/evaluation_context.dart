@@ -14,6 +14,9 @@ class EvaluationContext extends Equatable {
   final List<Attack> recentAttacks;
   final UserTriggerFlags userFlags;
   final BaselineSnapshot baselines;
+  final double? resolvedLat;
+  final double? resolvedLon;
+  final String? locationName;
 
   const EvaluationContext({
     required this.now,
@@ -25,6 +28,9 @@ class EvaluationContext extends Equatable {
     this.recentAttacks = const [],
     this.userFlags = const UserTriggerFlags(),
     required this.baselines,
+    this.resolvedLat,
+    this.resolvedLon,
+    this.locationName,
   });
 
   @override
@@ -38,6 +44,9 @@ class EvaluationContext extends Equatable {
         recentAttacks,
         userFlags,
         baselines,
+        resolvedLat,
+        resolvedLon,
+        locationName,
       ];
 }
 

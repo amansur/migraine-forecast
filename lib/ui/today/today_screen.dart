@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../state/cycle_provider.dart';
 import '../../state/mascot_overrides.dart';
 import '../../state/insights_eligibility_provider.dart';
+import '../../state/location_display_provider.dart';
 import '../../state/providers.dart';
 import '../../state/risk_assessment_provider.dart';
 import '../../state/settings_provider.dart';
@@ -95,6 +96,52 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            Consumer(
+              builder: (context, ref, _) {
+                final loc = ref.watch(effectiveLocationProvider).asData?.value;
+                if (loc == null) return const SizedBox.shrink();
+                final suffix = loc.isSet && loc.isAuto ? ' · Current location' : '';
+                final muted = Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6);
+                return InkWell(
+                  onTap: () => context.push('/settings'),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.location_on_outlined, size: 16, color: muted),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                '${loc.name}$suffix',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (loc.coords != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 22, top: 2),
+                            child: Text(
+                              loc.coords!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: muted, fontSize: 11),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
             ass.when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 80),

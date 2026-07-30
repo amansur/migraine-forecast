@@ -160,17 +160,7 @@ class BulkBackfillOrchestrator {
         // Health data degrades naturally for days > 30 days ago (no sleep/HRV);
         // this is expected and reflected in contributor confidence scores.
         final raw = riskEngine.evaluate(ctx, rulesConfig, horizon: RiskHorizon.today);
-        final assessment = RiskAssessment(
-          score: raw.score,
-          band: raw.band,
-          contributors: raw.contributors,
-          computedAt: raw.computedAt,
-          configVersion: raw.configVersion,
-          targetDate: raw.targetDate,
-          horizon: raw.horizon,
-          backfilled: true,
-        );
-        await assessmentRepo.save(assessment);
+        await assessmentRepo.save(raw.copyWith(backfilled: true));
         processed++;
         onProgress?.call(processed, missingDays.length);
       } catch (e, st) {

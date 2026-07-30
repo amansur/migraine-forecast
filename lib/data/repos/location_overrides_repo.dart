@@ -21,7 +21,7 @@ class LocationOverridesRepo {
       ..where((t) => t.day.equals(key));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
-    return UserLocation(lat: row.lat, lon: row.lon);
+    return UserLocation(lat: row.lat, lon: row.lon, label: row.displayName);
   }
 
   /// Persists a location override for [day], replacing any existing row.

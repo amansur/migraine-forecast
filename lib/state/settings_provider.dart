@@ -142,9 +142,9 @@ final manualLocationProvider = FutureProvider<UserLocation?>((ref) async {
   return ref.watch(manualLocationSourceProvider).current();
 });
 
-final setManualLocationProvider = Provider<Future<void> Function(double lat, double lon)>((ref) {
-  return (lat, lon) async {
-    await ref.read(manualLocationSourceProvider).set(lat: lat, lon: lon);
+final setManualLocationProvider = Provider<Future<void> Function(double lat, double lon, String? label)>((ref) {
+  return (lat, lon, label) async {
+    await ref.read(manualLocationSourceProvider).set(lat: lat, lon: lon, label: label);
     ref.invalidate(manualLocationProvider);
     ref.invalidate(riskAssessmentProvider);
     ref.invalidate(tomorrowRiskAssessmentProvider);

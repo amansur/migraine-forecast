@@ -38,6 +38,9 @@ class RiskAssessment extends Equatable {
   final DateTime targetDate;
   final RiskHorizon horizon;
   final bool backfilled;
+  final double? resolvedLat;
+  final double? resolvedLon;
+  final String? locationName;
 
   const RiskAssessment({
     required this.score,
@@ -48,12 +51,45 @@ class RiskAssessment extends Equatable {
     required this.targetDate,
     required this.horizon,
     this.backfilled = false,
+    this.resolvedLat,
+    this.resolvedLon,
+    this.locationName,
   });
 
   bool get isOnboarding =>
       contributors.isNotEmpty && contributors.every((c) => c.confidence == 0);
 
+  /// Returns a copy with the given fields replaced. Preserves every other
+  /// field — notably the resolved location — so callers that only want to flip
+  /// [backfilled] don't silently drop coordinates.
+  RiskAssessment copyWith({
+    int? score,
+    RiskBand? band,
+    List<TriggerSignal>? contributors,
+    DateTime? computedAt,
+    int? configVersion,
+    DateTime? targetDate,
+    RiskHorizon? horizon,
+    bool? backfilled,
+    double? resolvedLat,
+    double? resolvedLon,
+    String? locationName,
+  }) =>
+      RiskAssessment(
+        score: score ?? this.score,
+        band: band ?? this.band,
+        contributors: contributors ?? this.contributors,
+        computedAt: computedAt ?? this.computedAt,
+        configVersion: configVersion ?? this.configVersion,
+        targetDate: targetDate ?? this.targetDate,
+        horizon: horizon ?? this.horizon,
+        backfilled: backfilled ?? this.backfilled,
+        resolvedLat: resolvedLat ?? this.resolvedLat,
+        resolvedLon: resolvedLon ?? this.resolvedLon,
+        locationName: locationName ?? this.locationName,
+      );
+
   @override
   List<Object?> get props =>
-      [score, band, contributors, computedAt, configVersion, targetDate, horizon, backfilled];
+      [score, band, contributors, computedAt, configVersion, targetDate, horizon, backfilled, resolvedLat, resolvedLon, locationName];
 }

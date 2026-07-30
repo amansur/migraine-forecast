@@ -21,10 +21,15 @@ class LocationSearchDialog extends StatefulWidget {
   final OpenMeteoGeocoder geocoder;
   final void Function(GeocodingResult) onPick;
 
+  /// Optional text to pre-fill the search field with (e.g. the currently-set
+  /// location's name so the user can edit it).
+  final String? initialQuery;
+
   const LocationSearchDialog({
     super.key,
     required this.geocoder,
     required this.onPick,
+    this.initialQuery,
   });
 
   @override
@@ -36,6 +41,12 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
   List<GeocodingResult> _results = [];
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl.text = widget.initialQuery ?? '';
+  }
 
   @override
   void dispose() {
@@ -80,7 +91,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                     controller: _ctrl,
                     decoration: const InputDecoration(
                       labelText: 'City, state, country or postal code',
-                      hintText: 'San Francisco, CA',
+                      hintText: 'e.g. city, ZIP, or country',
                     ),
                     onSubmitted: (_) => _search(),
                     autofocus: true,

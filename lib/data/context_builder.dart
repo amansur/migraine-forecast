@@ -76,6 +76,11 @@ class ContextBuilder {
       recentAttacks: attacks,
       userFlags: flags,
       baselines: baselines,
+      resolvedLat: loc?.lat,
+      resolvedLon: loc?.lon,
+      // Name is known only when it came from a per-day override or a labelled
+      // manual location; GPS coords are reverse-geocoded lazily at display.
+      locationName: overrideLoc?.label ?? loc?.label,
     );
   }
 }
