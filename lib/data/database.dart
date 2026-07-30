@@ -181,7 +181,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -331,34 +331,64 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(riskAssessments, riskAssessments.locationName);
             await backfillAssessmentLocations();
           }
+          if (from < 17) {
+            // Re-run with the broadened backfill (nearest-fetch fallback) so
+            // historical days that had no exactly-covering snapshot still get a
+            // real recorded location instead of showing "Location not recorded".
+            await backfillAssessmentLocations();
+          }
         },
       );
 
-  /// Populates resolvedLat/resolvedLon on assessment rows that lack them by
-  /// matching each assessment's targetDate against the coverage window of a
-  /// cached weather snapshot. Prefers the snapshot whose fetchedAt is closest
-  /// to the assessment's computedAt. locationName is left null (historical name
-  /// unknown; reverse-geocoded lazily at display). Returns rows updated.
-  Future<int> backfillAssessmentLocations() async {
-    final snaps = await (select(weatherSnapshots)
-          ..where((t) =>
-              t.coverageStart.isNotNull() & t.coverageEnd.isNotNull()))
-        .get();
+  /// Populates resolvedLat/resolvedLon on assessment rows that lack them from
+  /// the cached weather snapshots.
+  ///
+  /// For each assessment we first look for a snapshot whose coverage window
+  /// contains the assessment's targetDate; if none exists we fall back to the
+  /// nearest snapshot by fetchedAt, but only when that fetch is within
+  /// [nearestWindow] of the assessment's computedAt (default 2 days) so we
+  /// never attribute a far-away fetch's location to an unrelated day. Both are
+  /// real recorded fetch locations — not the user's *current* location — so
+  /// history stays honest for people who travel. locationName is left null
+  /// (historical name unknown; reverse-geocoded lazily at display). Returns the
+  /// number of rows updated.
+  Future<int> backfillAssessmentLocations({
+    Duration nearestWindow = const Duration(days: 2),
+  }) async {
+    final snaps = await select(weatherSnapshots).get();
     if (snaps.isEmpty) return 0;
+    final withCoverage = snaps
+        .where((s) => s.coverageStart != null && s.coverageEnd != null)
+        .toList();
     final assessments = await (select(riskAssessments)
           ..where((t) => t.resolvedLat.isNull()))
         .get();
     var updated = 0;
     for (final a in assessments) {
       final day = a.targetDate;
-      final covering = snaps.where((s) =>
+      final covering = withCoverage.where((s) =>
           !s.coverageStart!.isAfter(day) && !s.coverageEnd!.isBefore(day));
-      if (covering.isEmpty) continue;
-      final best = covering.reduce((x, y) =>
-          (x.fetchedAt.difference(a.computedAt).abs() <=
-                  y.fetchedAt.difference(a.computedAt).abs())
-              ? x
-              : y);
+
+      WeatherSnapshot? best;
+      if (covering.isNotEmpty) {
+        best = covering.reduce((x, y) =>
+            (x.fetchedAt.difference(a.computedAt).abs() <=
+                    y.fetchedAt.difference(a.computedAt).abs())
+                ? x
+                : y);
+      } else {
+        // No covering snapshot — use the nearest fetch within the window.
+        for (final s in snaps) {
+          final gap = s.fetchedAt.difference(a.computedAt).abs();
+          if (gap > nearestWindow) continue;
+          if (best == null ||
+              gap < best.fetchedAt.difference(a.computedAt).abs()) {
+            best = s;
+          }
+        }
+      }
+      if (best == null) continue;
+
       await (update(riskAssessments)..where((t) => t.id.equals(a.id)))
           .write(RiskAssessmentsCompanion(
         resolvedLat: Value(best.lat),
