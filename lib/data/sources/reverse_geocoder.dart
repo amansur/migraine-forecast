@@ -41,9 +41,11 @@ class HttpReverseGeocoder implements ReverseGeocoder {
       final res = await client.get(uri);
       if (res.statusCode < 400) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
+        // Prefer the most specific populated place: `locality` (e.g. "Brooklyn")
+        // is more precise than `city` (e.g. "New York City").
         final city = _firstNonEmpty([
-          data['city'] as String?,
           data['locality'] as String?,
+          data['city'] as String?,
         ]);
         final region = data['principalSubdivision'] as String?;
         final parts = [city, region]

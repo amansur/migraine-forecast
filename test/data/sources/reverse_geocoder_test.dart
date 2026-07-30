@@ -8,7 +8,7 @@ void main() {
     expect(formatCoords(37.80442, -122.27119), '37.8044, -122.2712');
   });
 
-  test('parses city + principalSubdivision into "City, Region"', () async {
+  test('parses locality + principalSubdivision into "Locality, Region"', () async {
     final client = MockClient((req) async {
       expect(req.url.host, 'api.bigdatacloud.net');
       return http.Response(
@@ -20,13 +20,24 @@ void main() {
     expect(await g.label(37.8044, -122.2712), 'Oakland, California');
   });
 
-  test('falls back to locality when city is empty', () async {
+  test('prefers the more specific locality over the broader city', () async {
+    // Brooklyn coords: BigDataCloud returns locality "Brooklyn" but the
+    // broader city "New York City". We want the borough.
     final client = MockClient((req) async => http.Response(
-          '{"city":"","locality":"Brooklyn","principalSubdivision":"New York"}',
+          '{"city":"New York City","locality":"Brooklyn","principalSubdivision":"New York"}',
           200,
         ));
     final g = HttpReverseGeocoder(client);
-    expect(await g.label(40.66, -73.96), 'Brooklyn, New York');
+    expect(await g.label(40.6609, -73.9613), 'Brooklyn, New York');
+  });
+
+  test('falls back to city when locality is empty', () async {
+    final client = MockClient((req) async => http.Response(
+          '{"city":"Reno","locality":"","principalSubdivision":"Nevada"}',
+          200,
+        ));
+    final g = HttpReverseGeocoder(client);
+    expect(await g.label(39.5, -119.8), 'Reno, Nevada');
   });
 
   test('falls back to coords on HTTP error', () async {

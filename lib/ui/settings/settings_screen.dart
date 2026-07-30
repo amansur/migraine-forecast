@@ -287,8 +287,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: const Text('Location'),
                       subtitle: loc != null
                           ? Text(
-                              loc.label ??
-                                  '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
+                              loc.label != null
+                                  ? '${loc.label} (${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)})'
+                                  : '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
                             )
                           : const Text('Auto (GPS)'),
                       trailing: const Icon(Icons.edit_outlined),

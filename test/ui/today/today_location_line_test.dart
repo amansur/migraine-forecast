@@ -79,5 +79,7 @@ void main() {
 
     expect(find.textContaining('Oakland, California'), findsOneWidget);
     expect(find.textContaining('Current location'), findsOneWidget);
+    // Coordinates are visible to the user.
+    expect(find.text('37.8044, -122.2712'), findsOneWidget);
   });
 }
