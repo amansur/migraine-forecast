@@ -266,7 +266,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             error: (e, _) => Text('Error: $e'),
             data: (enabled) => SwitchListTile(
               title: const Text('High-risk alerts'),
-              subtitle: const Text('Background notifications come in Plan 4'),
+              subtitle: const Text(
+                'Get a notification when your migraine risk turns high.',
+              ),
               value: enabled,
               onChanged: (v) => ref.read(setNotificationsEnabledProvider)(v),
             ),

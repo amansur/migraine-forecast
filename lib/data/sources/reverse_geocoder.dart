@@ -1,4 +1,6 @@
-import 'package:geocoding/geocoding.dart' as geo;
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 
 String formatCoords(double lat, double lon) =>
     '${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)}';
@@ -8,10 +10,18 @@ abstract class ReverseGeocoder {
   Future<String> label(double lat, double lon);
 }
 
-/// Real implementation backed by the OS geocoder. Caches by coarse coordinate
-/// key and always falls back to [formatCoords] on failure/empty results.
-class PlatformReverseGeocoder implements ReverseGeocoder {
+/// Reverse-geocodes over HTTP so it works on every platform (mobile, web,
+/// desktop). The OS-level `geocoding` plugin only supports Android/iOS and
+/// needs Google Play services on Android, so it silently failed elsewhere.
+///
+/// Uses BigDataCloud's keyless `reverse-geocode-client` endpoint. Caches by
+/// coarse coordinate key and always falls back to [formatCoords] on
+/// failure/empty results.
+class HttpReverseGeocoder implements ReverseGeocoder {
+  final http.Client client;
   final _cache = <String, String>{};
+
+  HttpReverseGeocoder(this.client);
 
   @override
   Future<String> label(double lat, double lon) async {
@@ -21,14 +31,25 @@ class PlatformReverseGeocoder implements ReverseGeocoder {
 
     String result = formatCoords(lat, lon);
     try {
-      final marks = await geo.placemarkFromCoordinates(lat, lon);
-      if (marks.isNotEmpty) {
-        final m = marks.first;
-        final city = (m.locality?.isNotEmpty ?? false)
-            ? m.locality!
-            : (m.subAdministrativeArea ?? '');
-        final region = m.administrativeArea ?? '';
-        final parts = [city, region].where((s) => s.isNotEmpty).toList();
+      final uri = Uri.parse(
+              'https://api.bigdatacloud.net/data/reverse-geocode-client')
+          .replace(queryParameters: {
+        'latitude': lat.toString(),
+        'longitude': lon.toString(),
+        'localityLanguage': 'en',
+      });
+      final res = await client.get(uri);
+      if (res.statusCode < 400) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final city = _firstNonEmpty([
+          data['city'] as String?,
+          data['locality'] as String?,
+        ]);
+        final region = data['principalSubdivision'] as String?;
+        final parts = [city, region]
+            .where((s) => s != null && s.isNotEmpty)
+            .cast<String>()
+            .toList();
         if (parts.isNotEmpty) result = parts.join(', ');
       }
     } catch (_) {
@@ -36,5 +57,12 @@ class PlatformReverseGeocoder implements ReverseGeocoder {
     }
     _cache[key] = result;
     return result;
+  }
+
+  static String? _firstNonEmpty(List<String?> values) {
+    for (final v in values) {
+      if (v != null && v.isNotEmpty) return v;
+    }
+    return null;
   }
 }

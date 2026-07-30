@@ -52,8 +52,8 @@ final permissionServiceProvider = Provider<PermissionService>((_) => PermissionS
 final geocoderProvider = Provider<OpenMeteoGeocoder>(
     (ref) => OpenMeteoGeocoder(ref.watch(httpClientProvider)));
 
-final reverseGeocoderProvider =
-    Provider<ReverseGeocoder>((_) => PlatformReverseGeocoder());
+final reverseGeocoderProvider = Provider<ReverseGeocoder>(
+    (ref) => HttpReverseGeocoder(ref.watch(httpClientProvider)));
 
 final weatherSourceProvider = Provider<WeatherSource>((ref) =>
     OpenMeteoWeatherSource(client: ref.watch(httpClientProvider), db: ref.watch(databaseProvider)));
