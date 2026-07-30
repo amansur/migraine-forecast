@@ -367,10 +367,6 @@ class AppDatabase extends _$AppDatabase {
     final info =
         await customSelect('PRAGMA table_info(risk_assessments)').get();
     final columns = info.map((r) => r.read<String>('name')).toSet();
-    // Diagnostic (visible in the browser console) — confirms this heal path ran
-    // and what it saw. Safe to remove once web migration behavior is verified.
-    // ignore: avoid_print
-    print('[MF-migration] ensureResolvedLocationColumns: existing=$columns');
     if (!columns.contains('resolved_lat')) {
       await customStatement(
           'ALTER TABLE risk_assessments ADD COLUMN resolved_lat REAL');
