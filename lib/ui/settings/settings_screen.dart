@@ -285,7 +285,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: const Text('Location'),
                       subtitle: loc != null
                           ? Text(
-                              '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
+                              loc.label ??
+                                  '${loc.lat.toStringAsFixed(4)}, ${loc.lon.toStringAsFixed(4)}',
                             )
                           : const Text('Auto (GPS)'),
                       trailing: const Icon(Icons.edit_outlined),
@@ -677,6 +678,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
+        initialQuery: current?.label,
         onPick: (result) => ref
             .read(setManualLocationProvider)(result.lat, result.lon, result.displayName),
       ),
