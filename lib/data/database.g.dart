@@ -1982,6 +1982,39 @@ class $RiskAssessmentsTable extends RiskAssessments
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _resolvedLatMeta = const VerificationMeta(
+    'resolvedLat',
+  );
+  @override
+  late final GeneratedColumn<double> resolvedLat = GeneratedColumn<double>(
+    'resolved_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedLonMeta = const VerificationMeta(
+    'resolvedLon',
+  );
+  @override
+  late final GeneratedColumn<double> resolvedLon = GeneratedColumn<double>(
+    'resolved_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationNameMeta = const VerificationMeta(
+    'locationName',
+  );
+  @override
+  late final GeneratedColumn<String> locationName = GeneratedColumn<String>(
+    'location_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1993,6 +2026,9 @@ class $RiskAssessmentsTable extends RiskAssessments
     configVersion,
     contributorsJson,
     backfilled,
+    resolvedLat,
+    resolvedLon,
+    locationName,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2077,6 +2113,33 @@ class $RiskAssessmentsTable extends RiskAssessments
         backfilled.isAcceptableOrUnknown(data['backfilled']!, _backfilledMeta),
       );
     }
+    if (data.containsKey('resolved_lat')) {
+      context.handle(
+        _resolvedLatMeta,
+        resolvedLat.isAcceptableOrUnknown(
+          data['resolved_lat']!,
+          _resolvedLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resolved_lon')) {
+      context.handle(
+        _resolvedLonMeta,
+        resolvedLon.isAcceptableOrUnknown(
+          data['resolved_lon']!,
+          _resolvedLonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('location_name')) {
+      context.handle(
+        _locationNameMeta,
+        locationName.isAcceptableOrUnknown(
+          data['location_name']!,
+          _locationNameMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2126,6 +2189,18 @@ class $RiskAssessmentsTable extends RiskAssessments
         DriftSqlType.bool,
         data['${effectivePrefix}backfilled'],
       )!,
+      resolvedLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}resolved_lat'],
+      ),
+      resolvedLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}resolved_lon'],
+      ),
+      locationName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location_name'],
+      ),
     );
   }
 
@@ -2145,6 +2220,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
   final int configVersion;
   final String contributorsJson;
   final bool backfilled;
+  final double? resolvedLat;
+  final double? resolvedLon;
+  final String? locationName;
   const RiskAssessment({
     required this.id,
     required this.targetDate,
@@ -2155,6 +2233,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     required this.configVersion,
     required this.contributorsJson,
     required this.backfilled,
+    this.resolvedLat,
+    this.resolvedLon,
+    this.locationName,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2168,6 +2249,15 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     map['config_version'] = Variable<int>(configVersion);
     map['contributors_json'] = Variable<String>(contributorsJson);
     map['backfilled'] = Variable<bool>(backfilled);
+    if (!nullToAbsent || resolvedLat != null) {
+      map['resolved_lat'] = Variable<double>(resolvedLat);
+    }
+    if (!nullToAbsent || resolvedLon != null) {
+      map['resolved_lon'] = Variable<double>(resolvedLon);
+    }
+    if (!nullToAbsent || locationName != null) {
+      map['location_name'] = Variable<String>(locationName);
+    }
     return map;
   }
 
@@ -2182,6 +2272,15 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       configVersion: Value(configVersion),
       contributorsJson: Value(contributorsJson),
       backfilled: Value(backfilled),
+      resolvedLat: resolvedLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedLat),
+      resolvedLon: resolvedLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedLon),
+      locationName: locationName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locationName),
     );
   }
 
@@ -2200,6 +2299,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       configVersion: serializer.fromJson<int>(json['configVersion']),
       contributorsJson: serializer.fromJson<String>(json['contributorsJson']),
       backfilled: serializer.fromJson<bool>(json['backfilled']),
+      resolvedLat: serializer.fromJson<double?>(json['resolvedLat']),
+      resolvedLon: serializer.fromJson<double?>(json['resolvedLon']),
+      locationName: serializer.fromJson<String?>(json['locationName']),
     );
   }
   @override
@@ -2215,6 +2317,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       'configVersion': serializer.toJson<int>(configVersion),
       'contributorsJson': serializer.toJson<String>(contributorsJson),
       'backfilled': serializer.toJson<bool>(backfilled),
+      'resolvedLat': serializer.toJson<double?>(resolvedLat),
+      'resolvedLon': serializer.toJson<double?>(resolvedLon),
+      'locationName': serializer.toJson<String?>(locationName),
     };
   }
 
@@ -2228,6 +2333,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     int? configVersion,
     String? contributorsJson,
     bool? backfilled,
+    Value<double?> resolvedLat = const Value.absent(),
+    Value<double?> resolvedLon = const Value.absent(),
+    Value<String?> locationName = const Value.absent(),
   }) => RiskAssessment(
     id: id ?? this.id,
     targetDate: targetDate ?? this.targetDate,
@@ -2238,6 +2346,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     configVersion: configVersion ?? this.configVersion,
     contributorsJson: contributorsJson ?? this.contributorsJson,
     backfilled: backfilled ?? this.backfilled,
+    resolvedLat: resolvedLat.present ? resolvedLat.value : this.resolvedLat,
+    resolvedLon: resolvedLon.present ? resolvedLon.value : this.resolvedLon,
+    locationName: locationName.present ? locationName.value : this.locationName,
   );
   RiskAssessment copyWithCompanion(RiskAssessmentsCompanion data) {
     return RiskAssessment(
@@ -2260,6 +2371,15 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
       backfilled: data.backfilled.present
           ? data.backfilled.value
           : this.backfilled,
+      resolvedLat: data.resolvedLat.present
+          ? data.resolvedLat.value
+          : this.resolvedLat,
+      resolvedLon: data.resolvedLon.present
+          ? data.resolvedLon.value
+          : this.resolvedLon,
+      locationName: data.locationName.present
+          ? data.locationName.value
+          : this.locationName,
     );
   }
 
@@ -2274,7 +2394,10 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
           ..write('computedAt: $computedAt, ')
           ..write('configVersion: $configVersion, ')
           ..write('contributorsJson: $contributorsJson, ')
-          ..write('backfilled: $backfilled')
+          ..write('backfilled: $backfilled, ')
+          ..write('resolvedLat: $resolvedLat, ')
+          ..write('resolvedLon: $resolvedLon, ')
+          ..write('locationName: $locationName')
           ..write(')'))
         .toString();
   }
@@ -2290,6 +2413,9 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
     configVersion,
     contributorsJson,
     backfilled,
+    resolvedLat,
+    resolvedLon,
+    locationName,
   );
   @override
   bool operator ==(Object other) =>
@@ -2303,7 +2429,10 @@ class RiskAssessment extends DataClass implements Insertable<RiskAssessment> {
           other.computedAt == this.computedAt &&
           other.configVersion == this.configVersion &&
           other.contributorsJson == this.contributorsJson &&
-          other.backfilled == this.backfilled);
+          other.backfilled == this.backfilled &&
+          other.resolvedLat == this.resolvedLat &&
+          other.resolvedLon == this.resolvedLon &&
+          other.locationName == this.locationName);
 }
 
 class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
@@ -2316,6 +2445,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
   final Value<int> configVersion;
   final Value<String> contributorsJson;
   final Value<bool> backfilled;
+  final Value<double?> resolvedLat;
+  final Value<double?> resolvedLon;
+  final Value<String?> locationName;
   const RiskAssessmentsCompanion({
     this.id = const Value.absent(),
     this.targetDate = const Value.absent(),
@@ -2326,6 +2458,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     this.configVersion = const Value.absent(),
     this.contributorsJson = const Value.absent(),
     this.backfilled = const Value.absent(),
+    this.resolvedLat = const Value.absent(),
+    this.resolvedLon = const Value.absent(),
+    this.locationName = const Value.absent(),
   });
   RiskAssessmentsCompanion.insert({
     this.id = const Value.absent(),
@@ -2337,6 +2472,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     required int configVersion,
     required String contributorsJson,
     this.backfilled = const Value.absent(),
+    this.resolvedLat = const Value.absent(),
+    this.resolvedLon = const Value.absent(),
+    this.locationName = const Value.absent(),
   }) : targetDate = Value(targetDate),
        horizon = Value(horizon),
        score = Value(score),
@@ -2354,6 +2492,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     Expression<int>? configVersion,
     Expression<String>? contributorsJson,
     Expression<bool>? backfilled,
+    Expression<double>? resolvedLat,
+    Expression<double>? resolvedLon,
+    Expression<String>? locationName,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2365,6 +2506,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
       if (configVersion != null) 'config_version': configVersion,
       if (contributorsJson != null) 'contributors_json': contributorsJson,
       if (backfilled != null) 'backfilled': backfilled,
+      if (resolvedLat != null) 'resolved_lat': resolvedLat,
+      if (resolvedLon != null) 'resolved_lon': resolvedLon,
+      if (locationName != null) 'location_name': locationName,
     });
   }
 
@@ -2378,6 +2522,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     Value<int>? configVersion,
     Value<String>? contributorsJson,
     Value<bool>? backfilled,
+    Value<double?>? resolvedLat,
+    Value<double?>? resolvedLon,
+    Value<String?>? locationName,
   }) {
     return RiskAssessmentsCompanion(
       id: id ?? this.id,
@@ -2389,6 +2536,9 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
       configVersion: configVersion ?? this.configVersion,
       contributorsJson: contributorsJson ?? this.contributorsJson,
       backfilled: backfilled ?? this.backfilled,
+      resolvedLat: resolvedLat ?? this.resolvedLat,
+      resolvedLon: resolvedLon ?? this.resolvedLon,
+      locationName: locationName ?? this.locationName,
     );
   }
 
@@ -2422,6 +2572,15 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
     if (backfilled.present) {
       map['backfilled'] = Variable<bool>(backfilled.value);
     }
+    if (resolvedLat.present) {
+      map['resolved_lat'] = Variable<double>(resolvedLat.value);
+    }
+    if (resolvedLon.present) {
+      map['resolved_lon'] = Variable<double>(resolvedLon.value);
+    }
+    if (locationName.present) {
+      map['location_name'] = Variable<String>(locationName.value);
+    }
     return map;
   }
 
@@ -2436,7 +2595,10 @@ class RiskAssessmentsCompanion extends UpdateCompanion<RiskAssessment> {
           ..write('computedAt: $computedAt, ')
           ..write('configVersion: $configVersion, ')
           ..write('contributorsJson: $contributorsJson, ')
-          ..write('backfilled: $backfilled')
+          ..write('backfilled: $backfilled, ')
+          ..write('resolvedLat: $resolvedLat, ')
+          ..write('resolvedLon: $resolvedLon, ')
+          ..write('locationName: $locationName')
           ..write(')'))
         .toString();
   }
@@ -7431,6 +7593,9 @@ typedef $$RiskAssessmentsTableCreateCompanionBuilder =
       required int configVersion,
       required String contributorsJson,
       Value<bool> backfilled,
+      Value<double?> resolvedLat,
+      Value<double?> resolvedLon,
+      Value<String?> locationName,
     });
 typedef $$RiskAssessmentsTableUpdateCompanionBuilder =
     RiskAssessmentsCompanion Function({
@@ -7443,6 +7608,9 @@ typedef $$RiskAssessmentsTableUpdateCompanionBuilder =
       Value<int> configVersion,
       Value<String> contributorsJson,
       Value<bool> backfilled,
+      Value<double?> resolvedLat,
+      Value<double?> resolvedLon,
+      Value<String?> locationName,
     });
 
 class $$RiskAssessmentsTableFilterComposer
@@ -7496,6 +7664,21 @@ class $$RiskAssessmentsTableFilterComposer
 
   ColumnFilters<bool> get backfilled => $composableBuilder(
     column: $table.backfilled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get resolvedLat => $composableBuilder(
+    column: $table.resolvedLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get resolvedLon => $composableBuilder(
+    column: $table.resolvedLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locationName => $composableBuilder(
+    column: $table.locationName,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7553,6 +7736,21 @@ class $$RiskAssessmentsTableOrderingComposer
     column: $table.backfilled,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get resolvedLat => $composableBuilder(
+    column: $table.resolvedLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get resolvedLon => $composableBuilder(
+    column: $table.resolvedLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locationName => $composableBuilder(
+    column: $table.locationName,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RiskAssessmentsTableAnnotationComposer
@@ -7598,6 +7796,21 @@ class $$RiskAssessmentsTableAnnotationComposer
 
   GeneratedColumn<bool> get backfilled => $composableBuilder(
     column: $table.backfilled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get resolvedLat => $composableBuilder(
+    column: $table.resolvedLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get resolvedLon => $composableBuilder(
+    column: $table.resolvedLon,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get locationName => $composableBuilder(
+    column: $table.locationName,
     builder: (column) => column,
   );
 }
@@ -7648,6 +7861,9 @@ class $$RiskAssessmentsTableTableManager
                 Value<int> configVersion = const Value.absent(),
                 Value<String> contributorsJson = const Value.absent(),
                 Value<bool> backfilled = const Value.absent(),
+                Value<double?> resolvedLat = const Value.absent(),
+                Value<double?> resolvedLon = const Value.absent(),
+                Value<String?> locationName = const Value.absent(),
               }) => RiskAssessmentsCompanion(
                 id: id,
                 targetDate: targetDate,
@@ -7658,6 +7874,9 @@ class $$RiskAssessmentsTableTableManager
                 configVersion: configVersion,
                 contributorsJson: contributorsJson,
                 backfilled: backfilled,
+                resolvedLat: resolvedLat,
+                resolvedLon: resolvedLon,
+                locationName: locationName,
               ),
           createCompanionCallback:
               ({
@@ -7670,6 +7889,9 @@ class $$RiskAssessmentsTableTableManager
                 required int configVersion,
                 required String contributorsJson,
                 Value<bool> backfilled = const Value.absent(),
+                Value<double?> resolvedLat = const Value.absent(),
+                Value<double?> resolvedLon = const Value.absent(),
+                Value<String?> locationName = const Value.absent(),
               }) => RiskAssessmentsCompanion.insert(
                 id: id,
                 targetDate: targetDate,
@@ -7680,6 +7902,9 @@ class $$RiskAssessmentsTableTableManager
                 configVersion: configVersion,
                 contributorsJson: contributorsJson,
                 backfilled: backfilled,
+                resolvedLat: resolvedLat,
+                resolvedLon: resolvedLon,
+                locationName: locationName,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

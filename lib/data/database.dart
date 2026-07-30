@@ -69,6 +69,12 @@ class RiskAssessments extends Table {
   IntColumn get configVersion => integer()();
   TextColumn get contributorsJson => text()();
   BoolColumn get backfilled => boolean().withDefault(const Constant(false))();
+  // Resolved location the assessment was scored at. Nullable: not every day has
+  // a location-driven score, and pre-v16 rows are backfilled from the weather
+  // cache (locationName stays null there — reverse-geocoded lazily at display).
+  RealColumn get resolvedLat => real().nullable()();
+  RealColumn get resolvedLon => real().nullable()();
+  TextColumn get locationName => text().nullable()();
 
   @override
   List<Set<Column>> get uniqueKeys => [
@@ -175,7 +181,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -319,8 +325,49 @@ class AppDatabase extends _$AppDatabase {
                       t.fetchedAt.isBiggerThanValue(DateTime.now().toUtc())))
                 .go();
           }
+          if (from < 16) {
+            await m.addColumn(riskAssessments, riskAssessments.resolvedLat);
+            await m.addColumn(riskAssessments, riskAssessments.resolvedLon);
+            await m.addColumn(riskAssessments, riskAssessments.locationName);
+            await backfillAssessmentLocations();
+          }
         },
       );
+
+  /// Populates resolvedLat/resolvedLon on assessment rows that lack them by
+  /// matching each assessment's targetDate against the coverage window of a
+  /// cached weather snapshot. Prefers the snapshot whose fetchedAt is closest
+  /// to the assessment's computedAt. locationName is left null (historical name
+  /// unknown; reverse-geocoded lazily at display). Returns rows updated.
+  Future<int> backfillAssessmentLocations() async {
+    final snaps = await (select(weatherSnapshots)
+          ..where((t) =>
+              t.coverageStart.isNotNull() & t.coverageEnd.isNotNull()))
+        .get();
+    if (snaps.isEmpty) return 0;
+    final assessments = await (select(riskAssessments)
+          ..where((t) => t.resolvedLat.isNull()))
+        .get();
+    var updated = 0;
+    for (final a in assessments) {
+      final day = a.targetDate;
+      final covering = snaps.where((s) =>
+          !s.coverageStart!.isAfter(day) && !s.coverageEnd!.isBefore(day));
+      if (covering.isEmpty) continue;
+      final best = covering.reduce((x, y) =>
+          (x.fetchedAt.difference(a.computedAt).abs() <=
+                  y.fetchedAt.difference(a.computedAt).abs())
+              ? x
+              : y);
+      await (update(riskAssessments)..where((t) => t.id.equals(a.id)))
+          .write(RiskAssessmentsCompanion(
+        resolvedLat: Value(best.lat),
+        resolvedLon: Value(best.lon),
+      ));
+      updated++;
+    }
+    return updated;
+  }
 
   /// Parses [forecastJson] and returns the hourly timestamps as UTC [DateTime]
   /// objects. Returns an empty list if the JSON is missing a "time" array.

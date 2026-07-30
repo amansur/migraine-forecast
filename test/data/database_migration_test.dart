@@ -7,7 +7,7 @@ void main() {
   test('schemaVersion is 15 and day_location_overrides exists on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
     // Insert a row to prove the table exists.
     await db.into(db.dayLocationOverrides).insert(
           DayLocationOverridesCompanion.insert(
@@ -26,7 +26,7 @@ void main() {
   test('schemaVersion is 15 and manual_sleep_records still exists', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
     // Insert a row to prove the table exists.
     await db.into(db.manualSleepRecords).insert(
           ManualSleepRecordsCompanion.insert(
@@ -44,7 +44,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
@@ -129,7 +129,7 @@ void main() {
   test('v12: oura_sleep.average_heart_rate stores fractional BPM without rounding', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
 
     // Insert a row with a fractional average_heart_rate value.
     await db.into(db.ouraSleep).insert(
@@ -166,7 +166,7 @@ void main() {
   test('v13: day_checkins table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
     await db.into(db.dayCheckins).insert(
           DayCheckinsCompanion.insert(
             day: DateTime.utc(2026, 7, 10),
@@ -182,7 +182,7 @@ void main() {
   test('v14: medication_doses table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 15);
+    expect(db.schemaVersion, 16);
     await db.into(db.medicationDoses).insert(
           MedicationDosesCompanion.insert(
             at: DateTime.utc(2026, 7, 11, 8),
@@ -193,5 +193,121 @@ void main() {
     final rows = await db.select(db.medicationDoses).get();
     expect(rows, hasLength(1));
     expect(rows.single.reliefRating, isNull);
+  });
+
+  test('v16: risk_assessments has nullable resolved location columns', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    expect(db.schemaVersion, 16);
+
+    final id = await db.into(db.riskAssessments).insert(
+          RiskAssessmentsCompanion.insert(
+            targetDate: DateTime.utc(2026, 7, 20),
+            horizon: 'today',
+            score: 30,
+            band: 'moderate',
+            computedAt: DateTime.utc(2026, 7, 20, 23),
+            configVersion: 1,
+            contributorsJson: '[]',
+            resolvedLat: const Value(37.8044),
+            resolvedLon: const Value(-122.2712),
+            locationName: const Value('Oakland, California'),
+          ),
+        );
+    final row = await (db.select(db.riskAssessments)
+          ..where((t) => t.id.equals(id)))
+        .getSingle();
+    expect(row.resolvedLat, closeTo(37.8044, 0.0001));
+    expect(row.resolvedLon, closeTo(-122.2712, 0.0001));
+    expect(row.locationName, 'Oakland, California');
+  });
+
+  test('v16: resolved location columns default to null', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final id = await db.into(db.riskAssessments).insert(
+          RiskAssessmentsCompanion.insert(
+            targetDate: DateTime.utc(2026, 7, 21),
+            horizon: 'today',
+            score: 10,
+            band: 'low',
+            computedAt: DateTime.utc(2026, 7, 21, 23),
+            configVersion: 1,
+            contributorsJson: '[]',
+          ),
+        );
+    final row = await (db.select(db.riskAssessments)
+          ..where((t) => t.id.equals(id)))
+        .getSingle();
+    expect(row.resolvedLat, isNull);
+    expect(row.resolvedLon, isNull);
+    expect(row.locationName, isNull);
+  });
+
+  test('backfillAssessmentLocations copies coords from covering snapshot', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    // Snapshot covering 2026-07-20, fetched close to the assessment's compute.
+    await db.into(db.weatherSnapshots).insert(WeatherSnapshotsCompanion.insert(
+          fetchedAt: DateTime.utc(2026, 7, 20, 22),
+          lat: 40.7128,
+          lon: -74.0060,
+          forecastJson: '{}',
+          coverageStart: Value(DateTime.utc(2026, 7, 18)),
+          coverageEnd: Value(DateTime.utc(2026, 7, 22)),
+        ));
+    // Far snapshot that also covers the day but fetched days earlier.
+    await db.into(db.weatherSnapshots).insert(WeatherSnapshotsCompanion.insert(
+          fetchedAt: DateTime.utc(2026, 7, 10, 0),
+          lat: 1.0,
+          lon: 2.0,
+          forecastJson: '{}',
+          coverageStart: Value(DateTime.utc(2026, 7, 5)),
+          coverageEnd: Value(DateTime.utc(2026, 7, 25)),
+        ));
+
+    final id = await db.into(db.riskAssessments).insert(
+          RiskAssessmentsCompanion.insert(
+            targetDate: DateTime.utc(2026, 7, 20),
+            horizon: 'today',
+            score: 22,
+            band: 'low',
+            computedAt: DateTime.utc(2026, 7, 20, 23),
+            configVersion: 1,
+            contributorsJson: '[]',
+          ),
+        );
+
+    final updated = await db.backfillAssessmentLocations();
+    expect(updated, 1);
+
+    final row = await (db.select(db.riskAssessments)
+          ..where((t) => t.id.equals(id)))
+        .getSingle();
+    expect(row.resolvedLat, closeTo(40.7128, 0.0001)); // closest-fetch wins
+    expect(row.locationName, isNull);
+  });
+
+  test('backfillAssessmentLocations leaves uncovered days null', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final id = await db.into(db.riskAssessments).insert(
+          RiskAssessmentsCompanion.insert(
+            targetDate: DateTime.utc(2026, 7, 20),
+            horizon: 'today',
+            score: 5,
+            band: 'low',
+            computedAt: DateTime.utc(2026, 7, 20, 23),
+            configVersion: 1,
+            contributorsJson: '[]',
+          ),
+        );
+    final updated = await db.backfillAssessmentLocations();
+    expect(updated, 0);
+    final row = await (db.select(db.riskAssessments)
+          ..where((t) => t.id.equals(id)))
+        .getSingle();
+    expect(row.resolvedLat, isNull);
   });
 }
