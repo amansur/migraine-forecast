@@ -38,6 +38,20 @@
 - NOT merged to `main` — branch `location-ux` is ready for review/merge on the
   user's say-so. To finish: review the diff, then merge `location-ux` into `main`.
 
+## Post-QA fixes (from user testing on device)
+
+- c745fd9 — reverse geocoder was silently failing: the `geocoding` OS plugin
+  only supports Android/iOS + needs Play services. Replaced with an HTTP reverse
+  geocoder (BigDataCloud keyless client endpoint, works on every platform,
+  testable with a mock client). Also fixed the stale "Plan 4" notifications copy.
+- e58c55d — historical "auto locations not recorded": broadened the weather-cache
+  backfill to fall back to the nearest cached fetch within 2 days, re-run once via
+  schema v17.
+- 7615278 — precision + coords: prefer BigDataCloud `locality` (Brooklyn) over
+  `city` (New York City); show coordinates on the Today line and Settings row.
+
+Full suite: 422 passed, 4 skipped. Analyze: only pre-existing lints.
+
 **Status: COMPLETE — awaiting user review/merge.**
 
-**Last updated:** 2026-07-30 (all tasks done)
+**Last updated:** 2026-07-30 (all tasks done + post-QA fixes)
