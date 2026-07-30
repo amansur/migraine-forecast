@@ -181,7 +181,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(nativeMemoryDatabase());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -326,26 +326,71 @@ class AppDatabase extends _$AppDatabase {
                 .go();
           }
           if (from < 16) {
-            await m.addColumn(riskAssessments, riskAssessments.resolvedLat);
-            await m.addColumn(riskAssessments, riskAssessments.resolvedLon);
-            await m.addColumn(riskAssessments, riskAssessments.locationName);
-            await backfillAssessmentLocations();
+            await _ensureResolvedLocationColumns();
+            await _tryBackfillAssessmentLocations();
           }
           if (from < 17) {
             // Re-run with the broadened backfill (nearest-fetch fallback) so
             // historical days that had no exactly-covering snapshot still get a
             // real recorded location instead of showing "Location not recorded".
-            await backfillAssessmentLocations();
+            await _tryBackfillAssessmentLocations();
           }
           if (from < 18) {
             // Earlier builds saved backfilled/recalculated assessments through a
             // path that dropped the resolved location (now fixed via copyWith),
             // so rows written after the v16/v17 backfill could have been nulled
             // again. Re-run the backfill to heal them.
-            await backfillAssessmentLocations();
+            await _tryBackfillAssessmentLocations();
+          }
+          if (from < 19) {
+            // Heal DBs whose v16 column-add didn't persist — notably drift's web
+            // sharedIndexedDb fallback, where a migration interrupted by another
+            // open tab could bump the version without applying the ALTERs.
+            await _ensureResolvedLocationColumns();
+            await _tryBackfillAssessmentLocations();
           }
         },
+        beforeOpen: (details) async {
+          // Final safety net: guarantee the resolved-location columns exist on
+          // every open, regardless of how migrations played out. Idempotent, so
+          // it's a no-op once the columns are present. This is what makes the
+          // v18 "no column named resolved_lat" failure impossible to recur.
+          await _ensureResolvedLocationColumns();
+        },
       );
+
+  /// Adds the resolved-location columns to `risk_assessments` if they are
+  /// missing. Idempotent — checks `PRAGMA table_info` first — so it is safe to
+  /// call from any migration step and from [beforeOpen]. Uses raw `ALTER TABLE`
+  /// (not the generated schema) so it never depends on migration bookkeeping.
+  Future<void> _ensureResolvedLocationColumns() async {
+    final info =
+        await customSelect('PRAGMA table_info(risk_assessments)').get();
+    final columns = info.map((r) => r.read<String>('name')).toSet();
+    if (!columns.contains('resolved_lat')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN resolved_lat REAL');
+    }
+    if (!columns.contains('resolved_lon')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN resolved_lon REAL');
+    }
+    if (!columns.contains('location_name')) {
+      await customStatement(
+          'ALTER TABLE risk_assessments ADD COLUMN location_name TEXT');
+    }
+  }
+
+  /// Best-effort backfill. Wrapped so a failure (e.g. one unparseable cached
+  /// row) can never roll back the column-add DDL that shares its transaction.
+  Future<void> _tryBackfillAssessmentLocations() async {
+    try {
+      await backfillAssessmentLocations();
+    } catch (_) {
+      // Columns still exist; days simply show "Location not recorded" until a
+      // later successful backfill or recompute fills them.
+    }
+  }
 
   /// Populates resolvedLat/resolvedLon on assessment rows that lack them from
   /// the cached weather snapshots.

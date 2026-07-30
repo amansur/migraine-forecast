@@ -1,13 +1,123 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, WeatherSnapshot, RiskAssessment, PeriodDaySeverity;
+import 'package:sqlite3/sqlite3.dart' as sq;
 
 void main() {
+  test('REPRO: real v15 -> v18 upgrade adds resolved location columns', () async {
+    final dir = await Directory.systemTemp.createTemp('mf_mig');
+    final path = '${dir.path}/app.sqlite';
+
+    // Build a minimal v15-era schema by hand and stamp user_version = 15.
+    final raw = sq.sqlite3.open(path);
+    raw.execute('''
+      CREATE TABLE risk_assessments (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        target_date INTEGER NOT NULL,
+        horizon TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        band TEXT NOT NULL,
+        computed_at INTEGER NOT NULL,
+        config_version INTEGER NOT NULL,
+        contributors_json TEXT NOT NULL,
+        backfilled INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
+    raw.execute(
+        'CREATE UNIQUE INDEX risk_assessments_target_horizon ON risk_assessments (target_date, horizon);');
+    raw.execute('''
+      CREATE TABLE weather_snapshots (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        fetched_at INTEGER NOT NULL,
+        lat REAL NOT NULL,
+        lon REAL NOT NULL,
+        forecast_json TEXT NOT NULL,
+        air_quality_json TEXT,
+        source TEXT NOT NULL DEFAULT 'forecast',
+        coverage_start INTEGER,
+        coverage_end INTEGER
+      );
+    ''');
+    // storeDateTimeAsText: true → dates are ISO-8601 UTC text.
+    raw.execute(
+        "INSERT INTO risk_assessments (target_date, horizon, score, band, computed_at, config_version, contributors_json, backfilled) "
+        "VALUES ('2026-07-27T00:00:00.000Z', 'today', 22, 'low', '2026-07-27T23:00:00.000Z', 1, '[]', 0);");
+    raw.execute(
+        "INSERT INTO weather_snapshots (fetched_at, lat, lon, forecast_json, coverage_start, coverage_end) "
+        "VALUES ('2026-07-27T22:00:00.000Z', 40.66, -73.96, '{}', '2026-07-25T00:00:00.000Z', '2026-07-29T00:00:00.000Z');");
+    raw.execute('PRAGMA user_version = 15;');
+    raw.dispose();
+
+    // Open through AppDatabase → triggers onUpgrade 15 → 18.
+    final db = AppDatabase(NativeDatabase(File(path)));
+    addTearDown(() async {
+      await db.close();
+      await dir.delete(recursive: true);
+    });
+
+    final info =
+        await db.customSelect('PRAGMA table_info(risk_assessments)').get();
+    final cols = info.map((r) => r.read<String>('name')).toSet();
+    expect(cols, containsAll(['resolved_lat', 'resolved_lon', 'location_name']),
+        reason: 'v16 migration must add the location columns on a real upgrade');
+    expect(db.schemaVersion, 19);
+  });
+
+  test('SELF-HEAL: DB stamped v18 but missing the columns is repaired on open',
+      () async {
+    // Reproduces the broken web state: a prior migration bumped user_version to
+    // 18 (or higher) without persisting the ALTER TABLEs (drift sharedIndexedDb
+    // fallback interrupted by another tab). Opening must add the columns so the
+    // v18+ INSERT no longer fails with "no column named resolved_lat".
+    final dir = await Directory.systemTemp.createTemp('mf_heal');
+    final path = '${dir.path}/app.sqlite';
+
+    final raw = sq.sqlite3.open(path);
+    raw.execute('''
+      CREATE TABLE risk_assessments (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        target_date INTEGER NOT NULL,
+        horizon TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        band TEXT NOT NULL,
+        computed_at INTEGER NOT NULL,
+        config_version INTEGER NOT NULL,
+        contributors_json TEXT NOT NULL,
+        backfilled INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
+    raw.execute(
+        'CREATE UNIQUE INDEX risk_assessments_target_horizon ON risk_assessments (target_date, horizon);');
+    raw.execute(
+        "INSERT INTO risk_assessments (target_date, horizon, score, band, computed_at, config_version, contributors_json, backfilled) "
+        "VALUES ('2026-07-27T00:00:00.000Z', 'today', 22, 'low', '2026-07-27T23:00:00.000Z', 1, '[]', 0);");
+    // The dangerous state: version says 18, but the columns are absent.
+    raw.execute('PRAGMA user_version = 18;');
+    raw.dispose();
+
+    final db = AppDatabase(NativeDatabase(File(path)));
+    addTearDown(() async {
+      await db.close();
+      await dir.delete(recursive: true);
+    });
+
+    final info =
+        await db.customSelect('PRAGMA table_info(risk_assessments)').get();
+    final cols = info.map((r) => r.read<String>('name')).toSet();
+    expect(cols, containsAll(['resolved_lat', 'resolved_lon', 'location_name']),
+        reason: 'beforeOpen/v19 must repair a version-bumped-but-column-less DB');
+    // Existing data is preserved through the repair.
+    final surviving = await db.customSelect('SELECT score FROM risk_assessments').get();
+    expect(surviving.single.read<int>('score'), 22);
+  });
+
   test('schemaVersion is 15 and day_location_overrides exists on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
     // Insert a row to prove the table exists.
     await db.into(db.dayLocationOverrides).insert(
           DayLocationOverridesCompanion.insert(
@@ -26,7 +136,7 @@ void main() {
   test('schemaVersion is 15 and manual_sleep_records still exists', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
     // Insert a row to prove the table exists.
     await db.into(db.manualSleepRecords).insert(
           ManualSleepRecordsCompanion.insert(
@@ -44,7 +154,7 @@ void main() {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
 
     final attackId = await db.into(db.attacks).insert(
           AttacksCompanion.insert(
@@ -129,7 +239,7 @@ void main() {
   test('v12: oura_sleep.average_heart_rate stores fractional BPM without rounding', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
 
     // Insert a row with a fractional average_heart_rate value.
     await db.into(db.ouraSleep).insert(
@@ -166,7 +276,7 @@ void main() {
   test('v13: day_checkins table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
     await db.into(db.dayCheckins).insert(
           DayCheckinsCompanion.insert(
             day: DateTime.utc(2026, 7, 10),
@@ -182,7 +292,7 @@ void main() {
   test('v14: medication_doses table exists and accepts inserts on fresh DB', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
     await db.into(db.medicationDoses).insert(
           MedicationDosesCompanion.insert(
             at: DateTime.utc(2026, 7, 11, 8),
@@ -198,7 +308,7 @@ void main() {
   test('v16: risk_assessments has nullable resolved location columns', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 18);
+    expect(db.schemaVersion, 19);
 
     final id = await db.into(db.riskAssessments).insert(
           RiskAssessmentsCompanion.insert(
