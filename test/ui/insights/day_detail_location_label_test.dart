@@ -1,24 +1,19 @@
-/// Widget tests for the location-override row in DayDetailSheet.
+/// Widget tests for the History day-detail location label sourced from the
+/// stored per-day assessment coordinates.
 library;
 
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, PeriodDaySeverity;
+import 'package:migraine_forecast/data/database.dart' hide Attack, JournalEntry, RiskAssessment, PeriodDaySeverity;
 import 'package:migraine_forecast/data/repos/assessment_repository.dart';
 import 'package:migraine_forecast/data/sources/journal_source.dart';
-import 'package:migraine_forecast/data/sources/location_source.dart';
 import 'package:migraine_forecast/data/sources/reverse_geocoder.dart';
 import 'package:migraine_forecast/state/providers.dart';
 import 'package:migraine_forecast/ui/insights/insights_screen.dart';
 
 import '_fake_location_overrides_repo.dart';
-
-class _FakeReverse implements ReverseGeocoder {
-  @override
-  Future<String> label(double lat, double lon) async => 'Oakland, California';
-}
 
 class _FakeJournal implements JournalSource {
   @override Future<int> addAttack(Attack attack, {int? riskAssessmentId}) async => 1;
@@ -41,40 +36,69 @@ class _FakeJournal implements JournalSource {
   @override Stream<List<PeriodDaySeverity>> watchRecentPeriodDaySeverities(Duration w, {required DateTime now}) => Stream.value([]);
 }
 
-void main() {
-  final day = DateTime.utc(2026, 6, 1);
+class _FakeReverse implements ReverseGeocoder {
+  @override
+  Future<String> label(double lat, double lon) async => 'Oakland, California';
+}
 
-  Widget pumpTree(FakeLocationOverridesRepo repo, {AssessmentRepository? assessmentRepo}) =>
-      ProviderScope(
+void main() {
+  final day = DateTime.utc(2026, 7, 20);
+
+  Widget pumpTree(AssessmentRepository repo) => ProviderScope(
         overrides: [
           journalSourceProvider.overrideWithValue(_FakeJournal()),
           dayAssessmentProvider.overrideWith((ref, _) async => null),
           dayAttacksProvider.overrideWith((ref, _) => Stream.value(const <Attack>[])),
-          locationOverridesRepoProvider.overrideWithValue(repo),
-          if (assessmentRepo != null)
-            assessmentRepoProvider.overrideWithValue(assessmentRepo),
+          locationOverridesRepoProvider.overrideWithValue(FakeLocationOverridesRepo()),
+          assessmentRepoProvider.overrideWithValue(repo),
           reverseGeocoderProvider.overrideWithValue(_FakeReverse()),
         ],
         child: MaterialApp(home: Scaffold(body: DayDetailSheet(day: day))),
       );
 
-  testWidgets('shows Location not recorded when no override and no stored coords',
-      (tester) async {
+  testWidgets('reverse-geocodes stored coords when name is null', (tester) async {
     final db = AppDatabase.memory();
     addTearDown(db.close);
-    await tester.pumpWidget(
-        pumpTree(FakeLocationOverridesRepo(), assessmentRepo: AssessmentRepository(db)));
+    final repo = AssessmentRepository(db);
+    await repo.save(RiskAssessment(
+      score: 22,
+      band: RiskBand.low,
+      contributors: const [],
+      computedAt: DateTime.utc(2026, 7, 20, 23),
+      configVersion: 1,
+      targetDate: day,
+      horizon: RiskHorizon.today,
+      resolvedLat: 37.8044,
+      resolvedLon: -122.2712,
+    ));
+
+    await tester.pumpWidget(pumpTree(repo));
     await tester.pumpAndSettle();
-    expect(find.text('Location not recorded'), findsOneWidget);
+
+    expect(find.text('Oakland, California (37.8044, -122.2712)'), findsOneWidget);
     expect(find.text('Use auto'), findsNothing);
   });
 
-  testWidgets('shows override display name when override is active', (tester) async {
-    final repo = FakeLocationOverridesRepo()
-      ..seed(day, const UserLocation(lat: 51.5074, lon: -0.1278), 'London, UK');
+  testWidgets('uses stored locationName verbatim when present', (tester) async {
+    final db = AppDatabase.memory();
+    addTearDown(db.close);
+    final repo = AssessmentRepository(db);
+    await repo.save(RiskAssessment(
+      score: 22,
+      band: RiskBand.low,
+      contributors: const [],
+      computedAt: DateTime.utc(2026, 7, 20, 23),
+      configVersion: 1,
+      targetDate: day,
+      horizon: RiskHorizon.today,
+      resolvedLat: 51.5074,
+      resolvedLon: -0.1278,
+      locationName: 'London, England',
+    ));
+
     await tester.pumpWidget(pumpTree(repo));
     await tester.pumpAndSettle();
-    expect(find.text('London, UK'), findsOneWidget);
-    expect(find.text('Use auto'), findsOneWidget);
+
+    expect(find.text('London, England (51.5074, -0.1278)'), findsOneWidget);
   });
 }

@@ -48,6 +48,22 @@ class AssessmentRepository {
         );
   }
 
+  /// Returns (lat, lon, name) for the day's stored `today` assessment, or null
+  /// if none exists. Used by the History day-detail to show the actual location
+  /// the day's metrics were computed at.
+  Future<({double? lat, double? lon, String? name})?> resolvedLocationForDay(
+      DateTime day) async {
+    final d = day.toUtc();
+    final key = DateTime.utc(d.year, d.month, d.day);
+    final row = await (_db.select(_db.riskAssessments)
+          ..where((t) => t.targetDate.equals(key) & t.horizon.equals('today'))
+          ..orderBy([(t) => OrderingTerm.desc(t.computedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null) return null;
+    return (lat: row.resolvedLat, lon: row.resolvedLon, name: row.locationName);
+  }
+
   Future<RiskAssessment?> latestForDate({
     required DateTime target,
     required RiskHorizon horizon,
