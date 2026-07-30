@@ -50,7 +50,13 @@
 - 7615278 — precision + coords: prefer BigDataCloud `locality` (Brooklyn) over
   `city` (New York City); show coordinates on the Today line and Settings row.
 
-Full suite: 422 passed, 4 skipped. Analyze: only pre-existing lints.
+- 9bc1e63 — THE key history bug: recalculateForDay/backfill/bulk-orchestrator
+  reconstructed RiskAssessment to set backfilled:true and dropped the resolved
+  location the engine computed, so all historical days persisted null coords
+  ("Location not recorded" despite having weather). Added RiskAssessment.copyWith
+  and used it at all three save sites; schema v18 re-runs backfill to heal rows.
+
+Full suite: 422 app + 168 domain passed. Analyze: only pre-existing lints.
 
 **Status: COMPLETE — awaiting user review/merge.**
 
