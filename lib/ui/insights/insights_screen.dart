@@ -465,7 +465,7 @@ class _LocationOverrideRow extends ConsumerWidget {
         const SizedBox(width: 6),
         Expanded(
           child: GestureDetector(
-            onTap: () => _showSearchDialog(context, ref),
+            onTap: () => _showSearchDialog(context, ref, hasOverride: hasOverride),
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -499,11 +499,18 @@ class _LocationOverrideRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _showSearchDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showSearchDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool hasOverride,
+  }) async {
     await showDialog<void>(
       context: context,
       builder: (_) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
+        autoOptionLabel: 'Use automatic location',
+        isCurrentlyAuto: !hasOverride,
+        onUseAuto: () => _clearOverride(ref),
         onPick: (result) => _setOverride(ref, result),
       ),
     );

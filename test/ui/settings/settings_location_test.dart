@@ -35,4 +35,70 @@ void main() {
     expect(find.text('e.g. city, ZIP, or country'), findsOneWidget);
     expect(find.text('San Francisco, CA'), findsNothing);
   });
+
+  testWidgets('no auto option when onUseAuto is not provided', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: OpenMeteoGeocoder(http.Client()),
+          onPick: (_) {},
+        ),
+      ),
+    ));
+    expect(find.byKey(const Key('use-auto-location')), findsNothing);
+  });
+
+  testWidgets('tapping the auto option invokes onUseAuto and closes',
+      (tester) async {
+    var used = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => LocationSearchDialog(
+                geocoder: OpenMeteoGeocoder(http.Client()),
+                isCurrentlyAuto: false,
+                onUseAuto: () => used = true,
+                onPick: (_) {},
+              ),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Use my current location (GPS)'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('use-auto-location')));
+    await tester.pumpAndSettle();
+
+    expect(used, isTrue);
+    // Dialog closed.
+    expect(find.byKey(const Key('use-auto-location')), findsNothing);
+  });
+
+  testWidgets('auto option shows as active and is not tappable when current',
+      (tester) async {
+    var used = false;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: OpenMeteoGeocoder(http.Client()),
+          isCurrentlyAuto: true,
+          onUseAuto: () => used = true,
+          onPick: (_) {},
+        ),
+      ),
+    ));
+
+    expect(find.text('Currently active'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('use-auto-location')));
+    await tester.pump();
+    expect(used, isFalse); // disabled when already auto
+  });
 }
