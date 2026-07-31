@@ -508,7 +508,6 @@ class _LocationOverrideRow extends ConsumerWidget {
       context: context,
       builder: (_) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
-        autoOptionLabel: 'Use automatic location',
         isCurrentlyAuto: !hasOverride,
         onUseAuto: () => _clearOverride(ref),
         onPick: (result) => _setOverride(ref, result),

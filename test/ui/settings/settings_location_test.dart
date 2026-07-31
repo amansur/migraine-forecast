@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:migraine_forecast/data/sources/open_meteo/open_meteo_geocoder.dart';
 import 'package:migraine_forecast/ui/common/location_search_dialog.dart';
+
+OpenMeteoGeocoder _stubGeocoder() => OpenMeteoGeocoder(MockClient((_) async =>
+    http.Response(
+        '{"results":[{"name":"Reno","admin1":"Nevada","country":"United States","latitude":39.5,"longitude":-119.8}]}',
+        200)));
 
 void main() {
   testWidgets('dialog has neutral hint and honors initialQuery', (tester) async {
@@ -36,7 +42,7 @@ void main() {
     expect(find.text('San Francisco, CA'), findsNothing);
   });
 
-  testWidgets('no auto option when onUseAuto is not provided', (tester) async {
+  testWidgets('no mode toggle when onUseAuto is not provided', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: LocationSearchDialog(
@@ -45,10 +51,61 @@ void main() {
         ),
       ),
     ));
-    expect(find.byKey(const Key('use-auto-location')), findsNothing);
+    // No toggle → search field is shown directly.
+    expect(find.byKey(const Key('location-mode-toggle')), findsNothing);
+    expect(find.text('City, state, country or postal code'), findsOneWidget);
   });
 
-  testWidgets('tapping the auto option invokes onUseAuto and closes',
+  testWidgets('opens on Automatic and hides the search field', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: OpenMeteoGeocoder(http.Client()),
+          isCurrentlyAuto: true,
+          onUseAuto: () {},
+          onPick: (_) {},
+        ),
+      ),
+    ));
+    expect(find.byKey(const Key('location-mode-toggle')), findsOneWidget);
+    // Auto is selected → no search field yet.
+    expect(find.text('City, state, country or postal code'), findsNothing);
+  });
+
+  testWidgets('Automatic mode shows no search UI even with a prefilled query',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: true,
+          initialQuery: 'Brooklyn, New York', // non-empty, must not leak search UI
+          onUseAuto: () {},
+          onPick: (_) {},
+        ),
+      ),
+    ));
+    expect(find.textContaining('No results'), findsNothing);
+    expect(find.text('City, state, country or postal code'), findsNothing);
+  });
+
+  testWidgets('switching to Manual reveals the search field', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: OpenMeteoGeocoder(http.Client()),
+          isCurrentlyAuto: true,
+          onUseAuto: () {},
+          onPick: (_) {},
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Manual'));
+    await tester.pumpAndSettle();
+    expect(find.text('City, state, country or postal code'), findsOneWidget);
+  });
+
+  testWidgets('OK commits Automatic (invokes onUseAuto) and closes',
       (tester) async {
     var used = false;
     await tester.pumpWidget(MaterialApp(
@@ -58,8 +115,8 @@ void main() {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => LocationSearchDialog(
-                geocoder: OpenMeteoGeocoder(http.Client()),
-                isCurrentlyAuto: false,
+                geocoder: _stubGeocoder(),
+                isCurrentlyAuto: true, // opens on Automatic
                 onUseAuto: () => used = true,
                 onPick: (_) {},
               ),
@@ -73,32 +130,61 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Use my current location (GPS)'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('use-auto-location')));
+    // Nothing applied just by opening.
+    expect(used, isFalse);
+    await tester.tap(find.byKey(const Key('location-ok')));
     await tester.pumpAndSettle();
 
     expect(used, isTrue);
-    // Dialog closed.
-    expect(find.byKey(const Key('use-auto-location')), findsNothing);
+    expect(find.byKey(const Key('location-mode-toggle')), findsNothing);
   });
 
-  testWidgets('auto option shows as active and is not tappable when current',
+  testWidgets('OK is disabled in Manual until a result is selected',
       (tester) async {
-    var used = false;
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: LocationSearchDialog(
-          geocoder: OpenMeteoGeocoder(http.Client()),
-          isCurrentlyAuto: true,
-          onUseAuto: () => used = true,
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: false, // Manual
+          onUseAuto: () {},
           onPick: (_) {},
         ),
       ),
     ));
 
-    expect(find.text('Currently active'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('use-auto-location')));
-    await tester.pump();
-    expect(used, isFalse); // disabled when already auto
+    final okButton = tester.widget<FilledButton>(find.byKey(const Key('location-ok')));
+    expect(okButton.onPressed, isNull); // disabled — no selection yet
+  });
+
+  testWidgets('search, select a result, OK invokes onPick with it',
+      (tester) async {
+    GeocodingResult? picked;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: false,
+          onUseAuto: () {},
+          onPick: (r) => picked = r,
+        ),
+      ),
+    ));
+
+    await tester.enterText(
+        find.byType(TextField), 'Reno');
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pumpAndSettle();
+
+    // Result appears; pick it.
+    await tester.tap(find.text('Reno, Nevada, United States'));
+    await tester.pumpAndSettle();
+
+    // OK now enabled; commit.
+    await tester.tap(find.byKey(const Key('location-ok')));
+    await tester.pumpAndSettle();
+
+    expect(picked, isNotNull);
+    expect(picked!.name, 'Reno');
+    expect(picked!.lat, 39.5);
   });
 }
