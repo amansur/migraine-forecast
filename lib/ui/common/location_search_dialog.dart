@@ -121,7 +121,9 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
               ),
               const SizedBox(height: 12),
             ],
-            if (_mode == _LocationMode.manual)
+            // All search UI is Manual-only — in Automatic mode the search
+            // field, results, and "no results" message are irrelevant.
+            if (_mode == _LocationMode.manual) ...[
               Row(
                 children: [
                   Expanded(
@@ -139,51 +141,52 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                   IconButton(icon: const Icon(Icons.search), onPressed: _search),
                 ],
               ),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: CircularProgressIndicator(),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: CircularProgressIndicator(),
                 ),
-              ),
-            if (_results.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 240),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _results.length,
-                  itemBuilder: (_, i) {
-                    final r = _results[i];
-                    final selected = identical(r, _selected);
-                    return ListTile(
-                      selected: selected,
-                      title: Text(r.displayName),
-                      subtitle: Text(
-                          '${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
-                      trailing: selected
-                          ? Icon(Icons.check,
-                              color: Theme.of(context).colorScheme.primary)
-                          : null,
-                      onTap: () => setState(() => _selected = r),
-                    );
-                  },
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _error!,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
                 ),
-              ),
-            ] else if (!_loading &&
-                _ctrl.text.isNotEmpty &&
-                _results.isEmpty &&
-                _error == null)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text('No results — try a different search term'),
-              ),
+              if (_results.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 240),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _results.length,
+                    itemBuilder: (_, i) {
+                      final r = _results[i];
+                      final selected = identical(r, _selected);
+                      return ListTile(
+                        selected: selected,
+                        title: Text(r.displayName),
+                        subtitle: Text(
+                            '${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
+                        trailing: selected
+                            ? Icon(Icons.check,
+                                color: Theme.of(context).colorScheme.primary)
+                            : null,
+                        onTap: () => setState(() => _selected = r),
+                      );
+                    },
+                  ),
+                ),
+              ] else if (!_loading &&
+                  _ctrl.text.isNotEmpty &&
+                  _results.isEmpty &&
+                  _error == null)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text('No results — try a different search term'),
+                ),
+            ],
           ],
         ),
       ),

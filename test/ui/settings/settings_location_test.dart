@@ -72,6 +72,23 @@ void main() {
     expect(find.text('City, state, country or postal code'), findsNothing);
   });
 
+  testWidgets('Automatic mode shows no search UI even with a prefilled query',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: true,
+          initialQuery: 'Brooklyn, New York', // non-empty, must not leak search UI
+          onUseAuto: () {},
+          onPick: (_) {},
+        ),
+      ),
+    ));
+    expect(find.textContaining('No results'), findsNothing);
+    expect(find.text('City, state, country or postal code'), findsNothing);
+  });
+
   testWidgets('switching to Manual reveals the search field', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
