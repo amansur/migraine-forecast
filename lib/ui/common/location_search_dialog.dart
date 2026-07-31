@@ -167,8 +167,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                       return ListTile(
                         selected: selected,
                         title: Text(r.displayName),
-                        subtitle: Text(
-                            '${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
+                        subtitle: Text(r.detail),
                         trailing: selected
                             ? Icon(Icons.check,
                                 color: Theme.of(context).colorScheme.primary)
