@@ -25,11 +25,27 @@ class LocationSearchDialog extends StatefulWidget {
   /// location's name so the user can edit it).
   final String? initialQuery;
 
+  /// When provided, the dialog shows an explicit option to switch back to the
+  /// automatic (GPS / app-resolved) location. Without this there is no in-dialog
+  /// path to the auto state — the user has to know about a separate button.
+  final VoidCallback? onUseAuto;
+
+  /// Whether the automatic location is the currently-active choice, so the auto
+  /// option can be shown as selected rather than as an action.
+  final bool isCurrentlyAuto;
+
+  /// Label for the auto option. Defaults to the GPS wording used in Settings;
+  /// the day-detail override sheet passes a history-appropriate label.
+  final String autoOptionLabel;
+
   const LocationSearchDialog({
     super.key,
     required this.geocoder,
     required this.onPick,
     this.initialQuery,
+    this.onUseAuto,
+    this.isCurrentlyAuto = false,
+    this.autoOptionLabel = 'Use my current location (GPS)',
   });
 
   @override
@@ -84,6 +100,38 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.onUseAuto != null) ...[
+              ListTile(
+                key: const Key('use-auto-location'),
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.my_location),
+                title: Text(widget.autoOptionLabel),
+                subtitle: widget.isCurrentlyAuto
+                    ? const Text('Currently active')
+                    : null,
+                trailing: widget.isCurrentlyAuto
+                    ? Icon(Icons.check,
+                        color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: widget.isCurrentlyAuto
+                    ? null
+                    : () {
+                        widget.onUseAuto!();
+                        Navigator.pop(context);
+                      },
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: Row(children: [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('or search'),
+                  ),
+                  Expanded(child: Divider()),
+                ]),
+              ),
+            ],
             Row(
               children: [
                 Expanded(

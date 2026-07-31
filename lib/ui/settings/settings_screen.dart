@@ -682,6 +682,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => LocationSearchDialog(
         geocoder: ref.read(geocoderProvider),
         initialQuery: current?.label,
+        isCurrentlyAuto: current == null,
+        onUseAuto: () => ref.read(clearManualLocationProvider)(),
         onPick: (result) => ref
             .read(setManualLocationProvider)(result.lat, result.lon, result.displayName),
       ),
