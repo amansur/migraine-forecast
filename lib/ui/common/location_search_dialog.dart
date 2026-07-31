@@ -55,6 +55,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
   bool _loading = false;
   String? _error;
   late _LocationMode _mode;
+  GeocodingResult? _selected;
 
   @override
   void initState() {
@@ -115,16 +116,8 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                   ),
                 ],
                 selected: {_mode},
-                onSelectionChanged: (selection) {
-                  final next = selection.first;
-                  if (next == _LocationMode.auto) {
-                    // Auto applies immediately (consistent with picking a result).
-                    widget.onUseAuto!();
-                    Navigator.pop(context);
-                  } else {
-                    setState(() => _mode = _LocationMode.manual);
-                  }
-                },
+                onSelectionChanged: (selection) =>
+                    setState(() => _mode = selection.first),
               ),
               const SizedBox(height: 12),
             ],
@@ -168,14 +161,17 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
                   itemCount: _results.length,
                   itemBuilder: (_, i) {
                     final r = _results[i];
+                    final selected = identical(r, _selected);
                     return ListTile(
+                      selected: selected,
                       title: Text(r.displayName),
                       subtitle: Text(
                           '${r.lat.toStringAsFixed(4)}, ${r.lon.toStringAsFixed(4)}'),
-                      onTap: () {
-                        widget.onPick(r);
-                        Navigator.pop(context);
-                      },
+                      trailing: selected
+                          ? Icon(Icons.check,
+                              color: Theme.of(context).colorScheme.primary)
+                          : null,
+                      onTap: () => setState(() => _selected = r),
                     );
                   },
                 ),
@@ -196,7 +192,27 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
+        FilledButton(
+          key: const Key('location-ok'),
+          onPressed: _canConfirm ? _confirm : null,
+          child: const Text('OK'),
+        ),
       ],
     );
+  }
+
+  /// OK is enabled when there's a committable choice: Automatic (when the caller
+  /// supports it), or a picked search result in Manual mode.
+  bool get _canConfirm =>
+      (_mode == _LocationMode.auto && widget.onUseAuto != null) ||
+      (_mode == _LocationMode.manual && _selected != null);
+
+  void _confirm() {
+    if (_mode == _LocationMode.auto) {
+      widget.onUseAuto?.call();
+    } else if (_selected != null) {
+      widget.onPick(_selected!);
+    }
+    Navigator.pop(context);
   }
 }

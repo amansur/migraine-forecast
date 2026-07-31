@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:migraine_forecast/data/sources/open_meteo/open_meteo_geocoder.dart';
 import 'package:migraine_forecast/ui/common/location_search_dialog.dart';
+
+OpenMeteoGeocoder _stubGeocoder() => OpenMeteoGeocoder(MockClient((_) async =>
+    http.Response(
+        '{"results":[{"name":"Reno","admin1":"Nevada","country":"United States","latitude":39.5,"longitude":-119.8}]}',
+        200)));
 
 void main() {
   testWidgets('dialog has neutral hint and honors initialQuery', (tester) async {
@@ -82,7 +88,7 @@ void main() {
     expect(find.text('City, state, country or postal code'), findsOneWidget);
   });
 
-  testWidgets('selecting Automatic invokes onUseAuto and closes',
+  testWidgets('OK commits Automatic (invokes onUseAuto) and closes',
       (tester) async {
     var used = false;
     await tester.pumpWidget(MaterialApp(
@@ -92,8 +98,8 @@ void main() {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => LocationSearchDialog(
-                geocoder: OpenMeteoGeocoder(http.Client()),
-                isCurrentlyAuto: false, // opens on Manual
+                geocoder: _stubGeocoder(),
+                isCurrentlyAuto: true, // opens on Automatic
                 onUseAuto: () => used = true,
                 onPick: (_) {},
               ),
@@ -106,14 +112,62 @@ void main() {
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    // Opens on Manual (search visible).
-    expect(find.text('City, state, country or postal code'), findsOneWidget);
 
-    await tester.tap(find.text('Automatic'));
+    // Nothing applied just by opening.
+    expect(used, isFalse);
+    await tester.tap(find.byKey(const Key('location-ok')));
     await tester.pumpAndSettle();
 
     expect(used, isTrue);
-    // Dialog closed.
     expect(find.byKey(const Key('location-mode-toggle')), findsNothing);
+  });
+
+  testWidgets('OK is disabled in Manual until a result is selected',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: false, // Manual
+          onUseAuto: () {},
+          onPick: (_) {},
+        ),
+      ),
+    ));
+
+    final okButton = tester.widget<FilledButton>(find.byKey(const Key('location-ok')));
+    expect(okButton.onPressed, isNull); // disabled — no selection yet
+  });
+
+  testWidgets('search, select a result, OK invokes onPick with it',
+      (tester) async {
+    GeocodingResult? picked;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LocationSearchDialog(
+          geocoder: _stubGeocoder(),
+          isCurrentlyAuto: false,
+          onUseAuto: () {},
+          onPick: (r) => picked = r,
+        ),
+      ),
+    ));
+
+    await tester.enterText(
+        find.byType(TextField), 'Reno');
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pumpAndSettle();
+
+    // Result appears; pick it.
+    await tester.tap(find.text('Reno, Nevada, United States'));
+    await tester.pumpAndSettle();
+
+    // OK now enabled; commit.
+    await tester.tap(find.byKey(const Key('location-ok')));
+    await tester.pumpAndSettle();
+
+    expect(picked, isNotNull);
+    expect(picked!.name, 'Reno');
+    expect(picked!.lat, 39.5);
   });
 }
